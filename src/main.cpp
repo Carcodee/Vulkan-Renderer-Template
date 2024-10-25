@@ -120,9 +120,12 @@ void run(WindowProvider* windowProvider)
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input = glm::vec2(0.0f, -1.0f); }
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_D)) { input = glm::vec2(1.0f, 0.0f); }
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_A)) { input = glm::vec2(-1.0f, 0.0f); }
-                glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
-                fRenderer->camera.RotateCamera(mouseInput);
-                fRenderer->camera.Move(deltaTime, input);
+                if (glfwGetMouseButton(windowProvider->window, GLFW_MOUSE_BUTTON_2))
+                {
+                    glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+                    fRenderer->camera.RotateCamera(mouseInput);
+                    fRenderer->camera.Move(deltaTime, input);
+                }
                 inFlightQueue->EndFrame();
             }
             catch (vk::OutOfDateKHRError err)

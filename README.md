@@ -20,6 +20,14 @@ CodeVk_Renderer is a lightweight Vulkan-based rendering engine utilizing a Rende
 
 ## Getting Started
 
+### Project Structure
+
+The project is organized into two primary branches: **Main** and **Personal**.
+
+- **Main**: This branch contains a streamlined version of the renderer, stripped of any personal additions. It serves as a lightweight, clean base version of the project.
+  
+- **Personal**: This branch builds upon the template found in the Main branch, incorporating all of my personal features and customizations.
+
 ### Prerequisites
 
 - **C++20 Compiler**: A modern C++ compiler supporting C++20 features is required.
