@@ -24,10 +24,10 @@
 #include "RThings/ModelLoader.hpp"
 #include "RThings/Camera.hpp"
 
-
 #include "BaseRenderer.hpp"
 #include "Examples/ForwardRenderer.hpp"
 #include "Examples/ComputeRenderer.hpp"
+#include "Renderers/ClusterRenderer.hpp"
 #include "ImguiRenderer.hpp"
 
 

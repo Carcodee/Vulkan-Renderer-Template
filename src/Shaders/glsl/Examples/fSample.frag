@@ -13,5 +13,5 @@ void main() {
     ivec2 coord = ivec2(gl_FragCoord.xy);
     vec4 computeImage= imageLoad(storageImg, coord);
     vec4 text = texture(testImage, textCoord);
-    outColor = textCoord;
+    outColor = text;
 }
