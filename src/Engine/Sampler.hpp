@@ -79,6 +79,7 @@ namespace ENGINE
                 }
             }
             assert(false && "Sampler does not exist");
+            return nullptr;
         }
 
         
