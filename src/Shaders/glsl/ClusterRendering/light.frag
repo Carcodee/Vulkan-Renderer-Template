@@ -10,5 +10,7 @@ layout(set = 0 , binding = 2) uniform sampler2D gDepth;
 
 
 void main() {
+    vec4 col = texture(gCol, textCoord);
+    outColor = col;
 
 }

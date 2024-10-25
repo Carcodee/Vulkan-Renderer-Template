@@ -317,9 +317,10 @@ namespace ENGINE
             }
         }
         
-        void SetNodeDepthAttachmentImg(ImageView* imageView)
+        void SetNodeDepthAttachmentImg(std::string name,ImageView* imageView)
         {
             depthImage = imageView;
+            AddImageToProxy(name, imageView);
         }
 
         //We change the image view if the name already exist when using resources
@@ -523,7 +524,7 @@ namespace ENGINE
                 imagesProxy.try_emplace(name, imageView);
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(imageView);
+                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(name, imageView);
                 }
                 else
                 {
@@ -534,7 +535,7 @@ namespace ENGINE
                 imagesProxy.at(name) = imageView;
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(imageView);
+                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(name, imageView);
                 }else
                 {
                     std::cout << "Renderpass: " << passName << " does not exist, saving the image anyways. \n";
