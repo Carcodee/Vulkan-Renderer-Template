@@ -7,6 +7,7 @@
 //
 
 
+
 #ifndef FORWARDRENDERER_HPP
 #define FORWARDRENDERER_HPP
 
@@ -79,6 +80,10 @@ namespace Rendering
 
             writerBuilder.AddWriteImage(0, imageShipper.imageView.get(), imageShipper.sampler->samplerHandle.get(),
                                         vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler);
+
+            auto* storageImageView = renderGraphRef->GetResource("storageImage");
+            writerBuilder.AddWriteImage(1, storageImageView, imageShipper.sampler->samplerHandle.get(),
+                                        vk::ImageLayout::eGeneral, vk::DescriptorType::eStorageImage);
             
             writerBuilder.UpdateSet(core->logicalDevice.get(), dstSet.get());
  
@@ -100,6 +105,7 @@ namespace Rendering
             renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
             renderNode->AddNodeSampler("sampler", imageShipper.imageView.get());
+            renderNode->AddNodeStorageImg("sampler", imageShipper.imageView.get());
             renderNode->BuildRenderGraphNode();
             
         }

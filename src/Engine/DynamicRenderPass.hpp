@@ -28,7 +28,7 @@ namespace ENGINE
                                         .setStoreOp(storeOp)
                                         .setClearValue(
                                             vk::ClearValue(vk::ClearColorValue(std::array<float, 4>{
-                                                0.0f, 0.0f, 0.0f, 1.0f
+                                                0.2f, 0.2f, 0.5f, 1.0f
                                             })));
 
         attachmentInfo.format = format;

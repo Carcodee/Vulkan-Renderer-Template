@@ -45,6 +45,8 @@ void run(WindowProvider* windowProvider)
         glfwExtensions, glfwExtensionCount, &windowDesc, enableDebugging);
     
     std::unique_ptr<ENGINE::RenderGraph> renderGraph = core->CreateRenderGraph();
+    renderGraph->samplerPool.AddSampler(core->logicalDevice.get(), vk::SamplerAddressMode::eRepeat,
+                                                vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
     
     std::unique_ptr<ENGINE::InFlightQueue> inFlightQueue = std::make_unique<ENGINE::InFlightQueue>(
         core.get(),renderGraph.get(), windowDesc, imageCount, vk::PresentModeKHR::eMailbox,
@@ -114,7 +116,7 @@ void run(WindowProvider* windowProvider)
               
                 imguiRenderer->RenderFrame(currFrame.commandBuffer.get(),
                                            inFlightQueue->currentSwapchainImageView->imageView.get());
-
+                
                 glm::vec2 input = glm::vec2(0.0f);
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input = glm::vec2(0.0f, 1.0f); }
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input = glm::vec2(0.0f, -1.0f); }
@@ -141,7 +143,7 @@ void run(WindowProvider* windowProvider)
 
 int main()
 {
-    std::unique_ptr<WindowProvider> windowProvider= std::make_unique<WindowProvider>(WINDOWS_WIDTH, WINDOWS_HEIGHT, "Vulkan Engine Template");
+    std::unique_ptr<WindowProvider> windowProvider = std::make_unique<WindowProvider>(WINDOWS_WIDTH, WINDOWS_HEIGHT, "Vulkan Engine Template");
     windowProvider->InitGlfw();
     
     run(windowProvider.get());

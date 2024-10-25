@@ -147,7 +147,7 @@ namespace ENGINE
                     dstPattern = GRAPHICS_READ;
                     break;
                 case vk::PipelineBindPoint::eCompute:
-                    dstPattern = GRAPHICS_READ;
+                    dstPattern = COMPUTE;
                     break;
                 default:
                     assert(false && "pipeline type is unknown");
@@ -316,42 +316,53 @@ namespace ENGINE
                 std::cout << "Attachment: " << "\"" << name << "\"" << " already exist";
             }
         }
+        
+        void SetNodeDepthAttachmentImg(ImageView* imageView)
+        {
+            depthImage = imageView;
+        }
+
+        //We change the image view if the name already exist when using resources
         void AddNodeColAttachmentImg(std::string name, ImageView* imageView)
         {
             if (!imagesAttachment.contains(name))
             {
+                assert(imageView && "Name does not exist or image view is null");
                 imagesAttachment.try_emplace(name, imageView);
-            }else
+            }
+            else
             {
                 imagesAttachment.at(name)= imageView;
             }
+            AddImageToProxy(name, imageView);
         }
 
-        void SetNodeDepthAttachmentImg(std::string name, ImageView* imageView)
-        {
-            depthImage = imageView;
-        }
         void AddNodeSampler(std::string name, ImageView* imageView)
         {
             if (!sampledImages.contains(name))
             {
+                assert(imageView && "Name does not exist or image view is null");
                 sampledImages.try_emplace(name, imageView);
-            }else
+            }
+            else
             {
                 sampledImages.at(name)= imageView;
             }
+            AddImageToProxy(name, imageView);
         }
 
         void AddNodeStorageImg(std::string name, ImageView* imageView)
         {
             if (!storageImages.contains(name))
             {
+                assert(imageView != nullptr && "Name does not exist or image view is null");
                 storageImages.try_emplace(name, imageView);
             }
             else
             {
                 storageImages.at(name) = imageView;
             }
+            AddImageToProxy(name, imageView);
         }
         void DependsOn(std::string dependency)
         {
@@ -374,7 +385,16 @@ namespace ENGINE
             renderOperations = nullptr;
             tasks.clear();
         }       
-        
+        void AddImageToProxy(std::string name, ImageView* imageView)
+        {
+            if (!imagesProxyRef->contains(name))
+            {
+                imagesProxyRef->try_emplace(name, imageView);
+            }else
+            {
+                imagesProxyRef->at(name)= imageView;
+            }
+        }
         
         vk::UniquePipeline pipeline;
         vk::UniquePipelineLayout pipelineLayout;
@@ -384,6 +404,7 @@ namespace ENGINE
         DynamicRenderPass dynamicRenderPass;
         
     private:
+        
         friend class RenderGraph;
         ShaderModule* vertShaderModule = nullptr;
         ShaderModule* fragShaderModule = nullptr;
@@ -424,6 +445,7 @@ namespace ENGINE
         std::unordered_map<std::string, AttachmentInfo> outColAttachmentsProxy;
         std::unordered_map<std::string, AttachmentInfo> outDepthAttachmentProxy;
         
+        SamplerPool samplerPool;
         vk::Format storageImageFormat = vk::Format::eR32G32B32A32Sfloat;
         
         Core* core;
@@ -501,7 +523,7 @@ namespace ENGINE
                 imagesProxy.try_emplace(name, imageView);
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(name, imageView);
+                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(imageView);
                 }
                 else
                 {
@@ -512,7 +534,7 @@ namespace ENGINE
                 imagesProxy.at(name) = imageView;
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(name, imageView);
+                    renderNodes.at(passName)->SetNodeDepthAttachmentImg(imageView);
                 }else
                 {
                     std::cout << "Renderpass: " << passName << " does not exist, saving the image anyways. \n";
@@ -578,6 +600,17 @@ namespace ENGINE
             }
             return imageView;
         }
+
+        ImageView* GetResource(std::string name)
+        {
+            if (imagesProxy.contains(name))
+            {
+                return imagesProxy.at(name);
+            }
+            PrintInvalidResource("Resource", name);
+            return nullptr;
+            
+        }
         void RecreateFrameResources()
         {
             
@@ -590,24 +623,36 @@ namespace ENGINE
         void ExecuteAll(FrameResources* currentFrame)
         {
             assert(currentFrame && "Current frame reference is null");
-            RenderGraphNode* lastNode = nullptr;
+            std::vector<std::string> allPassesNames;
             for (auto& renderNode : renderNodes)
             {
                 RenderGraphNode* node = renderNode.second.get();
-                if (lastNode != nullptr)
+                bool dependancyNeed = false;
+                std::string dependancyName = "";
+                for (auto& passName : allPassesNames)
                 {
-                    if (node->dependencies.contains(lastNode->passName))
+                    if (node->dependencies.contains(passName))
                     {
-
-                        BufferUsageTypes lastNodeType = (lastNode->pipelineType == vk::PipelineBindPoint::eGraphics) ? B_GRAPHICS_WRITE :  B_COMPUTE_WRITE;
-                        BufferUsageTypes currNodeType = (lastNode->pipelineType == vk::PipelineBindPoint::eGraphics) ? B_GRAPHICS_WRITE :  B_COMPUTE_WRITE;
-                        BufferAccessPattern lastNodePattern = GetSrcBufferAccessPattern(lastNodeType);
-                        BufferAccessPattern currNodePattern = GetSrcBufferAccessPattern(currNodeType);
-                        CreateMemBarrier(lastNodePattern, currNodePattern, currentFrame->commandBuffer.get());
+                        dependancyNeed = true;
+                        dependancyName = passName;
                     }
                 }
+                if (dependancyNeed)
+                {
+                    RenderGraphNode* dependancyNode = renderNodes.at(dependancyName).get(); 
+                    BufferUsageTypes lastNodeType = (dependancyNode->pipelineType == vk::PipelineBindPoint::eGraphics)
+                                                        ? B_GRAPHICS_WRITE
+                                                        : B_COMPUTE_WRITE;
+                    BufferUsageTypes currNodeType = (dependancyNode->pipelineType == vk::PipelineBindPoint::eGraphics)
+                                                        ? B_GRAPHICS_WRITE
+                                                        : B_COMPUTE_WRITE;
+                    BufferAccessPattern lastNodePattern = GetSrcBufferAccessPattern(lastNodeType);
+                    BufferAccessPattern currNodePattern = GetSrcBufferAccessPattern(currNodeType);
+                    CreateMemBarrier(lastNodePattern, currNodePattern, currentFrame->commandBuffer.get());
+                }
                 node->Execute(currentFrame->commandBuffer.get());
-                lastNode = node;
+                allPassesNames.push_back(node->passName);
+                
             }
         }
     };

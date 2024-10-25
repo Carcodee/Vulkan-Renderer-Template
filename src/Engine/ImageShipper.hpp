@@ -2,6 +2,7 @@
 // Created by carlo on 2024-10-08.
 //
 
+
 #ifndef IMAGESHIPPER_HPP
 #define IMAGESHIPPER_HPP
 
@@ -61,14 +62,10 @@ namespace ENGINE
                 free(this->data);
                 data = nullptr;
             }
-            sampler = std::make_unique<Sampler>(core->logicalDevice.get(), vk::SamplerAddressMode::eRepeat,
+            sampler = core->renderGraphRef->samplerPool.GetSampler(vk::SamplerAddressMode::eRepeat,
                                                 vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
         }
 
-        std::unique_ptr<Sampler> ShipSampler()
-        {
-            return std::move(sampler);
-        }
         std::unique_ptr<Image> ShipImage()
         {
             return std::move(image);
@@ -81,7 +78,6 @@ namespace ENGINE
         void Clear()
         {
             if (imageView){imageView.release();}
-            if (sampler){sampler.release();}
             if (image){image.release();}
             if (data)
             {
@@ -90,8 +86,8 @@ namespace ENGINE
         }
 
         std::unique_ptr<Image> image;
-        std::unique_ptr<Sampler> sampler;
         std::unique_ptr<ImageView> imageView;
+        Sampler* sampler;
         void* data;
         glm::vec2 imageSize;
         vk::DeviceSize size;

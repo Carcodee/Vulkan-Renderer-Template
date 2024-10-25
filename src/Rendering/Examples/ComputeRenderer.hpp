@@ -4,6 +4,7 @@
 //
 
 
+
 #ifndef COMPUTERENDERER_HPP
 #define COMPUTERENDERER_HPP
 
@@ -34,8 +35,9 @@ namespace Rendering
                                                                    renderGraphRef->storageImageFormat,
                                                                    vk::ImageLayout::eUndefined);
             computeImageView = std::make_unique<ENGINE::ImageView>(logicalDevice, computeImageData.get(), 0, 1, 0, 1);
-            computeImageSampler = std::make_unique<ENGINE::Sampler>(logicalDevice, vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear ,vk::SamplerMipmapMode::eLinear);
-
+            
+            ENGINE::Sampler* computeImageSampler = renderGraphRef->samplerPool.GetSampler(
+                vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
 
             std::vector<uint32_t> compByteCode = ENGINE::GetByteCode(
                 "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\cSample.comp.spv");
@@ -127,7 +129,6 @@ namespace Rendering
         
         std::unique_ptr<ENGINE::Image> computeImage;
         std::unique_ptr<ENGINE::ImageData> computeImageData;
-        std::unique_ptr<ENGINE::Sampler> computeImageSampler;
         std::unique_ptr<ENGINE::ImageView> computeImageView;
  
     };
