@@ -180,9 +180,9 @@ namespace Rendering
             
             std::cout<< "Shaders reloaded\n";
             std::vector<uint32_t> vertCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Base\\fSample.vert.spv");
+                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.vert.spv");
             std::vector<uint32_t> fragCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Base\\fSample.frag.spv");
+                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.frag.spv");
 
             ENGINE::ShaderModule vertShaderModule(core->logicalDevice.get(), vertCode);
             ENGINE::ShaderModule fragShaderModule(core->logicalDevice.get(), fragCode);

@@ -106,7 +106,7 @@ namespace Rendering
             
             std::cout<< "Shaders reloaded\n";
             std::vector<uint32_t> compByteCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Base\\test.vert.spv");
+                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\cSample.comp.spv");
 
             ENGINE::ShaderModule compShaderModule(core->logicalDevice.get(), compByteCode);
             renderNode->SetPipelineLayoutCI(layoutCreateInfo);
