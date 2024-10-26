@@ -15,7 +15,13 @@ namespace Rendering
 			glm::mat4 perspective;
 			glm::mat4 view;
 		} matrices;
-
+		struct CameraProperties
+		{
+			float zNear = 0;
+			float zFar = 0;
+			float aspect = 0;
+			float fov = 0;		
+		};
 		enum CameraMode
 		{
 			E_FIXED,
@@ -94,6 +100,11 @@ namespace Rendering
 		{
 			matrices.perspective = glm::perspective(glm::radians(fov), aspect, znear, zfar);
 			matrices.perspective[1][1] *=-1;
+			
+			this->cameraProperties.fov = fov;
+			this->cameraProperties.aspect =aspect;
+			this->cameraProperties.zNear = znear;
+			this->cameraProperties.zFar =zfar;
 		}
 
 		void SetLookAt(glm::vec3 targetPosition)
@@ -114,9 +125,12 @@ namespace Rendering
 		glm::vec3 position;
 		float yaw = -90;
 		float pitch = -90;
-		float lastX;
-		float lastY;
+		float lastX = 0;
+		float lastY = 0;
 		float sens = 0.4f;
+
+		CameraProperties cameraProperties{};
+		
 		bool firstMouse = true;
 		bool inverseY = false;
 		CameraMode currentMode;

@@ -217,8 +217,6 @@ namespace Rendering
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
         Model model{};
         ForwardPc pc{};
-        std::vector<Vertex2D> vertices;
-        std::vector<uint32_t> indices;
 
     };
 }
