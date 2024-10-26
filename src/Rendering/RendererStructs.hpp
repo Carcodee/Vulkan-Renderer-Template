@@ -83,6 +83,12 @@ namespace Rendering
 		glm::mat4 model;
 		glm::mat4 projView;
 	};
+	struct CPropsUbo
+	{
+		glm::mat4 proj;
+		glm::mat4 view;
+	};
+
 
     
 }

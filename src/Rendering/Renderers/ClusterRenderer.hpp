@@ -3,6 +3,7 @@
 //
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -156,6 +157,8 @@ namespace Rendering
 
             quadVert = Vertex2D::GetQuadVertices();
             quadIndices = Vertex2D::GetQuadIndices();
+            propsUbo.proj = camera.matrices.perspective;
+            propsUbo.view = camera.matrices.view;
             
             lVertexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
@@ -165,6 +168,11 @@ namespace Rendering
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * quadIndices.size(), quadIndices.data());
+            cPropsBuffer = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eUniformBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(cPropsBuffer) * quadIndices.size(), quadIndices.data());
+            cPropsBuffer->SetupDescriptor();
             
             std::vector<uint32_t> lightVertCode = ENGINE::GetByteCode(
                 "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
@@ -203,6 +211,10 @@ namespace Rendering
                                         sampler->samplerHandle.get(),
                                         vk::ImageLayout::eShaderReadOnlyOptimal,
                                         vk::DescriptorType::eCombinedImageSampler);
+            writerBuilder.AddWriteBuffer(3,
+                                         cPropsBuffer.get(),
+                                         vk::DescriptorType::eUniformBuffer);
+
 
             writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
             
@@ -328,19 +340,21 @@ namespace Rendering
         std::unique_ptr<ENGINE::ImageData> depthAttachmentData;
         std::unique_ptr<ENGINE::ImageView> depthAttachmentView;
         
-        
-        
         std::unique_ptr<ENGINE::Buffer> vertexBuffer;
         std::unique_ptr<ENGINE::Buffer> indexBuffer;
         
         std::unique_ptr<ENGINE::Buffer> lVertexBuffer;
         std::unique_ptr<ENGINE::Buffer> lIndexBuffer;
         
+        std::unique_ptr<ENGINE::Buffer> cPropsBuffer;
+        
         std::string gBufferPassName = "gBuffer";
         std::string lightPassName = "Light";
 
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
+        CPropsUbo propsUbo;
         Model model{};
+        
         
         std::vector<Vertex2D> quadVert;
         std::vector<uint32_t> quadIndices;
