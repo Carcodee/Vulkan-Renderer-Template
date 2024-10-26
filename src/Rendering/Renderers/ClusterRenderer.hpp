@@ -245,9 +245,9 @@ namespace Rendering
         }
         void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
         {
-                auto setViewTask = new std::function<void()>([this, inflightQueue]()
+            auto setViewTask = new std::function<void()>([this, inflightQueue]()
             {
-                renderGraphRef->GetNode(gBufferPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
+                // renderGraphRef->GetNode(gBufferPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
             });
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
