@@ -13,7 +13,8 @@ namespace ENGINE
 
         void* Map()
         {
-            return logicalDevice.mapMemory(deviceMemHandle.get(), 0, deviceSize);
+            mappedMem = logicalDevice.mapMemory(deviceMemHandle.get(), 0, deviceSize);
+            return mappedMem;
         }
 
         void Unmap()
@@ -72,7 +73,7 @@ namespace ENGINE
 
             if (data!= nullptr)
             {
-                mappedMem = Map();
+                Map();
                 memcpy(mappedMem, data, deviceSize);
                 Unmap();
                 if (!(memPropertyFlags & vk::MemoryPropertyFlagBits::eHostCoherent)){

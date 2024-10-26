@@ -1,6 +1,5 @@
-﻿
-#ifndef RENDERING_UTIL 
-#define RENDERING_UTIL 
+#ifndef R_UTIL 
+#define R_UTIL 
 
 vec3 GetPositionFromDepth(mat4 invView, mat4 invProj, float depth, uvec2 fragPos){
     vec4 ndcCoords = vec4(1.0f);
