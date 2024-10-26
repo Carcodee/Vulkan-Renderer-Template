@@ -407,7 +407,7 @@ namespace Rendering
         std::unique_ptr<ENGINE::Buffer> cPropsBuffer;
         
         std::string gBufferPassName = "gBuffer";
-        std::string lightPassName = "Light";
+        std::string lightPassName = "light";
 
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
         CPropsUbo propsUbo;
