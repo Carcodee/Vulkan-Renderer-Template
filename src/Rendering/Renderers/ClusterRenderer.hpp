@@ -84,24 +84,14 @@ namespace Rendering
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
-            
-            std::vector<uint32_t> vertCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
-            std::vector<uint32_t> fragCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
-            
-            ENGINE::ShaderParser vertParser(vertCode);
-            ENGINE::ShaderParser fragParser(fragCode);
-
-            ENGINE::ShaderModule vertShaderModule(logicalDevice, vertCode);
-            ENGINE::ShaderModule fragShaderModule(logicalDevice, fragCode);
+            gVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
+            gFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
             ENGINE::DescriptorLayoutBuilder builder;
 
-            ENGINE::ShaderParser::GetLayout(vertParser, builder);
-            ENGINE::ShaderParser::GetLayout(fragParser, builder);
-
+            ENGINE::ShaderParser::GetLayout(*gVertShader.get()->sParser, builder);
+            ENGINE::ShaderParser::GetLayout(*gFragShader.get()->sParser, builder);
 
             gDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
@@ -136,8 +126,8 @@ namespace Rendering
             ENGINE::AttachmentInfo depthInfo = ENGINE::GetDepthAttachmentInfo();
             auto renderNode = renderGraphRef->AddPass(gBufferPassName);
             
-            renderNode->SetVertModule(&vertShaderModule);
-            renderNode->SetFragModule(&fragShaderModule);
+            renderNode->SetVertShader(gVertShader.get());
+            renderNode->SetFragShader(gFragShader.get());
             renderNode->SetFramebufferSize(windowProvider->GetWindowSize());
             renderNode->SetPipelineLayoutCI(layoutCreateInfo);
             renderNode->SetVertexInput(vertexInput);
@@ -176,19 +166,11 @@ namespace Rendering
             cPropsBuffer->Map();
             cPropsBuffer->SetupDescriptor();
             
-            std::vector<uint32_t> lightVertCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
-            std::vector<uint32_t> lightFragCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
-
-            ENGINE::ShaderParser lVertParser(lightVertCode);
-            ENGINE::ShaderParser lFragParser(lightFragCode);
-
-            ENGINE::ShaderModule lVertShaderModule(logicalDevice, lightVertCode);
-            ENGINE::ShaderModule lFragShaderModule(logicalDevice, lightFragCode);
-
-            ENGINE::ShaderParser::GetLayout(lVertParser, builder);
-            ENGINE::ShaderParser::GetLayout(lFragParser, builder);
+            lVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
+            lFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
+            
+            ENGINE::ShaderParser::GetLayout(*lVertShader->sParser, builder);
+            ENGINE::ShaderParser::GetLayout(*lFragShader->sParser, builder);
             
             lDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
@@ -223,8 +205,8 @@ namespace Rendering
             ENGINE::VertexInput lVertexInput= Vertex2D::GetVertexInput();
             
             auto lRenderNode = renderGraphRef->AddPass(lightPassName);
-            lRenderNode->SetVertModule(&lVertShaderModule);
-            lRenderNode->SetFragModule(&lFragShaderModule);
+            lRenderNode->SetVertShader(lVertShader.get());
+            lRenderNode->SetFragShader(lFragShader.get());
             lRenderNode->SetFramebufferSize(windowProvider->GetWindowSize());
             lRenderNode->SetPipelineLayoutCI(lLayoutCreateInfo);
             lRenderNode->SetVertexInput(lVertexInput);
@@ -314,59 +296,12 @@ namespace Rendering
         void ReloadShaders() override
         {
             
-            int result = std::system("C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\shaders\\compile.bat");
-            if (result == 0)
-            {
-            }else
-            {
-                assert(false &&"reload shaders failed");
-            }
-            std::vector<uint32_t> gVertCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
-            std::vector<uint32_t> gFragCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
-            std::vector<uint32_t> vertCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
-            std::vector<uint32_t> fragCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
-
-            
-            ENGINE::ShaderModule gVertShaderModule(core->logicalDevice.get(), gVertCode);
-            ENGINE::ShaderModule gFragShaderModule(core->logicalDevice.get(), gFragCode);
-
-            ENGINE::ShaderModule vertShaderModule(core->logicalDevice.get(), vertCode);
-            ENGINE::ShaderModule fragShaderModule(core->logicalDevice.get(), fragCode);
-            
-           auto pushConstantRange = vk::PushConstantRange()
-                                     .setOffset(0)
-                                     .setStageFlags(
-                                         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
-                                     .setSize(sizeof(ForwardPc));
-  
-            auto gLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                     .setPushConstantRanges(pushConstantRange)
-                                     .setSetLayoutCount(1)
-                                     .setPSetLayouts(&gDstLayout.get());
-           
-            auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                    .setSetLayoutCount(1)
-                                    .setPSetLayouts(&lDstLayout.get());
-            
-            
             auto* gRenderNode = renderGraphRef->GetNode(gBufferPassName);
             auto* renderNode = renderGraphRef->GetNode(lightPassName);
             
-            gRenderNode->SetPipelineLayoutCI(gLayoutCreateInfo);
-            gRenderNode->SetVertModule(&gVertShaderModule);
-            gRenderNode->SetFragModule(&gFragShaderModule);
             gRenderNode->RecreateResources();
-            
-            renderNode->SetPipelineLayoutCI(layoutCreateInfo);
-            renderNode->SetVertModule(&vertShaderModule);
-            renderNode->SetFragModule(&fragShaderModule);
             renderNode->RecreateResources();
             
-            std::cout<< "Shaders reloaded\n";
         }
 
 
@@ -382,6 +317,12 @@ namespace Rendering
         
         vk::UniqueDescriptorSetLayout lDstLayout;
         vk::UniqueDescriptorSet lDstSet;
+
+        std::unique_ptr<ENGINE::Shader> gVertShader;
+        std::unique_ptr<ENGINE::Shader> gFragShader;
+        
+        std::unique_ptr<ENGINE::Shader> lVertShader;
+        std::unique_ptr<ENGINE::Shader> lFragShader;
         
         ENGINE::ImageShipper imageShipperCol;
         ENGINE::ImageShipper imageShipperNorm;

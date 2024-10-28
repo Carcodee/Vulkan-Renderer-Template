@@ -64,11 +64,9 @@ void run(WindowProvider* windowProvider)
     };
     descriptorAllocator->BeginPool(core->logicalDevice.get(), 10, poolSizeRatios);
 
-    std::unique_ptr<Rendering::ComputeRenderer> compRenderer =std::make_unique<Rendering::ComputeRenderer>(core.get(), windowProvider, descriptorAllocator.get());
-    compRenderer->SetRenderOperation(inFlightQueue.get());
-    
-    std::unique_ptr<Rendering::ForwardRenderer> fRenderer = std::make_unique<Rendering::ForwardRenderer>(core.get(), windowProvider, descriptorAllocator.get());
-    fRenderer->SetRenderOperation(inFlightQueue.get());
+    std::unique_ptr<Rendering::ClusterRenderer> clusterRenderer = std::make_unique<Rendering::ClusterRenderer>(
+        core.get(), windowProvider, descriptorAllocator.get());
+    clusterRenderer->SetRenderOperation(inFlightQueue.get());
     
     std::unique_ptr<Rendering::ImguiRenderer> imguiRenderer = std::make_unique<Rendering::ImguiRenderer>(
         core.get(), windowProvider);
@@ -95,17 +93,16 @@ void run(WindowProvider* windowProvider)
                 windowProvider->framebufferResized = false;
                 core->resizeRequested = false;
                 renderGraph->RecreateFrameResources();
-                compRenderer->RecreateSwapChainResources();
-                compRenderer->SetRenderOperation(inFlightQueue.get());
-                fRenderer->RecreateSwapChainResources();
-                fRenderer->SetRenderOperation(inFlightQueue.get());
+                clusterRenderer->SetRenderOperation(inFlightQueue.get());
+
             }
             try
             {
 
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_RIGHT_CONTROL)&& glfwGetKey(windowProvider->window, GLFW_KEY_S))
                 {
-                   fRenderer->ReloadShaders(); 
+                    renderGraph->RecompileShaders();
+                    clusterRenderer->ReloadShaders(); 
                 }
 
                 inFlightQueue->BeginFrame();
@@ -125,8 +122,8 @@ void run(WindowProvider* windowProvider)
                 if (glfwGetMouseButton(windowProvider->window, GLFW_MOUSE_BUTTON_2))
                 {
                     glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
-                    fRenderer->camera.RotateCamera(mouseInput);
-                    fRenderer->camera.Move(deltaTime, input);
+                    clusterRenderer->camera.RotateCamera(mouseInput);
+                    clusterRenderer->camera.Move(deltaTime, input);
                 }
                 inFlightQueue->EndFrame();
             }
