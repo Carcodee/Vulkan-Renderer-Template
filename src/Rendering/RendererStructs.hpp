@@ -88,6 +88,11 @@ namespace Rendering
 		glm::mat4 invProj;
 		glm::mat4 invView;
 	};
+	struct ArrayIndexor 
+	{
+		int offset = -1;
+		int size = 0;
+	};
 
 
     

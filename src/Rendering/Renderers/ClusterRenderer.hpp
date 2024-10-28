@@ -5,6 +5,8 @@
 
 
 
+
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -143,13 +145,75 @@ namespace Rendering
             renderNode->AddNodeColAttachmentImg("gNorm", normAttachmentView.get());
             renderNode->SetNodeDepthAttachmentImg("gDepth", depthAttachmentView.get());
             renderNode->BuildRenderGraphNode();
+            
+            //Cull pass//
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+
+            std::uniform_real_distribution<> distribution(2.0f, 10.0f);
+            pointLights.reserve(10);
+            for (int i = 0; i < 10; ++i)
+            {
+                float radius = distribution(gen);
+                glm::vec3 pos = glm::vec3(radius);
+                glm::vec3 col = glm::vec3(radius);
+                float intensity = radius;
+                pointLights.emplace_back(PointLight{pos, col, radius, intensity});
+            }
+            for (int i = 0; i < tileSize * tileSize; ++i)
+            {
+                lightsMap.emplace_back(ArrayIndexor{});
+            }
+            
+
+            pointLightsBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(PointLight) * pointLights.size(), pointLights.data());
+            pointLightsBuff->SetupDescriptor();
+            
+
+            lightsMapBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(ArrayIndexor) * lightsMap.size(), lightsMap.data());
+            lightsMapBuff->SetupDescriptor();
+            
+            
+            cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+                                                              "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
+
+
+            ENGINE::ShaderParser::GetLayout(*cullCompShader->sParser, builder);
+            
+            cullDstLayout = builder.BuildBindings(logicalDevice,
+                                                  vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment
+                                                  | vk::ShaderStageFlagBits::eFragment);
+
+            auto cullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
+            .setSetLayoutCount(1)
+            .setPSetLayouts(&cullDstLayout.get());
+            
+            cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
+
+            writerBuilder.AddWriteBuffer(0, pointLightsBuff.get(), vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(1, lightsMapBuff.get(), vk::DescriptorType::eStorageBuffer);
+            
+            writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
+
+            auto* cullRenderNode = renderGraphRef->AddPass(computePassName);
+            cullRenderNode->SetCompShader(cullCompShader.get());
+            cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
+            cullRenderNode->BuildRenderGraphNode();
+            
 
             //light pass//
 
             quadVert = Vertex2D::GetQuadVertices();
             quadIndices = Vertex2D::GetQuadIndices();
-            propsUbo.invProj = glm::inverse(camera.matrices.perspective);
-            propsUbo.invView = glm::inverse(camera.matrices.view);
+            cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
+            cPropsUbo.invView = glm::inverse(camera.matrices.view);
             
             lVertexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
@@ -159,12 +223,12 @@ namespace Rendering
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * quadIndices.size(), quadIndices.data());
-            cPropsBuffer = std::make_unique<ENGINE::Buffer>(
+            camPropsBuff = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eUniformBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(cPropsBuffer), &propsUbo);
-            cPropsBuffer->Map();
-            cPropsBuffer->SetupDescriptor();
+                sizeof(camPropsBuff), &cPropsUbo);
+            camPropsBuff->Map();
+            camPropsBuff->SetupDescriptor();
             
             lVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
             lFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
@@ -196,7 +260,7 @@ namespace Rendering
                                         vk::ImageLayout::eShaderReadOnlyOptimal,
                                         vk::DescriptorType::eCombinedImageSampler);
             writerBuilder.AddWriteBuffer(3,
-                                         cPropsBuffer.get(),
+                                         camPropsBuff.get(),
                                          vk::DescriptorType::eUniformBuffer);
 
 
@@ -221,16 +285,13 @@ namespace Rendering
 
             
         }
+
         void RecreateSwapChainResources() override
         {
             
         }
         void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
         {
-            auto setViewTask = new std::function<void()>([this, inflightQueue]()
-            {
-                // renderGraphRef->GetNode(gBufferPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
-            });
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
@@ -259,9 +320,22 @@ namespace Rendering
            
                 });
 
-                renderGraphRef->GetNode(gBufferPassName)->AddTask(setViewTask);
                 renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
 
+                auto cullRenderOp =  new std::function<void(vk::CommandBuffer& command_buffer)>(
+                    [this](vk::CommandBuffer& commandBuffer)
+                    {
+                        auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
+                        commandBuffer.bindDescriptorSets(renderNode->pipelineType,
+                                                         renderNode->pipelineLayout.get(), 0,
+                                                         1,
+                                                         &cullDstSet.get(), 0, nullptr);
+                        commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
+                        commandBuffer.dispatch(tileSize / localSize, tileSize / localSize, 1);
+                    });
+
+                renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);
+                
                 auto lSetViewTask = new std::function<void()>([this, inflightQueue]()
                 {
                     auto* currImage = inflightQueue->currentSwapchainImageView;
@@ -269,9 +343,9 @@ namespace Rendering
                     renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
                     renderGraphRef->AddDepthImageResource(lightPassName, "lDepth", currDepthImage.imageView.get());
                     renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
-                    propsUbo.invProj = glm::inverse(camera.matrices.perspective);
-                    propsUbo.invView = glm::inverse(camera.matrices.view);
-                    memcpy(cPropsBuffer->mappedMem, &propsUbo, sizeof(CPropsUbo)); 
+                    cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
+                    cPropsUbo.invView = glm::inverse(camera.matrices.view);
+                    memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo)); 
                     
                 });
                 auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -303,6 +377,7 @@ namespace Rendering
             renderNode->RecreateResources();
             
         }
+        
 
 
         ENGINE::DescriptorAllocator* descriptorAllocatorRef;
@@ -318,11 +393,16 @@ namespace Rendering
         vk::UniqueDescriptorSetLayout lDstLayout;
         vk::UniqueDescriptorSet lDstSet;
 
+        vk::UniqueDescriptorSetLayout cullDstLayout;
+        vk::UniqueDescriptorSet cullDstSet;
+
         std::unique_ptr<ENGINE::Shader> gVertShader;
         std::unique_ptr<ENGINE::Shader> gFragShader;
         
         std::unique_ptr<ENGINE::Shader> lVertShader;
         std::unique_ptr<ENGINE::Shader> lFragShader;
+        
+        std::unique_ptr<ENGINE::Shader> cullCompShader;
         
         ENGINE::ImageShipper imageShipperCol;
         ENGINE::ImageShipper imageShipperNorm;
@@ -345,19 +425,34 @@ namespace Rendering
         std::unique_ptr<ENGINE::Buffer> lVertexBuffer;
         std::unique_ptr<ENGINE::Buffer> lIndexBuffer;
         
-        std::unique_ptr<ENGINE::Buffer> cPropsBuffer;
+        std::unique_ptr<ENGINE::Buffer> camPropsBuff;
+
+        //std::unique_ptr<ENGINE::Buffer> dirLightsBuff;
+        std::unique_ptr<ENGINE::Buffer> pointLightsBuff;
+        std::unique_ptr<ENGINE::Buffer> lightsMapBuff;
+        
         
         std::string gBufferPassName = "gBuffer";
+        std::string computePassName= "cullLight";
         std::string lightPassName = "light";
 
+        //gbuff
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
-        CPropsUbo propsUbo;
         Model model{};
+        ForwardPc pc{};
+
+        //culling
+        std::vector<PointLight> pointLights;
+        std::vector<ArrayIndexor> lightsMap;
+        //std::vector<DirectionalLight> directionalLights;
+        int tileSize = 32;
+        int localSize = 2;
         
-        
+
+        //light
         std::vector<Vertex2D> quadVert;
         std::vector<uint32_t> quadIndices;
-        ForwardPc pc{};
+        CPropsUbo cPropsUbo;
     };   
 }
 

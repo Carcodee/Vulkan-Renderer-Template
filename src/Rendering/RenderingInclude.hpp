@@ -20,6 +20,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "RendererStructs.hpp"
 
+#include "RThings/Lights.hpp"
 #include "RThings/Model.hpp"
 #include "RThings/ModelLoader.hpp"
 #include "RThings/Camera.hpp"
