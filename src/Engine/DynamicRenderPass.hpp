@@ -55,19 +55,19 @@ namespace ENGINE
     {
     public:
         void SetPipelineRenderingInfo(uint32_t colorAttachmentCount,
-                          std::vector<vk::Format>& colorFormats,
+                          std::vector<vk::Format> colorFormats,
                           vk::Format depthFormat = vk::Format::eD32Sfloat)
         {
             if (colorFormats.empty())
             {
                 colorFormats.push_back(vk::Format::eB8G8R8A8Srgb);
             }
-            this->colorFormat = colorFormat;
+            this->colorFormats = colorFormats;
             this->depthFormat = depthFormat;
             this->expectedColorAttachmentSize = colorAttachmentCount;
             pipelineRenderingCreateInfo = vk::PipelineRenderingCreateInfo()
             .setColorAttachmentCount(colorAttachmentCount)
-            .setPColorAttachmentFormats(colorFormats.data())
+            .setPColorAttachmentFormats(this->colorFormats.data())
             .setDepthAttachmentFormat(this->depthFormat)
             .setStencilAttachmentFormat(vk::Format::eUndefined);
             
@@ -124,7 +124,7 @@ namespace ENGINE
                 .setExtent({scissorSize.x, scissorSize.y});
             
         }
-        vk::Format colorFormat;
+        std::vector<vk::Format> colorFormats;
         vk::Format depthFormat;
         uint32_t expectedColorAttachmentSize = 0;
         vk::RenderingInfo renderInfo;

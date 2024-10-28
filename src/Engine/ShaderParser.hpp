@@ -140,12 +140,39 @@ namespace ENGINE
             GetBinding(parser.uniformBuffers, builder, repeatedBindings);
             GetBinding(parser.storageBuffers, builder, repeatedBindings);
         }
-        ShaderStage stage;
-        
         std::vector<ShaderResource> uniformBuffers;
         std::vector<ShaderResource> storageBuffers;
         std::vector<ShaderResource> sampledImages;
         std::vector<ShaderResource> storageImages;
+        ShaderStage stage;
+    };
+
+    class Shader 
+    {
+    public:
+        Shader(vk::Device logicalDevice, std::string path)
+        {
+            this->path = path;
+            this->logicalDevice = logicalDevice;
+            std::vector<uint32_t> byteCode = GetByteCode(path);
+            sParser = std::make_unique<ShaderParser>(byteCode);
+            sModule = std::make_unique<ShaderModule>(logicalDevice, byteCode);
+        }
+        void Reload()
+        {
+            std::vector<uint32_t> byteCode = GetByteCode(path);
+            sParser.reset();
+            sModule.reset();
+            sParser = std::make_unique<ShaderParser>(byteCode);
+            sModule = std::make_unique<ShaderModule>(logicalDevice, byteCode);
+            
+        }
+        std::unique_ptr<ShaderParser> sParser;
+        std::unique_ptr<ShaderModule> sModule;
+        vk::Device logicalDevice;
+        std::string path;
+        
+        
     };
 }
 

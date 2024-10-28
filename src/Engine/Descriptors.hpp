@@ -37,7 +37,8 @@ namespace ENGINE
             clear();
             return device.createDescriptorSetLayoutUnique(dstSetLayoutCreateInfo);
         }
-         void clear()
+
+        void clear()
         {
             bindings.clear();
         }       

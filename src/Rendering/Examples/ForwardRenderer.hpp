@@ -3,8 +3,16 @@
 
 
 
+
+
+
+
+
 // Created by carlo on 2024-10-07.
 //
+
+
+
 
 
 
@@ -41,24 +49,14 @@ namespace Rendering
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
             
-            
-            std::vector<uint32_t> vertCode = ENGINE::GetByteCode(
-                    "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.vert.spv");
-            std::vector<uint32_t> fragCode = ENGINE::GetByteCode(
-                    "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.frag.spv");
-            
-            
-            ENGINE::ShaderParser vertParser(vertCode);
-            ENGINE::ShaderParser fragParser(fragCode);
-            
-            ENGINE::ShaderModule vertShaderModule(logicalDevice, vertCode);
-            ENGINE::ShaderModule fragShaderModule(logicalDevice, fragCode);
 
+            vertShader = std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.vert.spv");
+            fragShader = std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.frag.spv");
+           
             ENGINE::DescriptorLayoutBuilder builder;
 
-            ENGINE::ShaderParser::GetLayout(vertParser, builder);
-            ENGINE::ShaderParser::GetLayout(fragParser, builder);
-            
+            ENGINE::ShaderParser::GetLayout(*vertShader->sParser, builder);
+            ENGINE::ShaderParser::GetLayout(*fragShader->sParser, builder);
             
              dstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
@@ -67,11 +65,11 @@ namespace Rendering
             .setOffset(0)
             .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
             .setSize(sizeof(ForwardPc));
-            
+
             auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                    .setSetLayoutCount(1)
-                                    .setPushConstantRanges(pushConstantRange)    
-                                    .setPSetLayouts(&dstLayout.get());
+                                    .setSetLayoutCount(1).
+                                    setPushConstantRanges(pushConstantRange).
+                                    setPSetLayouts(&dstLayout.get());
             
             imageShipper.SetDataFromPath("C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
             imageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
@@ -95,8 +93,8 @@ namespace Rendering
             forwardPassName = "ForwardPass";
             auto renderNode = renderGraphRef->AddPass(forwardPassName);
             
-            renderNode->SetVertModule(&vertShaderModule);
-            renderNode->SetFragModule(&fragShaderModule);
+            renderNode->SetVertShader(vertShader.get());
+            renderNode->SetFragShader(fragShader.get());
             renderNode->SetFramebufferSize(windowProvider->GetWindowSize());
             renderNode->SetPipelineLayoutCI(layoutCreateInfo);
             renderNode->SetVertexInput(vertexInput);
@@ -165,36 +163,7 @@ namespace Rendering
 
         void ReloadShaders() override
         {
-            int result = std::system("C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\shaders\\compile.bat");
-            if (result == 0)
-            {
-            }else
-            {
-                assert(false &&"reload shaders failed");
-            }
             auto renderNode = renderGraphRef->GetNode(forwardPassName);
-            auto pushConstantRange = vk::PushConstantRange()
-                                     .setOffset(0)
-                                     .setStageFlags(
-                                         vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
-                                     .setSize(sizeof(ForwardPc));
-
-            auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                    .setSetLayoutCount(1)
-                                    .setPushConstantRanges(pushConstantRange)
-                                    .setPSetLayouts(&dstLayout.get());
-            
-            std::cout<< "Shaders reloaded\n";
-            std::vector<uint32_t> vertCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.vert.spv");
-            std::vector<uint32_t> fragCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.frag.spv");
-
-            ENGINE::ShaderModule vertShaderModule(core->logicalDevice.get(), vertCode);
-            ENGINE::ShaderModule fragShaderModule(core->logicalDevice.get(), fragCode);
-            renderNode->SetPipelineLayoutCI(layoutCreateInfo);
-            renderNode->SetVertModule(&vertShaderModule);
-            renderNode->SetFragModule(&fragShaderModule);
             renderNode->RecreateResources();
         }
 
@@ -212,6 +181,9 @@ namespace Rendering
         ENGINE::ImageShipper imageShipper;
         std::unique_ptr<ENGINE::Buffer> vertexBuffer;
         std::unique_ptr<ENGINE::Buffer> indexBuffer;
+        
+        std::unique_ptr<ENGINE::Shader> vertShader;
+        std::unique_ptr<ENGINE::Shader> fragShader;
         
        
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};

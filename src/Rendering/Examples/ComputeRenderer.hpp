@@ -39,20 +39,17 @@ namespace Rendering
             ENGINE::Sampler* computeImageSampler = renderGraphRef->samplerPool.GetSampler(
                 vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
 
-            std::vector<uint32_t> compByteCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\cSample.comp.spv");
-            ENGINE::ShaderParser compParser(compByteCode);
-            ENGINE::ShaderModule compShaderModule(logicalDevice, compByteCode);
+            compShader = std::make_unique<ENGINE::Shader>(logicalDevice,"C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\cSample.comp.spv");
             
             ENGINE::DescriptorLayoutBuilder builder;
 
-            ENGINE::ShaderParser::GetLayout(compParser, builder);
+            ENGINE::ShaderParser::GetLayout(*compShader->sParser.get(), builder);
 
             dstLayout= builder.BuildBindings(logicalDevice, vk::ShaderStageFlagBits::eCompute);
-            
+
             auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                    .setSetLayoutCount(1)
-                                    .setPSetLayouts(&dstLayout.get());
+            .setSetLayoutCount(1)
+            .setPSetLayouts(&dstLayout.get());
             
             dstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), dstLayout.get());
             
@@ -64,7 +61,7 @@ namespace Rendering
             computeNodeName = "compute";
             auto renderNode = renderGraphRef->AddPass(computeNodeName);
             
-            renderNode->SetCompModule(&compShaderModule);
+            renderNode->SetCompShader(compShader.get());
             renderNode->SetPipelineLayoutCI(layoutCreateInfo);
             renderNode->AddNodeStorageImg("storageImage", computeImageView.get());
             renderNode->BuildRenderGraphNode();
@@ -93,26 +90,7 @@ namespace Rendering
 
         void ReloadShaders() override
         {
-                        int result = std::system("C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\shaders\\compile.bat");
-            if (result == 0)
-            {
-            }else
-            {
-                assert(false &&"reload shaders failed");
-            }
             auto renderNode = renderGraphRef->GetNode(computeNodeName);
-
-            auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                    .setSetLayoutCount(1)
-                                    .setPSetLayouts(&dstLayout.get());
-            
-            std::cout<< "Shaders reloaded\n";
-            std::vector<uint32_t> compByteCode = ENGINE::GetByteCode(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\cSample.comp.spv");
-
-            ENGINE::ShaderModule compShaderModule(core->logicalDevice.get(), compByteCode);
-            renderNode->SetPipelineLayoutCI(layoutCreateInfo);
-            renderNode->SetCompModule(&compShaderModule);
             renderNode->RecreateResources();
         }
         
@@ -124,6 +102,7 @@ namespace Rendering
         ENGINE::DescriptorWriterBuilder writerBuilder;
         vk::UniqueDescriptorSetLayout dstLayout;
         vk::UniqueDescriptorSet dstSet;
+        std::unique_ptr<ENGINE::Shader> compShader;
 
         std::string computeNodeName;
         

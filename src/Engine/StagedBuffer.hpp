@@ -25,7 +25,7 @@ namespace ENGINE
 
         void* Map()
         {
-            stagingBuffer->Map();
+            return stagingBuffer->Map();
         }
 
         void Unmap(vk::CommandBuffer commandBuffer)

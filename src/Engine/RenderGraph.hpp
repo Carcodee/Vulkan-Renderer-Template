@@ -7,6 +7,9 @@
 
 
 
+
+
+
 #ifndef RENDERGRAPH_HPP
 #define RENDERGRAPH_HPP
 
@@ -27,8 +30,9 @@ namespace ENGINE
              assert(&pipelineLayoutCI != nullptr && "Pipeline layout is null");
             pipeline.reset();
             pipelineLayout.reset();
-
-            if (fragShaderModule && vertShaderModule)
+            ReloadShaders();
+            
+            if (fragShader && vertShader)
             {
                 std::vector<vk::Format> colorFormats;
                 colorFormats.reserve(colAttachments.size());
@@ -42,8 +46,8 @@ namespace ENGINE
 
                 pipelineLayout = core->logicalDevice->createPipelineLayoutUnique(pipelineLayoutCI);
                 std::unique_ptr<GraphicsPipeline> graphicsPipeline = std::make_unique<ENGINE::GraphicsPipeline>(
-                    core->logicalDevice.get(), vertShaderModule->shaderModuleHandle.get(),
-                    fragShaderModule->shaderModuleHandle.get(), pipelineLayout.get(),
+                    core->logicalDevice.get(), vertShader->sModule->shaderModuleHandle.get(),
+                    fragShader->sModule->shaderModuleHandle.get(), pipelineLayout.get(),
                     dynamicRenderPass.pipelineRenderingCreateInfo,
                     colorBlendConfigs, depthConfig,
                     vertexInput, pipelineCache.get()
@@ -52,12 +56,11 @@ namespace ENGINE
                 pipelineType = vk::PipelineBindPoint::eGraphics;
                 std::cout << "Graphics pipeline created\n";
                 
-            }else if(compShaderModule)
+            }else if(compShader)
             {
                 pipelineLayout = core->logicalDevice->createPipelineLayoutUnique(pipelineLayoutCI);
-                std::unique_ptr<ComputePipeline> computePipeline;
-                std::unique_ptr<ComputePipeline> graphicsPipeline = std::make_unique<ENGINE::ComputePipeline>(
-                    core->logicalDevice.get(), compShaderModule->shaderModuleHandle.get(), pipelineLayout.get(),
+                std::unique_ptr<ComputePipeline> computePipeline = std::make_unique<ENGINE::ComputePipeline>(
+                    core->logicalDevice.get(), compShader->sModule->shaderModuleHandle.get(), pipelineLayout.get(),
                     pipelineCache.get());
                 pipeline = std::move(computePipeline->pipelineHandle);
                 pipelineType = vk::PipelineBindPoint::eCompute;
@@ -73,8 +76,7 @@ namespace ENGINE
             assert(&pipelineLayoutCI != nullptr && "Pipeline layout is null");
             auto pipelineCacheCreateInfo = vk::PipelineCacheCreateInfo();
             pipelineCache = core->logicalDevice->createPipelineCacheUnique(pipelineCacheCreateInfo);
- 
-            if (fragShaderModule && vertShaderModule)
+            if (fragShader && vertShader)
             {
                 std::vector<vk::Format> colorFormats;
                 colorFormats.reserve(colAttachments.size());
@@ -90,8 +92,8 @@ namespace ENGINE
 
                
                 std::unique_ptr<GraphicsPipeline> graphicsPipeline = std::make_unique<ENGINE::GraphicsPipeline>(
-                    core->logicalDevice.get(), vertShaderModule->shaderModuleHandle.get(),
-                    fragShaderModule->shaderModuleHandle.get(), pipelineLayout.get(),
+                    core->logicalDevice.get(), vertShader->sModule->shaderModuleHandle.get(),
+                    fragShader->sModule->shaderModuleHandle.get(), pipelineLayout.get(),
                     dynamicRenderPass.pipelineRenderingCreateInfo,
                     colorBlendConfigs, depthConfig,
                     vertexInput, pipelineCache.get()
@@ -100,11 +102,11 @@ namespace ENGINE
                 pipelineType = vk::PipelineBindPoint::eGraphics;
                 std::cout << "Graphics pipeline created\n";
                 
-            }else if(compShaderModule)
+            }else if(compShader)
             {
                 pipelineLayout = core->logicalDevice->createPipelineLayoutUnique(pipelineLayoutCI);
                 std::unique_ptr<ComputePipeline> computePipeline = std::make_unique<ENGINE::ComputePipeline>(
-                    core->logicalDevice.get(), compShaderModule->shaderModuleHandle.get(), pipelineLayout.get(), 
+                    core->logicalDevice.get(), compShader->sModule->shaderModuleHandle.get(), pipelineLayout.get(), 
                     pipelineCache.get());
                 pipeline = std::move(computePipeline->pipelineHandle);
                 pipelineType = vk::PipelineBindPoint::eCompute;
@@ -159,6 +161,17 @@ namespace ENGINE
                 }
             }           
         }
+        void ReloadShaders()
+        {
+            if (vertShader && fragShader)
+            {
+                vertShader->Reload();
+                fragShader->Reload();
+            }else if(compShader)
+            {
+                compShader->Reload();
+            }
+        }
         void ExecutePass(vk::CommandBuffer commandBuffer)
         {
  
@@ -198,8 +211,8 @@ namespace ENGINE
             TransitionImages(commandBuffer);
             commandBuffer.bindPipeline(pipelineType, pipeline.get());
             (*renderOperations)(commandBuffer);
-            
         }
+
         void Execute(vk::CommandBuffer commandBuffer)
         {
             for (int i = 0; i < tasks.size(); ++i)
@@ -244,6 +257,14 @@ namespace ENGINE
         void SetPipelineLayoutCI(vk::PipelineLayoutCreateInfo createInfo)
         {
             this->pipelineLayoutCI = createInfo;
+            if (createInfo.pPushConstantRanges != nullptr)
+            {
+                this->pushConstantRange.offset = createInfo.pPushConstantRanges->offset;
+                this->pushConstantRange.size = createInfo.pPushConstantRanges->size;
+                this->pushConstantRange.stageFlags = createInfo.pPushConstantRanges->stageFlags;
+                this->pipelineLayoutCI.setPushConstantRanges(this->pushConstantRange);
+            }
+            
         }
         void SetDepthConfig(DepthConfigs dephtConfig)
         {
@@ -254,20 +275,19 @@ namespace ENGINE
             colorBlendConfigs.push_back(blendConfig);
         }
 
-        void SetFragModule(ShaderModule* fragShaderModule)
+        void SetVertShader(Shader* shader)
         {
-            this->fragShaderModule = fragShaderModule;
+            this->vertShader = shader; 
+        }
+        void SetFragShader(Shader* shader)
+        {
+            this->fragShader = shader; 
+        }
+        void SetCompShader(Shader* shader)
+        {
+            this->compShader= shader; 
         }
 
-        void SetVertModule(ShaderModule* fragShaderModule)
-        {
-            this->vertShaderModule = fragShaderModule;
-        }
-
-        void SetCompModule(ShaderModule* fragShaderModule)
-        {
-            this->compShaderModule = fragShaderModule;
-        }
         void AddColorAttachmentInput(std::string name)
         {
             if (outColAttachmentsProxyRef->contains(name))
@@ -401,15 +421,18 @@ namespace ENGINE
         vk::UniquePipelineLayout pipelineLayout;
         vk::UniquePipelineCache pipelineCache;
         vk::PipelineLayoutCreateInfo pipelineLayoutCI;
+        vk::PushConstantRange pushConstantRange;
         vk::PipelineBindPoint pipelineType;
         DynamicRenderPass dynamicRenderPass;
         
     private:
         
         friend class RenderGraph;
-        ShaderModule* vertShaderModule = nullptr;
-        ShaderModule* fragShaderModule = nullptr;
-        ShaderModule* compShaderModule = nullptr;
+        
+        Shader* vertShader = nullptr;
+        Shader* fragShader = nullptr;
+        Shader* compShader = nullptr;
+        
         std::vector<BlendConfigs> colorBlendConfigs;
         DepthConfigs depthConfig;
         VertexInput vertexInput;
@@ -619,6 +642,19 @@ namespace ENGINE
             {
                 renderNode.second->ClearOperations();
             }
+        }
+        void RecompileShaders()
+        {
+            int result = std::system("C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\shaders\\compile.bat");
+            if (result == 0)
+            {
+                std::cout << "Shaders compiled\n";
+            }
+            else
+            {
+                assert(false &&"reload shaders failed");
+            }
+
         }
 
         void ExecuteAll(FrameResources* currentFrame)
