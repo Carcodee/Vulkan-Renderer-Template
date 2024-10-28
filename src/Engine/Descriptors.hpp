@@ -66,9 +66,9 @@ namespace ENGINE
             writes.push_back(dstWrite);
         }
         
-         void AddWriteBuffer(int binding, Buffer* buffer, vk::DescriptorType type)
+         void AddWriteBuffer(int binding, vk::DescriptorBufferInfo& descriptor, vk::DescriptorType type)
         {
-            vk::DescriptorBufferInfo& bufferInfo = bufferInfos.emplace_back(buffer->descriptor);
+            vk::DescriptorBufferInfo& bufferInfo = bufferInfos.emplace_back(descriptor);
 
             auto dstWrite = vk::WriteDescriptorSet()
             .setDstBinding(binding)
