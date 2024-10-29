@@ -16,6 +16,7 @@
 
 
 
+
 #ifndef FORWARDRENDERER_HPP
 #define FORWARDRENDERER_HPP
 
@@ -102,8 +103,8 @@ namespace Rendering
             renderNode->SetDepthAttachmentOutput("depth", depthInfo);
             renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
-            renderNode->AddNodeSampler("sampler", imageShipper.imageView.get());
-            renderNode->AddNodeStorageImg("sampler", imageShipper.imageView.get());
+            renderNode->AddSamplerResource("sampler", imageShipper.imageView.get());
+            renderNode->AddStorageResource("sampler", imageShipper.imageView.get());
             renderNode->BuildRenderGraphNode();
             
         }
@@ -122,7 +123,7 @@ namespace Rendering
                 auto* currImage = inflightQueue->currentSwapchainImageView;
                 auto* currDepthImage = core->swapchainRef->depthImagesFull.at(inflightQueue->frameIndex).imageView.get();
                 renderGraphRef->AddColorImageResource("ForwardPass", "color", currImage);
-                renderGraphRef->AddDepthImageResource("ForwardPass", "depth", currDepthImage);
+                renderGraphRef->SetDepthImageResource("ForwardPass", "depth", currDepthImage);
                 renderGraphRef->GetNode("ForwardPass")->SetFramebufferSize(windowProvider->GetWindowSize());
             });
 

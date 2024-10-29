@@ -64,7 +64,7 @@ namespace Rendering
             
             renderNode->SetCompShader(compShader.get());
             renderNode->SetPipelineLayoutCI(layoutCreateInfo);
-            renderNode->AddNodeStorageImg("storageImage", computeImageView.get());
+            renderNode->AddStorageResource("storageImage", computeImageView.get());
             renderNode->BuildRenderGraphNode();
         }
         void RecreateSwapChainResources() override

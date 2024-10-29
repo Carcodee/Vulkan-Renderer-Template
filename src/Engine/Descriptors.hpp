@@ -68,6 +68,7 @@ namespace ENGINE
         
          void AddWriteBuffer(int binding, vk::DescriptorBufferInfo& descriptor, vk::DescriptorType type)
         {
+            assert(descriptor.range != 0 && "Descriptor is not set");
             vk::DescriptorBufferInfo& bufferInfo = bufferInfos.emplace_back(descriptor);
 
             auto dstWrite = vk::WriteDescriptorSet()

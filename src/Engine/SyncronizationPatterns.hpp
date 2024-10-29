@@ -134,7 +134,7 @@ namespace ENGINE
         case B_COMPUTE_WRITE:
             bufferAccessPattern.stage = vk::PipelineStageFlagBits::eComputeShader;
             bufferAccessPattern.accessMask = vk::AccessFlagBits::eShaderWrite;
-            bufferAccessPattern.queueFamilyType = QueueFamilyTypes::GRAPHICS;
+            bufferAccessPattern.queueFamilyType = QueueFamilyTypes::COMPUTE;
             break;
         case B_TRANSFER_SRC:
             bufferAccessPattern.stage = vk::PipelineStageFlagBits::eTransfer;
@@ -178,7 +178,7 @@ namespace ENGINE
         case B_COMPUTE_WRITE:
             bufferAccessPattern.stage = vk::PipelineStageFlagBits::eComputeShader;
             bufferAccessPattern.accessMask = vk::AccessFlagBits::eShaderRead | vk::AccessFlagBits::eShaderWrite;
-            bufferAccessPattern.queueFamilyType = QueueFamilyTypes::GRAPHICS;
+            bufferAccessPattern.queueFamilyType = QueueFamilyTypes::COMPUTE;
             break;
         case B_TRANSFER_SRC:
             bufferAccessPattern.stage = vk::PipelineStageFlagBits::eTransfer;
