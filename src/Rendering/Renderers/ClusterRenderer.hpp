@@ -171,14 +171,12 @@ namespace Rendering
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(PointLight) * pointLights.size(), pointLights.data());
-            pointLightsBuff->SetupDescriptor();
             
 
             lightsMapBuff = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(ArrayIndexor) * lightsMap.size(), lightsMap.data());
-            lightsMapBuff->SetupDescriptor();
             
             
             cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
@@ -197,8 +195,8 @@ namespace Rendering
             
             cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
 
-            writerBuilder.AddWriteBuffer(0, pointLightsBuff.get(), vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(1, lightsMapBuff.get(), vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
             
             writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
 
@@ -228,7 +226,6 @@ namespace Rendering
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(camPropsBuff), &cPropsUbo);
             camPropsBuff->Map();
-            camPropsBuff->SetupDescriptor();
             
             lVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
             lFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
@@ -260,7 +257,7 @@ namespace Rendering
                                         vk::ImageLayout::eShaderReadOnlyOptimal,
                                         vk::DescriptorType::eCombinedImageSampler);
             writerBuilder.AddWriteBuffer(3,
-                                         camPropsBuff.get(),
+                                         camPropsBuff->descriptor,
                                          vk::DescriptorType::eUniformBuffer);
 
 
@@ -281,6 +278,7 @@ namespace Rendering
             lRenderNode->AddNodeSampler("colGSampler", colAttachmentView.get());
             lRenderNode->AddNodeSampler("normGSampler", normAttachmentView.get());
             lRenderNode->AddNodeSampler("depthGSampler", depthAttachmentView.get());
+            lRenderNode->DependsOn(computePassName);
             lRenderNode->BuildRenderGraphNode();
 
             
@@ -335,7 +333,6 @@ namespace Rendering
                     });
 
                 renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);
-                
                 auto lSetViewTask = new std::function<void()>([this, inflightQueue]()
                 {
                     auto* currImage = inflightQueue->currentSwapchainImageView;
