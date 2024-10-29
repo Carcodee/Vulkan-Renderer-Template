@@ -7,6 +7,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -139,11 +140,11 @@ namespace Rendering
             renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
-            renderNode->AddNodeSampler("colGSampler", imageShipperCol.imageView.get());
-            renderNode->AddNodeSampler("normGSampler", imageShipperNorm.imageView.get());
-            renderNode->AddNodeColAttachmentImg("gColor", colAttachmentView.get());
-            renderNode->AddNodeColAttachmentImg("gNorm", normAttachmentView.get());
-            renderNode->SetNodeDepthAttachmentImg("gDepth", depthAttachmentView.get());
+            renderNode->AddSamplerResource("colGSampler", imageShipperCol.imageView.get());
+            renderNode->AddSamplerResource("normGSampler", imageShipperNorm.imageView.get());
+            renderNode->AddColorImageResource("gColor", colAttachmentView.get());
+            renderNode->AddColorImageResource("gNorm", normAttachmentView.get());
+            renderNode->AddColorImageResource("gDepth", depthAttachmentView.get());
             renderNode->BuildRenderGraphNode();
             
             //Cull pass//
@@ -275,9 +276,9 @@ namespace Rendering
             lRenderNode->SetDepthAttachmentOutput("lDepth", depthInfo);
             lRenderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             lRenderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
-            lRenderNode->AddNodeSampler("colGSampler", colAttachmentView.get());
-            lRenderNode->AddNodeSampler("normGSampler", normAttachmentView.get());
-            lRenderNode->AddNodeSampler("depthGSampler", depthAttachmentView.get());
+            lRenderNode->AddSamplerResource("colGSampler", colAttachmentView.get());
+            lRenderNode->AddSamplerResource("normGSampler", normAttachmentView.get());
+            lRenderNode->AddSamplerResource("depthGSampler", depthAttachmentView.get());
             lRenderNode->DependsOn(computePassName);
             lRenderNode->BuildRenderGraphNode();
 
@@ -338,7 +339,7 @@ namespace Rendering
                     auto* currImage = inflightQueue->currentSwapchainImageView;
                     auto& currDepthImage = core->swapchainRef->depthImagesFull.at(inflightQueue->frameIndex);
                     renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
-                    renderGraphRef->AddDepthImageResource(lightPassName, "lDepth", currDepthImage.imageView.get());
+                    renderGraphRef->SetDepthImageResource(lightPassName, "lDepth", currDepthImage.imageView.get());
                     renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
                     cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
                     cPropsUbo.invView = glm::inverse(camera.matrices.view);
