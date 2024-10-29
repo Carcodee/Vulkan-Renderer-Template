@@ -346,9 +346,9 @@ namespace ENGINE
         //We change the image view if the name already exist when using resources
         void AddColorImageResource(std::string name, ImageView* imageView)
         {
+            assert(imageView && "Name does not exist or image view is null");
             if (!imagesAttachment.contains(name))
             {
-                assert(imageView && "Name does not exist or image view is null");
                 imagesAttachment.try_emplace(name, imageView);
             }
             else
@@ -360,9 +360,9 @@ namespace ENGINE
 
         void AddSamplerResource(std::string name, ImageView* imageView)
         {
+            assert(imageView && "Name does not exist or image view is null");
             if (!sampledImages.contains(name))
             {
-                assert(imageView && "Name does not exist or image view is null");
                 sampledImages.try_emplace(name, imageView);
             }
             else
@@ -374,9 +374,9 @@ namespace ENGINE
 
         void AddStorageResource(std::string name, ImageView* imageView)
         {
+            assert(imageView && "Name does not exist or image view is null");
             if (!storageImages.contains(name))
             {
-                assert(imageView != nullptr && "Name does not exist or image view is null");
                 storageImages.try_emplace(name, imageView);
             }
             else
@@ -549,7 +549,7 @@ namespace ENGINE
                 imagesProxy.try_emplace(name, imageView);
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->SetDepthImageResource(imageView);
+                    renderNodes.at(passName)->SetDepthImageResource(name ,imageView);
                 }
                 else
                 {
@@ -560,7 +560,7 @@ namespace ENGINE
                 imagesProxy.at(name) = imageView;
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->SetDepthImageResource(imageView);
+                    renderNodes.at(passName)->SetDepthImageResource(name ,imageView);
                 }else
                 {
                     std::cout << "Renderpass: " << passName << " does not exist, saving the image anyways. \n";
