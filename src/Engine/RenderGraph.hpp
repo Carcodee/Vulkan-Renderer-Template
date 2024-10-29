@@ -337,9 +337,10 @@ namespace ENGINE
             }
         }
         
-        void SetDepthImageResource(ImageView* imageView)
+        void SetDepthImageResource(std::string name, ImageView* imageView)
         {
             depthImage = imageView;
+            AddImageToProxy(name, imageView);
         }
 
         //We change the image view if the name already exist when using resources
