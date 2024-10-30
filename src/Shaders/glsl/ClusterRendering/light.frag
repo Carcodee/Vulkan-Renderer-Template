@@ -38,6 +38,9 @@ vec3 EvalPointLight(PointLight light, vec3 col, vec3 pos, out bool evaluated){
     vec3 finalCol = col * light.col * (1/(1.0 + pow(d, 2.0))) * 2.0;
     return finalCol;
 }
+float inverseLerp(float a, float b, float value) {
+    return (value - a) / (b - a);
+}
 
 void main() {
 
@@ -47,27 +50,33 @@ void main() {
     vec4 norm = texture(gNormals, textCoord);
 
     
-    vec3 pos = GetPositionFromDepth(cProps.invView, cProps.invProj, depth, fragCoord);
+    vec3 pos = GetPositionFromDepth(cProps.invProj, cProps.invView, depth, fragCoord);
     
-    vec3 lightPos = vec3(5.0, 5.0, 5.0);
-    vec3 lightDir = normalize(lightPos - pos);
-    vec3 finalCol = max(0.01,dot(lightDir, norm.xyz)) * col.xyz * 3.0f + vec3(0.01, 0.01, 0.01);
+    vec3 lightPos = vec3(0.0, 0.1, 0.0);
+    vec3 lightDir = normalize(lightPos - col.xyz);
+    vec3 finalCol = max(0.01,dot(lightDir, norm.xyz)) * vec3(0.05, 0.01, 0.0) + vec3(0.01, 0.01, 0.01);
     
     
     int evalCounter = 0;
     for (int i = 0; i< 10 ; i++) {
         bool addValue = false;
-        vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, pos, addValue);
-        if (addValue){
-            evalCounter++;
-         //   finalCol += (pointLightCol);
-        }
+        //vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, col.xyz, addValue);
+        //if (addValue){
+            //evalCounter++;
+            //finalCol += (pointLightCol);
+        //}
+        
+        
+    }
+    float dis = distance(col.xyz, vec3(0.0, 0.0, 0.0));
+    if(dis < 0.4){
+        //finalCol = vec3(1.0);
     }
     if(evalCounter > 0){
         //finalCol /= evalCounter;
     }
 
 
-    outColor = vec4(vec3(depth), 1.0);
+    outColor = vec4(finalCol, 1.0);
 
 }

@@ -7,6 +7,7 @@ layout (location = 3) in vec2 uv;
 
 layout (location = 0) out vec2 textCoord;
 layout (location = 1) out vec3 norm;
+layout (location = 2) out vec4 fragPos;
 
 layout(push_constant)uniform pushConstants{
     mat4 model;
@@ -15,6 +16,7 @@ layout(push_constant)uniform pushConstants{
 
 void main() {
     gl_Position = pc.projView * pc.model * vec4(pos, 1.0f);
+    fragPos = pc.model * vec4(pos, 1.0f);
     norm = normal;
     textCoord = uv;
 }

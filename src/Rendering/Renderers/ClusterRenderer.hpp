@@ -158,7 +158,7 @@ namespace Rendering
             pointLights.reserve(10);
             for (int i = 0; i < 10; ++i)
             {
-                std::uniform_real_distribution<> distribution(2.0f, 10.0f);
+                std::uniform_real_distribution<> distribution(0.0f, 2.0f);
                 float radius = distribution(gen);
 
                 std::uniform_real_distribution<> distributionPos(0.0f, 5.0f);
