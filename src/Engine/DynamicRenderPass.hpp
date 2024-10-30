@@ -13,7 +13,7 @@ namespace ENGINE
     struct AttachmentInfo
     {
         vk::RenderingAttachmentInfo attachmentInfo;
-        vk::Format format;
+        vk::Format format = vk::Format::eUndefined;
     };
 
     static AttachmentInfo GetColorAttachmentInfo(glm::vec4 clearCol = glm::vec4(0.0f, 0.1f, 0.1f, 1.0f),
@@ -57,11 +57,12 @@ namespace ENGINE
     public:
         void SetPipelineRenderingInfo(uint32_t colorAttachmentCount,
                           std::vector<vk::Format> colorFormats,
-                          vk::Format depthFormat = vk::Format::eD32Sfloat)
+                          vk::Format depthFormat = vk::Format::eUndefined)
         {
             if (colorFormats.empty())
             {
-                colorFormats.push_back(g_32bFormat);
+                std::cout<< "Warning (Dynamic Render Pass): no color formats were set\n";
+                colorFormats.push_back(vk::Format::eUndefined);
             }
             this->colorFormats = colorFormats;
             this->depthFormat = depthFormat;

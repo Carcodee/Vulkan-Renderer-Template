@@ -443,7 +443,7 @@ namespace ENGINE
         Shader* compShader = nullptr;
         
         std::vector<BlendConfigs> colorBlendConfigs;
-        DepthConfigs depthConfig;
+        DepthConfigs depthConfig = D_NONE;
         VertexInput vertexInput;
         glm::uvec2 frameBufferSize;
         

@@ -162,8 +162,11 @@ namespace ENGINE
                                 .setVertexAttributeDescriptionCount(static_cast<uint32_t>(vertexInput.inputDescription.size()))
                                 .setPVertexAttributeDescriptions(vertexInput.inputDescription.data());
 
-            
-            auto depthStencilStateCreateInfo = GetDepthStencil(depthConfigs);
+            vk::PipelineDepthStencilStateCreateInfo depthStencilStateCreateInfo;
+            if (depthConfigs != D_NONE)
+            {
+                 depthStencilStateCreateInfo = GetDepthStencil(depthConfigs);
+            }
 
             std::vector<vk::PipelineColorBlendAttachmentState> blendStates;
             for (auto blendConfig : blendConfigs)
