@@ -9,6 +9,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -167,8 +168,14 @@ namespace Rendering
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
                 
-                float intensity = 1.0f;
-                pointLights.emplace_back(PointLight{pos, col, radius, intensity});
+                std::uniform_real_distribution<> distributionIntensity(3.0f, 9.0f);
+                float intensity = distributionIntensity(gen);
+                
+                std::uniform_real_distribution<> distributionAttenuation(0.0f, 5.0f);
+                float lAttenuation = distributionAttenuation(gen);
+                float qAttenuation = distributionAttenuation(gen);
+                
+                pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, qAttenuation});
             }
             for (int i = 0; i < tileSize * tileSize; ++i)
             {
@@ -285,9 +292,7 @@ namespace Rendering
             lRenderNode->SetPipelineLayoutCI(lLayoutCreateInfo);
             lRenderNode->SetVertexInput(lVertexInput);
             lRenderNode->AddColorAttachmentOutput("lColor", lColInfo);
-            lRenderNode->SetDepthAttachmentOutput("lDepth", depthInfo);
             lRenderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
-            lRenderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
             lRenderNode->AddSamplerResource("colGSampler", colAttachmentView.get());
             lRenderNode->AddSamplerResource("normGSampler", normAttachmentView.get());
             lRenderNode->AddSamplerResource("depthGSampler", depthAttachmentView.get());
@@ -349,7 +354,6 @@ namespace Rendering
                     auto* currImage = inflightQueue->currentSwapchainImageView;
                     auto& currDepthImage = core->swapchainRef->depthImagesFull.at(inflightQueue->frameIndex);
                     renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
-                    renderGraphRef->SetDepthImageResource(lightPassName, "lDepth", currDepthImage.imageView.get());
                     renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
                     cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
                     cPropsUbo.invView = glm::inverse(camera.matrices.view);
@@ -447,7 +451,7 @@ namespace Rendering
         std::string lightPassName = "light";
 
         //gbuff
-        Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
+        Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FREE};
         Model model{};
         ForwardPc pc{};
 

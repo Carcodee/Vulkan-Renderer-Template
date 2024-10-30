@@ -32,10 +32,13 @@ bool SDF_Sphere(float radius, vec3 spherePos, vec3 pos, out float d){
     return (d < radius);
 }
 
-vec3 EvalPointLight(PointLight light, vec3 col, vec3 pos, out bool evaluated){
+vec3 EvalPointLight(PointLight light, vec3 col, vec3 pos, vec3 normal, out bool evaluated){
     float d;
     evaluated = SDF_Sphere(light.radius, light.pos, pos, d);
-    vec3 finalCol = col * light.col * (1.0/(1.0 + pow(d, 2.0))) * light.intensity;
+    vec3 lightDir = light.pos - pos;
+    float diff = max(0.01, dot(lightDir, normal));
+    float attenuation =  1.0/(1.0 + light.lAttenuation * d + light.qAttenuation * pow(d, 2.0));
+    vec3 finalCol = col* diff * light.col * attenuation * light.intensity;
     return finalCol;
 }
 float inverseLerp(float a, float b, float value) {
@@ -48,28 +51,34 @@ void main() {
     float depth = texture(gDepth, textCoord).r;
     vec4 col = texture(gCol, textCoord);
     vec4 norm = texture(gNormals, textCoord);
+    if(norm == vec4(0.0)){
+
+        discard;
+    }
 
     
-    //vec3 pos = GetPositionFromDepth(cProps.invProj, cProps.invView, depth, fragCoord);
+    vec3 pos = GetPositionFromDepth(cProps.invProj, cProps.invView, depth, fragCoord);
     
-    vec3 lightPos = vec3(0.0, 0.1, 0.0);
-    vec3 lightDir = normalize(lightPos - col.xyz);
-    vec3 finalCol = dot(lightDir, norm.xyz) * vec3(0.0, 0.01, 0.0) + vec3(0.01, 0.01, 0.01);
+    vec3 lightPos = vec3(0.0, 3.0, 0.0);
+    vec3 lightDir = normalize(lightPos - pos);
+    vec3 lightCol = vec3(0.0, 0.1, 0.1);
+    vec3 ambientCol = vec3(0.0, 0.0, 0.0);
+    vec3 finalCol = vec3(1.0f) * dot(lightDir, norm.xyz) * lightCol + ambientCol;
     
     int evalCounter = 0;
     for (int i = 0; i< 100 ; i++) {
         bool addValue = false;
-        vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, col.xyz, addValue);
+        //vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, pos, norm.xyz, addValue);
         if (addValue){
             evalCounter++;
-            finalCol += (pointLightCol);
+//            finalCol += (pointLightCol);
         }
-        
         
     }
     if(evalCounter > 0){
-        finalCol /= evalCounter;
+//        finalCol /= evalCounter;
     }
-    outColor = vec4(finalCol, 1.0);
+
+    outColor = vec4(pos, 1.0);
 
 }

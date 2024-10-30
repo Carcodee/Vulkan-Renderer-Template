@@ -8,6 +8,8 @@ struct PointLight{
     vec3 col;
     float radius;
     float intensity;
+    float lAttenuation;
+    float qAttenuation;
 };
 
 struct DirLight{

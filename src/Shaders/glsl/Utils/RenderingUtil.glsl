@@ -10,6 +10,7 @@ vec3 GetPositionFromDepth(mat4 invProj, mat4 invView, float depth, uvec2 screenP
     vec4 viewPos = invProj * clipSpacePos;
     viewPos = viewPos / viewPos.w;
     vec4 worldPos = invView * viewPos;
+    
     return vec3(worldPos.xyz);
 }
 

@@ -17,6 +17,8 @@ struct PointLight
     glm::vec3 col;
     float radius;
     float intensity;
+    float lAttenuation;
+    float qAttenuation;
 };
 
 
