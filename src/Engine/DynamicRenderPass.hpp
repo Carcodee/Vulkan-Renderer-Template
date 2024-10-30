@@ -16,8 +16,8 @@ namespace ENGINE
         vk::Format format;
     };
 
-    static AttachmentInfo GetColorAttachmentInfo(glm::vec4 clearCol = glm::vec4(0.0f, 0.1f, 0.1f, 0.1f),
-                                                 vk::Format format = vk::Format::eB8G8R8A8Srgb,
+    static AttachmentInfo GetColorAttachmentInfo(glm::vec4 clearCol = glm::vec4(0.0f, 0.1f, 0.1f, 1.0f),
+                                                 vk::Format format = g_32bFormat,
                                                  vk::AttachmentLoadOp loadOp = vk::AttachmentLoadOp::eClear,
                                                  vk::AttachmentStoreOp storeOp = vk::AttachmentStoreOp::eStore)
     {
@@ -61,7 +61,7 @@ namespace ENGINE
         {
             if (colorFormats.empty())
             {
-                colorFormats.push_back(vk::Format::eB8G8R8A8Srgb);
+                colorFormats.push_back(g_32bFormat);
             }
             this->colorFormats = colorFormats;
             this->depthFormat = depthFormat;

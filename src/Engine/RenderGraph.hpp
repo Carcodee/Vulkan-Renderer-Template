@@ -479,7 +479,6 @@ namespace ENGINE
         std::unordered_map<std::string, AttachmentInfo> outDepthAttachmentProxy;
         
         SamplerPool samplerPool;
-        vk::Format storageImageFormat = vk::Format::eR32G32B32A32Sfloat;
         
         Core* core;
         RenderGraph(Core* core)

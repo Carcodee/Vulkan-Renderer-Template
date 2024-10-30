@@ -8,6 +8,7 @@
 
 
 
+
 // Created by carlo on 2024-10-07.
 //
 
@@ -89,7 +90,8 @@ namespace Rendering
             
             ENGINE::VertexInput vertexInput= M_Vertex3D::GetVertexInput();
 
-            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo();
+            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo(
+                glm::vec4(0.0f, 0.1f, 0.1f, 1.0f), core->swapchainRef->GetFormat());
             ENGINE::AttachmentInfo depthInfo = ENGINE::GetDepthAttachmentInfo();
             forwardPassName = "ForwardPass";
             auto renderNode = renderGraphRef->AddPass(forwardPassName);

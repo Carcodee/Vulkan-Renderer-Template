@@ -24,6 +24,10 @@ namespace ENGINE
         }
         return usageFlags;
     }
+    
+    static const vk::Format g_32bFormat = vk::Format::eR32G32B32A32Sfloat;
+    static const vk::Format g_16bFormat = vk::Format::eR16G16B16A16Sfloat;
+    
     static const vk::ImageUsageFlags colorImageUsage = vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
     static const vk::ImageUsageFlags depthImageUsage = vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled;
 

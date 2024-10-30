@@ -25,7 +25,7 @@ namespace Rendering
             auto physicalDevice = core->physicalDevice;
 
             auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
-                                                         renderGraphRef->storageImageFormat,
+                                                         ENGINE::g_32bFormat,
                                                          vk::ImageUsageFlagBits::eStorage);
             
             computeImage = std::make_unique<ENGINE::Image>(physicalDevice, logicalDevice, imageInfo);
@@ -33,7 +33,7 @@ namespace Rendering
                                                                    glm::vec3(windowProvider->GetWindowSize().x,
                                                                              windowProvider->GetWindowSize().y, 1), 1,
                                                                    1,
-                                                                   renderGraphRef->storageImageFormat,
+                                                                   ENGINE::g_32bFormat,
                                                                    vk::ImageLayout::eUndefined);
             computeImageView = std::make_unique<ENGINE::ImageView>(logicalDevice, computeImageData.get(), 0, 1, 0, 1);
             
