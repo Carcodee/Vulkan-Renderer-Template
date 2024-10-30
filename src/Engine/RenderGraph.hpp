@@ -154,11 +154,12 @@ namespace ENGINE
                 default:
                     assert(false && "pipeline type is unknown");
                 }
-                if (IsImageTransitionNeeded(sampler.second->imageData->currentLayout, dstPattern))
-                {
-                    TransitionImage(sampler.second->imageData, dstPattern, sampler.second->GetSubresourceRange(),
-                                    commandBuffer);
-                }
+                //TODO: Better transition for sampler images
+                // if (IsImageTransitionNeeded(sampler.second->imageData->currentLayout, dstPattern))
+                // {
+                // }
+                TransitionImage(sampler.second->imageData, dstPattern, sampler.second->GetSubresourceRange(),
+                                commandBuffer);
             }           
         }
         void ReloadShaders()
@@ -192,6 +193,14 @@ namespace ENGINE
                 colAttachments[index].attachmentInfo.setImageView(imagePair.second->imageView.get());
                 attachmentInfos.push_back(colAttachments[index].attachmentInfo);
                 index++;
+            }
+            if (depthImage)
+            {
+                if (depthImage->imageData->currentLayout != DEPTH_ATTACHMENT)
+                {
+                    TransitionImage(depthImage->imageData, DEPTH_ATTACHMENT, depthImage->GetSubresourceRange(),
+                                    commandBuffer);
+                }
             }
 
             TransitionImages(commandBuffer);
