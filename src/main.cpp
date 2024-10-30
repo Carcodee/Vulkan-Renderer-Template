@@ -105,6 +105,7 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->ReloadShaders(); 
                 }
 
+                
                 inFlightQueue->BeginFrame();
 
                 auto& currFrame = inFlightQueue->frameResources[inFlightQueue->frameIndex];

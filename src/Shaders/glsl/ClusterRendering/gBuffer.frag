@@ -12,4 +12,5 @@ layout (set = 0, binding = 1) uniform sampler2D normal;
 void main() {
     colors = texture(color, textCoord);
     normals = vec4(norm, 1.0f);
+    
 }

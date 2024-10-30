@@ -157,12 +157,18 @@ namespace ENGINE
                        .setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
                        .setApiVersion(VK_API_VERSION_1_3);
 
+        // std::vector validationFeaturesEnable = {vk::ValidationFeatureEnableEXT::eDebugPrintf};
+        // auto valFeaturesPNext = vk::ValidationFeaturesEXT()
+        // .setEnabledValidationFeatureCount((uint32_t)validationFeaturesEnable.size())
+        // .setPEnabledValidationFeatures(validationFeaturesEnable.data());
+        //
         auto instanceCreateInfo = vk::InstanceCreateInfo()
                                   .setPApplicationInfo(&appInfo)
                                   .setEnabledExtensionCount(uint32_t(instanceExtensions.size()))
                                   .setPpEnabledExtensionNames(instanceExtensions.data())
                                   .setEnabledLayerCount(uint32_t(validationLayers.size()))
                                   .setPpEnabledLayerNames(validationLayers.data());
+                                  // .setPNext(&valFeaturesPNext);
         
 
         return vk::createInstanceUnique(instanceCreateInfo);

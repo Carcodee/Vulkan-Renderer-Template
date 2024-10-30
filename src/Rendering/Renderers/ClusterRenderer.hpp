@@ -8,6 +8,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -26,6 +27,9 @@ namespace Rendering
             this->descriptorAllocatorRef = descriptorAllocator;
             auto logicalDevice = core->logicalDevice.get();
             auto physicalDevice = core->physicalDevice;
+            camera.SetPerspective(
+                45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
+                0.1f, 512.0f);
             
             auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          core->swapchainRef->GetFormat(),
@@ -54,7 +58,6 @@ namespace Rendering
                                                                     core->swapchainRef->GetFormat(),
                                                                     vk::ImageLayout::eUndefined);
             normAttachmentView = std::make_unique<ENGINE::ImageView>(logicalDevice, normAttachmentData.get(), 0, 1, 0, 1);
-            
             depthAttachment = std::make_unique<ENGINE::Image>(physicalDevice, logicalDevice, depthImageInfo);
             depthAttachmentData = std::make_unique<ENGINE::ImageData>(depthAttachment->imageHandle.get(),
                                                                     vk::ImageType::e2D,
@@ -125,7 +128,7 @@ namespace Rendering
             writerBuilder.UpdateSet(core->logicalDevice.get(), gDstSet.get());
             
             ENGINE::VertexInput vertexInput= M_Vertex3D::GetVertexInput();
-            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo();
+            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f));
             ENGINE::AttachmentInfo depthInfo = ENGINE::GetDepthAttachmentInfo();
             auto renderNode = renderGraphRef->AddPass(gBufferPassName);
             
@@ -144,7 +147,7 @@ namespace Rendering
             renderNode->AddSamplerResource("normGSampler", imageShipperNorm.imageView.get());
             renderNode->AddColorImageResource("gColor", colAttachmentView.get());
             renderNode->AddColorImageResource("gNorm", normAttachmentView.get());
-            renderNode->AddColorImageResource("gDepth", depthAttachmentView.get());
+            renderNode->SetDepthImageResource("gDepth", depthAttachmentView.get());
             renderNode->BuildRenderGraphNode();
             
             //Cull pass//
@@ -152,14 +155,19 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            std::uniform_real_distribution<> distribution(2.0f, 10.0f);
             pointLights.reserve(10);
             for (int i = 0; i < 10; ++i)
             {
+                std::uniform_real_distribution<> distribution(2.0f, 10.0f);
                 float radius = distribution(gen);
-                glm::vec3 pos = glm::vec3(radius);
-                glm::vec3 col = glm::vec3(radius);
-                float intensity = radius;
+
+                std::uniform_real_distribution<> distributionPos(0.0f, 5.0f);
+                glm::vec3 pos = glm::vec3(1.0f);
+                
+                std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
+                glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
+                
+                float intensity = distributionCol(gen);
                 pointLights.emplace_back(PointLight{pos, col, radius, intensity});
             }
             for (int i = 0; i < tileSize * tileSize; ++i)
@@ -225,7 +233,7 @@ namespace Rendering
             camPropsBuff = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eUniformBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(camPropsBuff), &cPropsUbo);
+                sizeof(CPropsUbo), &cPropsUbo);
             camPropsBuff->Map();
             
             lVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
@@ -243,7 +251,10 @@ namespace Rendering
           
             lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
 
-            ENGINE::Sampler* sampler = renderGraphRef->samplerPool.GetSampler(vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
+            ENGINE::Sampler* sampler = renderGraphRef->samplerPool.AddSampler(logicalDevice, vk::SamplerAddressMode::eRepeat, vk::Filter::eNearest, vk::SamplerMipmapMode::eNearest);
+            ENGINE::Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
+                logicalDevice, vk::SamplerAddressMode::eClampToEdge, vk::Filter::eNearest,
+                vk::SamplerMipmapMode::eNearest);
             
             writerBuilder.AddWriteImage(0, colAttachmentView.get(),
                                         sampler->samplerHandle.get(),
@@ -254,14 +265,13 @@ namespace Rendering
                                         vk::ImageLayout::eShaderReadOnlyOptimal,
                                         vk::DescriptorType::eCombinedImageSampler);
             writerBuilder.AddWriteImage(2, depthAttachmentView.get(),
-                                        sampler->samplerHandle.get(),
+                                        depthSampler->samplerHandle.get(),
                                         vk::ImageLayout::eShaderReadOnlyOptimal,
                                         vk::DescriptorType::eCombinedImageSampler);
-            writerBuilder.AddWriteBuffer(3,
-                                         camPropsBuff->descriptor,
-                                         vk::DescriptorType::eUniformBuffer);
-
-
+            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor,vk::DescriptorType::eUniformBuffer);
+            writerBuilder.AddWriteBuffer(4, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(5, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            
             writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
             
             ENGINE::VertexInput lVertexInput= Vertex2D::GetVertexInput();
@@ -304,9 +314,7 @@ namespace Rendering
                     
                     for (int i = 0; i < model.meshCount; ++i)
                     {
-                        camera.SetPerspective(
-                            45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
-                            0.1f, 512.0f);
+
                         pc.projView = camera.matrices.perspective * camera.matrices.view;
                         pc.model = model.modelsMat[i];
                         commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
@@ -343,7 +351,7 @@ namespace Rendering
                     renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
                     cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
                     cPropsUbo.invView = glm::inverse(camera.matrices.view);
-                    memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo)); 
+                    memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));  
                     
                 });
                 auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -412,10 +420,12 @@ namespace Rendering
         std::unique_ptr<ENGINE::Image> normAttachment;
         std::unique_ptr<ENGINE::ImageData> normAttachmentData;
         std::unique_ptr<ENGINE::ImageView> normAttachmentView;
-
+       
         std::unique_ptr<ENGINE::Image> depthAttachment;
         std::unique_ptr<ENGINE::ImageData> depthAttachmentData;
         std::unique_ptr<ENGINE::ImageView> depthAttachmentView;
+
+        
         
         std::unique_ptr<ENGINE::Buffer> vertexBuffer;
         std::unique_ptr<ENGINE::Buffer> indexBuffer;

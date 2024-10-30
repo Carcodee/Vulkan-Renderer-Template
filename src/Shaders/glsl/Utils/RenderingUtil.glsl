@@ -1,19 +1,16 @@
 #ifndef R_UTIL 
 #define R_UTIL 
 
-vec3 GetPositionFromDepth(mat4 invView, mat4 invProj, float depth, uvec2 fragPos){
-    vec4 ndcCoords = vec4(1.0f);
-    ndcCoords.x = 2 * fragPos.x - 1.0f;
-    ndcCoords.y = 2 * fragPos.y - 1.0f;
-    ndcCoords.z = 2 * depth - 1.0f;
+vec3 GetPositionFromDepth(mat4 invView, mat4 invProj, float depth, uvec2 screenPos){
+    vec4 clipSpacePos = vec4(1.0f);
+    clipSpacePos.x = 2 * screenPos.x - 1.0f;
+    clipSpacePos.y = 2 * screenPos.y - 1.0f;
+    clipSpacePos.z = 2 * depth - 1.0f;
     
-    ndcCoords = invProj * ndcCoords;
-    ndcCoords = ndcCoords / ndcCoords.w;
-    
-    //world space
-    ndcCoords = invView * ndcCoords;
-    
-    return ndcCoords.xyz;
+    vec4 viewPos = invProj * clipSpacePos;
+    viewPos = viewPos / viewPos.w;
+    vec4 worldPos = invView * viewPos;
+    return vec3(worldPos.xyz);
 }
 
 #endif 

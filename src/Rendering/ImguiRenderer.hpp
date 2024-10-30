@@ -70,7 +70,7 @@ namespace Rendering
             ImGui::ShowDemoWindow();
             
             ImGui::Render();
-            ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
+            ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f),core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
             attachmentInfo.attachmentInfo.setImageView(imageView);
             
             std::vector<vk::RenderingAttachmentInfo> attachmentInfos = {attachmentInfo.attachmentInfo};
