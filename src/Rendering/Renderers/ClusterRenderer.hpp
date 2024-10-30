@@ -32,7 +32,7 @@ namespace Rendering
                 0.1f, 512.0f);
             
             auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
-                                                         core->swapchainRef->GetFormat(),
+                                                         vk::Format::eR32G32B32A32Sfloat,
                                                          vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
             auto depthImageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          core->swapchainRef->depthFormat,
@@ -45,7 +45,7 @@ namespace Rendering
                                                                     glm::vec3(windowProvider->GetWindowSize().x,
                                                                               windowProvider->GetWindowSize().y, 1), 1,
                                                                     1,
-                                                                    core->swapchainRef->GetFormat(),
+                                                                    vk::Format::eR32G32B32A32Sfloat,
                                                                     vk::ImageLayout::eUndefined);
             colAttachmentView = std::make_unique<ENGINE::ImageView>(logicalDevice, colAttachmentData.get(), 0, 1, 0, 1);
             
@@ -55,7 +55,7 @@ namespace Rendering
                                                                     glm::vec3(windowProvider->GetWindowSize().x,
                                                                               windowProvider->GetWindowSize().y, 1), 1,
                                                                     1,
-                                                                    core->swapchainRef->GetFormat(),
+                                                                    vk::Format::eR32G32B32A32Sfloat,
                                                                     vk::ImageLayout::eUndefined);
             normAttachmentView = std::make_unique<ENGINE::ImageView>(logicalDevice, normAttachmentData.get(), 0, 1, 0, 1);
             depthAttachment = std::make_unique<ENGINE::Image>(physicalDevice, logicalDevice, depthImageInfo);
@@ -72,11 +72,11 @@ namespace Rendering
 
             imageShipperCol.SetDataFromPath(
                 "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
-            imageShipperCol.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(),
+            imageShipperCol.BuildImage(core, 1, 1, core->swapchainRef->GetFormat(),
                                        ENGINE::GRAPHICS_READ);
             imageShipperNorm.SetDataFromPath(
                 "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
-            imageShipperNorm.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(),
+            imageShipperNorm.BuildImage(core, 1, 1, core->swapchainRef->GetFormat(),
                                         ENGINE::GRAPHICS_READ);
             ModelLoader::GetInstance()->LoadGLTF(
                 "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\3d_pbr_curved_sofa\\scene.gltf",
@@ -128,7 +128,7 @@ namespace Rendering
             writerBuilder.UpdateSet(core->logicalDevice.get(), gDstSet.get());
             
             ENGINE::VertexInput vertexInput= M_Vertex3D::GetVertexInput();
-            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f));
+            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f), vk::Format::eR32G32B32A32Sfloat);
             ENGINE::AttachmentInfo depthInfo = ENGINE::GetDepthAttachmentInfo();
             auto renderNode = renderGraphRef->AddPass(gBufferPassName);
             
@@ -155,19 +155,19 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(10);
-            for (int i = 0; i < 10; ++i)
+            pointLights.reserve(1000);
+            for (int i = 0; i < 1000; ++i)
             {
                 std::uniform_real_distribution<> distribution(0.0f, 2.0f);
                 float radius = distribution(gen);
 
-                std::uniform_real_distribution<> distributionPos(0.0f, 5.0f);
-                glm::vec3 pos = glm::vec3(1.0f);
+                std::uniform_real_distribution<> distributionPos(-3.0f, 3.0f);
+                glm::vec3 pos = glm::vec3(distributionPos(gen), 0.2f, distributionPos(gen));
                 
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
                 
-                float intensity = distributionCol(gen);
+                float intensity = 1.0f;
                 pointLights.emplace_back(PointLight{pos, col, radius, intensity});
             }
             for (int i = 0; i < tileSize * tileSize; ++i)
@@ -274,6 +274,8 @@ namespace Rendering
             
             writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
             
+            ENGINE::AttachmentInfo lColInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f), core->swapchainRef->GetFormat());
+            
             ENGINE::VertexInput lVertexInput= Vertex2D::GetVertexInput();
             
             auto lRenderNode = renderGraphRef->AddPass(lightPassName);
@@ -282,7 +284,7 @@ namespace Rendering
             lRenderNode->SetFramebufferSize(windowProvider->GetWindowSize());
             lRenderNode->SetPipelineLayoutCI(lLayoutCreateInfo);
             lRenderNode->SetVertexInput(lVertexInput);
-            lRenderNode->AddColorAttachmentOutput("lColor", colInfo);
+            lRenderNode->AddColorAttachmentOutput("lColor", lColInfo);
             lRenderNode->SetDepthAttachmentOutput("lDepth", depthInfo);
             lRenderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             lRenderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
