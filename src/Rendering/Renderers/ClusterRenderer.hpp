@@ -28,10 +28,10 @@ namespace Rendering
             this->descriptorAllocatorRef = descriptorAllocator;
             auto logicalDevice = core->logicalDevice.get();
             auto physicalDevice = core->physicalDevice;
-            camera.SetPerspective(
-                45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
+            camera.SetPerspective( 45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
                 0.1f, 512.0f);
-            
+           
+            camera.SetLookAt(glm::vec3(0.0f));
             auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          vk::Format::eR32G32B32A32Sfloat,
                                                          vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
@@ -451,7 +451,7 @@ namespace Rendering
         std::string lightPassName = "light";
 
         //gbuff
-        Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FREE};
+        Camera camera = {glm::vec3(5.0f), Camera::CameraMode::E_FREE};
         Model model{};
         ForwardPc pc{};
 

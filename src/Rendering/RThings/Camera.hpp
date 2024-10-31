@@ -31,6 +31,7 @@ namespace Rendering
 		Camera(glm::vec3 camPos = glm::vec3(0.0f), CameraMode mode = E_FREE, glm::uvec2 aspect = glm::uvec2(800, 600),
 		       glm::vec3 lookAt = glm::vec3(0.0f))
 		{
+			SetLookAt(lookAt);
 			SetPerspective(45.0f, (float)aspect.x/ (float)aspect.y, 0.1f, 512.0f);
 			this->position = camPos;
 			this->currentMode = mode;

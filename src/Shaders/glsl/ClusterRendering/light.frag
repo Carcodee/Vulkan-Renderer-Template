@@ -47,7 +47,8 @@ float inverseLerp(float a, float b, float value) {
 
 void main() {
 
-    uvec2 fragCoord = uvec2(textCoord.x, textCoord.y);
+    
+    vec2 fragCoord = vec2(textCoord.x , textCoord.y);
     float depth = texture(gDepth, textCoord).r;
     vec4 col = texture(gCol, textCoord);
     vec4 norm = texture(gNormals, textCoord);
@@ -56,29 +57,27 @@ void main() {
         discard;
     }
 
-    
     vec3 pos = GetPositionFromDepth(cProps.invProj, cProps.invView, depth, fragCoord);
     
-    vec3 lightPos = vec3(0.0, 3.0, 0.0);
+    vec3 lightPos = vec3(0.0, 4.0, 0.0);
     vec3 lightDir = normalize(lightPos - pos);
-    vec3 lightCol = vec3(0.0, 0.1, 0.1);
-    vec3 ambientCol = vec3(0.0, 0.0, 0.0);
-    vec3 finalCol = vec3(1.0f) * dot(lightDir, norm.xyz) * lightCol + ambientCol;
+    vec3 lightCol = vec3(1.0, 1.0, 1.0);
+    vec3 ambientCol = vec3(0.0, 0.1, 0.1);
+    vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 3.0f + ambientCol;
     
     int evalCounter = 0;
     for (int i = 0; i< 100 ; i++) {
         bool addValue = false;
-        //vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, pos, norm.xyz, addValue);
+        vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, pos, norm.xyz, addValue);
         if (addValue){
             evalCounter++;
-//            finalCol += (pointLightCol);
+            finalCol += (pointLightCol);
         }
-        
     }
     if(evalCounter > 0){
-//        finalCol /= evalCounter;
+        finalCol /= evalCounter;
     }
 
-    outColor = vec4(pos, 1.0);
+    outColor = vec4(finalCol, 1.0);
 
 }
