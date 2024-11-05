@@ -35,8 +35,7 @@ void main() {
     
     vec2 tileSize = vec2(pc.sWidth / TILESIZE, pc.sHeight / TILESIZE);
 
-//    vec2 min = (tileSize * tileId);
-    vec2 min = (tileId);
+    vec2 min = (tileSize * tileId);
     vec2 max = (min + tileSize);
 
 //    min /= vec2(pc.sWidth, pc.sHeight);
