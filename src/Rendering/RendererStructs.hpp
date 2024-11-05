@@ -88,10 +88,15 @@ namespace Rendering
 		glm::mat4 invProj;
 		glm::mat4 invView;
 	};
-	struct ArrayIndexor 
+	struct ArrayIndexer 
 	{
-		int offset = -1;
-		int size = 0;
+		float offset = -1;
+		float size = 0;
+	};
+	struct ScreenDataPc
+	{
+		int sWidth = -1;
+		int sHeight = -1;
 	};
 
 

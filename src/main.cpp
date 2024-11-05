@@ -70,7 +70,7 @@ void run(WindowProvider* windowProvider)
     
     std::unique_ptr<Rendering::ImguiRenderer> imguiRenderer = std::make_unique<Rendering::ImguiRenderer>(
         core.get(), windowProvider);
-    
+
      
     while (!windowProvider->WindowShouldClose())
     {
@@ -94,7 +94,6 @@ void run(WindowProvider* windowProvider)
                 core->resizeRequested = false;
                 renderGraph->RecreateFrameResources();
                 clusterRenderer->SetRenderOperation(inFlightQueue.get());
-
             }
             try
             {

@@ -3,7 +3,7 @@
 
 //Lights
 
-struct PointLight{
+struct u_PointLight{
     vec3 pos;
     vec3 col;
     float radius;
@@ -12,7 +12,7 @@ struct PointLight{
     float qAttenuation;
 };
 
-struct DirLight{
+struct u_DirLight{
     vec3 pos;
     vec3 col;
     float intensity;
@@ -22,9 +22,9 @@ struct DirLight{
 
 //Util
 
-struct ArrayIndexor{
-    int offset;
-    int size;
+struct u_ArrayIndexer{
+    float offset;
+    float size;
 };
 
 //End Util

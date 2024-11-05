@@ -6,8 +6,9 @@
 #extension GL_EXT_debug_printf : enable
 
 
-#include "../Utils/RenderingUtil.glsl"
-#include "../Utils/RStructs.glsl"
+#include "../Utils/uRendering.glsl"
+#include "../Utils/uStructs.glsl"
+#include "../Utils/uMath.glsl"
 
 layout(location = 0) out vec4 outColor;
 
@@ -21,18 +22,13 @@ layout(set = 0, binding = 3, scalar) uniform CameraProperties{
     mat4 invView;
 }cProps;
 layout (set = 0, binding = 4, scalar) buffer PointLights{
-    PointLight[] pointLights;
+    u_PointLight[] pointLights;
 };
 layout (set = 0, binding = 5, scalar) buffer LightMap{
-    ArrayIndexor[] lightMap;
+    u_ArrayIndexer[] lightMap;
 };
 
-bool SDF_Sphere(float radius, vec3 spherePos, vec3 pos, out float d){
-    d = distance(spherePos, pos);
-    return (d < radius);
-}
-
-vec3 EvalPointLight(PointLight light, vec3 col, vec3 pos, vec3 normal, out bool evaluated){
+vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal, out bool evaluated){
     float d;
     evaluated = SDF_Sphere(light.radius, light.pos, pos, d);
     vec3 lightDir = light.pos - pos;
@@ -41,12 +37,18 @@ vec3 EvalPointLight(PointLight light, vec3 col, vec3 pos, vec3 normal, out bool 
     vec3 finalCol = col* diff * light.col * attenuation * light.intensity;
     return finalCol;
 }
-float inverseLerp(float a, float b, float value) {
-    return (value - a) / (b - a);
-}
 
 void main() {
 
+
+
+    vec2 tilePos = u_Remap(vec2(0), vec2(1024.0), vec2(0), vec2(32), vec2(gl_FragCoord));
+    tilePos.x = floor(tilePos.x);
+    tilePos.y = floor(tilePos.y);
+//    tilePos /= vec2(32);
+    int mapIndex = int(tilePos.x) * 32 + int(tilePos.y);
+    
+   float lightsInTile = lightMap[mapIndex].size; 
     
     vec2 fragCoord = vec2(textCoord.x , textCoord.y);
     float depth = texture(gDepth, textCoord).r;
@@ -57,27 +59,30 @@ void main() {
         discard;
     }
 
-    vec3 pos = GetPositionFromDepth(cProps.invProj, cProps.invView, depth, fragCoord);
+    vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
     
     vec3 lightPos = vec3(0.0, 4.0, 0.0);
     vec3 lightDir = normalize(lightPos - pos);
     vec3 lightCol = vec3(1.0, 1.0, 1.0);
-    vec3 ambientCol = vec3(0.0, 0.1, 0.1);
+    vec3 ambientCol = vec3(0.0, 0.0, 0.0);
     vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 3.0f + ambientCol;
     
     int evalCounter = 0;
-    for (int i = 0; i< 100 ; i++) {
+    for (int i = 0; i< 1000 ; i++) {
         bool addValue = false;
         vec3 pointLightCol = EvalPointLight(pointLights[i], finalCol, pos, norm.xyz, addValue);
         if (addValue){
             evalCounter++;
-            finalCol += (pointLightCol);
+//            finalCol += (pointLightCol);
         }
     }
     if(evalCounter > 0){
-        finalCol /= evalCounter;
+//        finalCol /= evalCounter;
+    }
+    if(lightsInTile>0){
     }
 
+    finalCol += vec3(float(lightsInTile), 0.0, 0.0)/1022.0;
     outColor = vec4(finalCol, 1.0);
 
 }
