@@ -90,13 +90,14 @@ namespace Rendering
 	};
 	struct ArrayIndexer 
 	{
-		float offset = -1;
-		float size = 0;
+		int offset = -1;
+		int size = 0;
 	};
 	struct ScreenDataPc
 	{
 		int sWidth = -1;
 		int sHeight = -1;
+		int pointLightsCount = 0;
 	};
 
 

@@ -14,8 +14,9 @@ namespace Rendering
     class ImguiRenderer
     {
     public:
-        ImguiRenderer(ENGINE::Core* core, WindowProvider* windowProvider)
+        ImguiRenderer(ENGINE::Core* core, WindowProvider* windowProvider, ClusterRenderer* clusterRenderer)
         {
+            this->clusterRenderer = clusterRenderer;
             this->core =core;
             this->windowProvider= windowProvider;
 
@@ -68,6 +69,7 @@ namespace Rendering
             ImGui::NewFrame();
 
             ImGui::ShowDemoWindow();
+            DisplayLightOptions();
             
             ImGui::Render();
             ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f),core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
@@ -88,11 +90,43 @@ namespace Rendering
         {
             ImGui_ImplVulkan_Shutdown();
         }
-        
+        void DisplayLightOptions()
+        {
+            ImGui::Begin("Light Options");
+            static float pointLightRadiuses = 1.0f;
+            if(ImGui::SliderFloat("Point lights Radiuses", &pointLightRadiuses, 1.0f, 10.0f))
+            {
+                for (auto& pointLight : clusterRenderer->pointLights)
+                {
+                    pointLight.radius = pointLightRadiuses;
+                    pointLight.CalculateQAttenuationFromRadius();
+                }
+            }
+            static float pointQuadraticAttenuation = 1.0f;
+            if (ImGui::SliderFloat("Point lights Attenuation", &pointQuadraticAttenuation, 1.0f, 10.0f))
+            {
+                for (auto& pointLight : clusterRenderer->pointLights)
+                {
+                    pointLight.qAttenuation = pointQuadraticAttenuation;
+                    pointLight.CalculateRadiusFromAttenuation();
+                }
+            }
+            static float pointLightIntensity = 1.0f;
+            if (ImGui::SliderFloat("Point lights Intensity", &pointLightIntensity, 1.0f, 10.0f))
+            {
+                for (auto& pointLight : clusterRenderer->pointLights)
+                {
+                    pointLight.intensity = pointLightIntensity;
+                }
+            }
+            ImGui::End();
+        }
+
         ENGINE::DynamicRenderPass dynamicRenderPass;
         WindowProvider* windowProvider;
         ENGINE::DescriptorAllocator descriptorAllocator;
         ENGINE::Core* core;
+        ClusterRenderer* clusterRenderer;
     };
 }
 

@@ -11,6 +11,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -34,6 +35,7 @@ namespace Rendering
 
             screenDataPc.sWidth = windowProvider->GetWindowSize().x;
             screenDataPc.sHeight = windowProvider->GetWindowSize().y;
+            screenDataPc.pointLightsCount = 0;
             
             camera.SetLookAt(glm::vec3(0.0f));
             auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
@@ -160,26 +162,28 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(1024);
-            for (int i = 0; i < 1024; ++i)
+            pointLights.reserve(40);
+            for (int i = 0; i < 40; ++i)
             {
-                std::uniform_real_distribution<> distribution(0.0f, 2.0f);
-                float radius = distribution(gen);
-
                 std::uniform_real_distribution<> distributionPos(-3.0f, 3.0f);
-                glm::vec3 pos = glm::vec3(distributionPos(gen), 0.2f, distributionPos(gen));
+                glm::vec3 pos = glm::vec3(distributionPos(gen), 0.4f, distributionPos(gen));
                 
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
                 
-                std::uniform_real_distribution<> distributionIntensity(3.0f, 9.0f);
-                float intensity = distributionIntensity(gen);
+                std::uniform_real_distribution<> distributionIntensity(0.5f, 2.0f);
+                float intensity =static_cast<float> (distributionIntensity(gen));
                 
-                std::uniform_real_distribution<> distributionAttenuation(0.0f, 5.0f);
-                float lAttenuation = distributionAttenuation(gen);
-                float qAttenuation = distributionAttenuation(gen);
+                std::uniform_real_distribution<> distributionRadius(0.5f, 10.0f);
+                float radius = 2.0f;
                 
-                pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, qAttenuation});
+                
+                std::uniform_real_distribution<> distributionAttenuation(0.3f, 10.0f);
+                float lAttenuation =0.01f;
+                float qAttenuation =static_cast<float> (distributionAttenuation(gen));
+
+                
+                pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, 0.0f});
             }
             lightsMap.reserve(tileSize * tileSize);
             for (int i = 0; i < tileSize * tileSize; ++i)
@@ -187,11 +191,19 @@ namespace Rendering
                 lightsMap.emplace_back(ArrayIndexer{});
             }
             
+            lightsIndices.reserve(lightsMap.size() * pointLights.size());
+            for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
+            {
+                lightsIndices.emplace_back(-1);
+            }
+            screenDataPc.pointLightsCount = pointLights.size();
+            
 
             pointLightsBuff = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(PointLight) * pointLights.size(), pointLights.data());
+            pointLightsBuff->Map();
             
 
             lightsMapBuff = std::make_unique<ENGINE::Buffer>(
@@ -199,6 +211,13 @@ namespace Rendering
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
             lightsMapBuff->Map();
+            
+            lightsIndicesBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(int32_t) * lightsIndices.size(), lightsIndices.data());
+            lightsIndicesBuff->Map();
+            
             
             camPropsBuff = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eUniformBuffer,
@@ -232,7 +251,8 @@ namespace Rendering
 
             writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
             writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(2, camPropsBuff->descriptor,vk::DescriptorType::eUniformBuffer);
+            writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor,vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor,vk::DescriptorType::eUniformBuffer);
             
             writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
 
@@ -293,6 +313,7 @@ namespace Rendering
             writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor,vk::DescriptorType::eUniformBuffer);
             writerBuilder.AddWriteBuffer(4, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
             writerBuilder.AddWriteBuffer(5, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(6, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
             
             writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
             
@@ -313,8 +334,6 @@ namespace Rendering
             lRenderNode->AddSamplerResource("depthGSampler", depthAttachmentView.get());
             lRenderNode->DependsOn(computePassName);
             lRenderNode->BuildRenderGraphNode();
-
-            
         }
 
         void RecreateSwapChainResources() override
@@ -360,12 +379,22 @@ namespace Rendering
                     }
                     memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
                     
+                    lightsIndices.clear();
+                    for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
+                    {
+                        lightsIndices.emplace_back(-1);
+                    }
+                    memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
+                    
                     cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
                     cPropsUbo.invView = glm::inverse(camera.matrices.view);
                     memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
                     
                     screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
                     screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
+                    screenDataPc.pointLightsCount = pointLights.size();
+
+                    memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
                 });
             
                 auto cullRenderOp =  new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -479,6 +508,7 @@ namespace Rendering
         //std::unique_ptr<ENGINE::Buffer> dirLightsBuff;
         std::unique_ptr<ENGINE::Buffer> pointLightsBuff;
         std::unique_ptr<ENGINE::Buffer> lightsMapBuff;
+        std::unique_ptr<ENGINE::Buffer> lightsIndicesBuff;
         
         
         std::string gBufferPassName = "gBuffer";
@@ -493,6 +523,7 @@ namespace Rendering
         //culling
         std::vector<PointLight> pointLights;
         std::vector<ArrayIndexer> lightsMap;
+        std::vector<int32_t> lightsIndices;
         ScreenDataPc screenDataPc;
         //std::vector<DirectionalLight> directionalLights;
         int tileSize = 32;

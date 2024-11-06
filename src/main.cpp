@@ -69,7 +69,7 @@ void run(WindowProvider* windowProvider)
     clusterRenderer->SetRenderOperation(inFlightQueue.get());
     
     std::unique_ptr<Rendering::ImguiRenderer> imguiRenderer = std::make_unique<Rendering::ImguiRenderer>(
-        core.get(), windowProvider);
+        core.get(), windowProvider, clusterRenderer.get());
 
      
     while (!windowProvider->WindowShouldClose())

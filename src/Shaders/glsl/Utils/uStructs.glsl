@@ -23,8 +23,8 @@ struct u_DirLight{
 //Util
 
 struct u_ArrayIndexer{
-    float offset;
-    float size;
+    int offset;
+    int size;
 };
 
 //End Util
