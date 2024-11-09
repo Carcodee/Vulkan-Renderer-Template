@@ -21,8 +21,8 @@ float previousTime;
 #define GLM_FORCE_RIGHT_HANDED
 #define GLM_ENABLE_EXPERIMENTAL
 
-CONST int WINDOWS_WIDTH = 1024;
-CONST int WINDOWS_HEIGHT = 1024;
+CONST int WINDOWS_WIDTH = 1920;
+CONST int WINDOWS_HEIGHT = 1080;
 
 
 void run(WindowProvider* windowProvider)

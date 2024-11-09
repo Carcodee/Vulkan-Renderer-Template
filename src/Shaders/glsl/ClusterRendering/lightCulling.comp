@@ -33,14 +33,14 @@ layout(push_constant)uniform pushConstants{
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-#define TILESIZE 32
+#define TILE_PX_SIZE 32
 
 void main() {
 
     
     uvec2 tileId = gl_GlobalInvocationID.xy;
     
-    vec2 tileSize = vec2(TILESIZE, TILESIZE);
+    vec2 tileSize = vec2(TILE_PX_SIZE, TILE_PX_SIZE);
     vec2 screenSize = vec2(pc.sWidth, pc.sHeight);
 
     vec2 ndcSizePerTile = 2 * (tileSize/screenSize);
@@ -86,9 +86,7 @@ void main() {
     //just to prevent collision, even if is less likely to have all lights in the same tile
     int maxLightsPerTile= pc.pointLightsCount;
     
-    
-    
-    uint idxIndexer = tileId.y * TILESIZE + tileId.x;
+    uint idxIndexer = tileId.y * pc.tileCountX + tileId.x;
     uint idxLightIndicesStart = (idxIndexer * maxLightsPerTile);
     
     int lightCount = 0;

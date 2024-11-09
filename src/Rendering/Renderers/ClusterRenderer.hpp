@@ -67,8 +67,15 @@ namespace Rendering
 
                 auto cullTask = new std::function<void()>([this, inflightQueue]()
                 {
+                                        
+                    screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
+                    screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
+                    screenDataPc.pointLightsCount = pointLights.size();
+                    screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width- 1) / tileSize + 1);
+                    screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+
                     lightsMap.clear();
-                    for (int i = 0; i < tileSize * tileSize; ++i)
+                    for (int i = 0; i < screenDataPc.xTileCount * screenDataPc.yTileCount; ++i)
                     {
                         lightsMap.emplace_back(ArrayIndexer{});
                     }
@@ -86,13 +93,6 @@ namespace Rendering
                     cPropsUbo.pos = camera.position;
                     
                     memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
-                    
-                    screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
-                    screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
-                    screenDataPc.pointLightsCount = pointLights.size();
-                    screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width- 1) / tileSize + 1);
-                    screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
-             
 
                     memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
                 });
@@ -109,9 +109,9 @@ namespace Rendering
                                                     vk::ShaderStageFlagBits::eCompute,
                                                     0, sizeof(ScreenDataPc), &screenDataPc);
                         commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
-                        int xGpCount = tileSize / localSize;
-                        int yGpCount = tileSize / localSize;
-                        commandBuffer.dispatch(xGpCount, yGpCount, 1);
+                        int xGpCount = screenDataPc.xTileCount / localSize;
+                        int yGpCount = screenDataPc.xTileCount / localSize;
+                        commandBuffer.dispatch(screenDataPc.xTileCount, screenDataPc.xTileCount, 1);
                     });
 
                 renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
@@ -229,7 +229,7 @@ namespace Rendering
             for (int i = 0; i < 40; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-3.0f, 3.0f);
-                glm::vec3 pos = glm::vec3(distributionPos(gen), 0.4f, distributionPos(gen));
+                glm::vec3 pos = glm::vec3(distributionPos(gen), 1.0f, distributionPos(gen));
                 
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
@@ -247,11 +247,17 @@ namespace Rendering
 
                 
                 pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, 0.0f});
-
-            
             }
-            lightsMap.reserve(tileSize * tileSize);
-            for (int i = 0; i < tileSize * tileSize; ++i)
+            
+            screenDataPc.sWidth = windowProvider->GetWindowSize().x;
+            screenDataPc.sHeight = windowProvider->GetWindowSize().y;
+            screenDataPc.pointLightsCount = 0;
+            screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSize + 1);
+            screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+            screenDataPc.pointLightsCount = pointLights.size();
+
+            lightsMap.reserve(screenDataPc.xTileCount * screenDataPc.yTileCount);
+            for (int i = 0; i < screenDataPc.xTileCount * screenDataPc.xTileCount; ++i)
             {
                 lightsMap.emplace_back(ArrayIndexer{});
             }
@@ -262,13 +268,6 @@ namespace Rendering
                 lightsIndices.emplace_back(-1);
             }
             
-            screenDataPc.sWidth = windowProvider->GetWindowSize().x;
-            screenDataPc.sHeight = windowProvider->GetWindowSize().y;
-            screenDataPc.pointLightsCount = 0;
-            screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSize + 1);
-            screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
-            screenDataPc.pointLightsCount = pointLights.size();
-
             //light
             quadVert = Vertex2D::GetQuadVertices();
             quadIndices = Vertex2D::GetQuadIndices();

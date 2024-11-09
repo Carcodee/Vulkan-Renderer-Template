@@ -47,11 +47,11 @@ vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
     return vec3(0.0);
 }
 
-#define TILECOUNT 32
+#define TILE_PX_SIZE 32
 void main() {
 
 
-    ivec2 tileId = ivec2(gl_FragCoord.xy/TILECOUNT);
+    ivec2 tileId = ivec2(gl_FragCoord.xy/TILE_PX_SIZE);
     
     uint mapIndex = tileId.y * pc.tileCountX + tileId.x;
 
@@ -85,7 +85,7 @@ void main() {
     if(lightsInTile>0){
         float intensity= u_InvLerp(0.0,40.0, float(lightsInTile));
         vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 0.3), vec3(0.3, 0.0, 0.0), intensity);
-//        finalCol += debugCol;
+        finalCol += debugCol;
     }
     
 
