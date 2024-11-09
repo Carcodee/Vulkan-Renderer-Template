@@ -344,6 +344,7 @@ namespace Rendering
 
             gDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+
             
 
             auto pushConstantRange = vk::PushConstantRange()
