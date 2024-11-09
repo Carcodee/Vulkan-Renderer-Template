@@ -1,30 +1,54 @@
 #ifndef R_UTIL 
 #define R_UTIL 
 
-vec3 u_ScreenToWorld(mat4 invProj, mat4 invView, float depth, vec2 screenPos){
-    vec4 clipSpacePos = vec4(1.0f);
-    clipSpacePos.x = 2 * screenPos.x - 1.0f;
-    clipSpacePos.y = 2 * screenPos.y - 1.0f;
-    clipSpacePos.z = depth;
+vec3 u_ScreenToWorldNDC(mat4 invProj, mat4 invView, float depth, vec2 screenPos){
+    vec4 ndcPos = vec4(1.0f);
+    ndcPos.x = screenPos.x;
+    ndcPos.y = screenPos.y;
+    ndcPos.z = depth;
     
-    vec4 viewPos = invProj * clipSpacePos;
+    vec4 viewPos = invProj * ndcPos;
     viewPos = viewPos / viewPos.w;
     
     vec4 worldPos = invView * viewPos;
     return vec3(worldPos.xyz);
 }
+vec3 u_ScreenToWorld(mat4 invProj, mat4 invView, float depth, vec2 screenPos){
+    vec4 ndcPos = vec4(1.0f);
+    ndcPos.x = 2 * screenPos.x - 1.0f;
+    ndcPos.y = 2 * screenPos.y - 1.0f;
+    ndcPos.z = depth;
 
-vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
-    vec4 clipSpacePos = vec4(1.0f);
-    clipSpacePos.x = 2 * screenPos.x - 1.0f;
-    clipSpacePos.y = 2 * screenPos.y - 1.0f;
-    clipSpacePos.z = depth;
+    vec4 viewPos = invProj * ndcPos;
+    viewPos = viewPos / viewPos.w;
 
-    vec4 viewPos = invProj * clipSpacePos;
+    vec4 worldPos = invView * viewPos;
+    return vec3(worldPos.xyz);
+}
+
+vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos, vec2 screenSize){
+    vec4 ndcPos = vec4(1.0f);
+    ndcPos.x = 2 * (screenPos.x/screenSize.x) - 1.0f;
+    ndcPos.y = 2 * (screenPos.y/screenSize.y) - 1.0f;
+    ndcPos.z = depth;
+
+    vec4 viewPos = invProj * ndcPos;
     viewPos = viewPos / viewPos.w;
 
     return vec3(viewPos.xyz);
 }
+vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
+    vec4 ndcPos = vec4(1.0f);
+    ndcPos.x = 2 * screenPos.x - 1.0f;
+    ndcPos.y = 2 * screenPos.y - 1.0f;
+    ndcPos.z = depth;
+
+    vec4 viewPos = invProj * ndcPos;
+    viewPos = viewPos / viewPos.w;
+
+    return vec3(viewPos.xyz);
+}
+
 float u_SDF_Sphere(float radius, vec3 spherePos, vec3 pos){
     
     return distance(spherePos, pos);

@@ -87,17 +87,25 @@ namespace Rendering
 	{
 		glm::mat4 invProj;
 		glm::mat4 invView;
+		glm::vec3 pos = glm::vec3(0.0);
 	};
 	struct ArrayIndexer 
 	{
-		int offset = -1;
+		int offset = 0;
 		int size = 0;
 	};
 	struct ScreenDataPc
 	{
-		int sWidth = -1;
-		int sHeight = -1;
-		int pointLightsCount = 0;
+		int sWidth; 
+		int sHeight; 
+		int pointLightsCount; 
+		uint32_t xTileCount; 
+		uint32_t yTileCount; 
+	};
+	struct LightPc 
+	{
+		uint32_t xTileCount;
+		uint32_t yTileCount;
 	};
 
 

@@ -18,7 +18,7 @@ float previousTime;
 
 #define GLM_FORCE_RADIANS
 #define GLM_DEPTH_ZERO_TO_ONE
-//#define GLM_FORCE_RIGHT_HANDED
+#define GLM_FORCE_RIGHT_HANDED
 #define GLM_ENABLE_EXPERIMENTAL
 
 CONST int WINDOWS_WIDTH = 1024;
@@ -98,7 +98,7 @@ void run(WindowProvider* windowProvider)
             try
             {
 
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_RIGHT_CONTROL)&& glfwGetKey(windowProvider->window, GLFW_KEY_S))
+                if (glfwGetKey(windowProvider->window, GLFW_KEY_R))
                 {
                     renderGraph->RecompileShaders();
                     clusterRenderer->ReloadShaders(); 

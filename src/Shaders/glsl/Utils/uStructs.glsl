@@ -27,6 +27,11 @@ struct u_ArrayIndexer{
     int size;
 };
 
+struct u_Frustum{
+    vec4 planes[6];
+    vec3 points[8];
+};
+
 //End Util
 
 #endif 

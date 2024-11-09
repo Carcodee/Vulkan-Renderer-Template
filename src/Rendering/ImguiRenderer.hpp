@@ -69,7 +69,7 @@ namespace Rendering
             ImGui::NewFrame();
 
             ImGui::ShowDemoWindow();
-            DisplayLightOptions();
+            ClusterRendererInfo();
             
             ImGui::Render();
             ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f),core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
@@ -90,7 +90,7 @@ namespace Rendering
         {
             ImGui_ImplVulkan_Shutdown();
         }
-        void DisplayLightOptions()
+        void ClusterRendererInfo()
         {
             ImGui::Begin("Light Options");
             static float pointLightRadiuses = 1.0f;
@@ -119,6 +119,9 @@ namespace Rendering
                     pointLight.intensity = pointLightIntensity;
                 }
             }
+            ImGui::LabelText(":X", "%f.3f", clusterRenderer->camera.position.x);
+            ImGui::LabelText(":Y", "%f.3f", clusterRenderer->camera.position.y);
+            ImGui::LabelText(":Z", "%f.3f", clusterRenderer->camera.position.z);
             ImGui::End();
         }
 

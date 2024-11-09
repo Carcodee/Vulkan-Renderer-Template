@@ -31,6 +31,10 @@ layout (set = 0, binding = 6, scalar) buffer LightIndices{
     int[] lightIndices;
 };
 
+layout(push_constant)uniform pushConstants{
+    uint tileCountX;
+    uint tileCountY;
+}pc;
 vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
     float d = u_SDF_Sphere(light.radius, light.pos, pos);
     if(d < light.radius){
@@ -43,15 +47,13 @@ vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
     return vec3(0.0);
 }
 
+#define TILECOUNT 32
 void main() {
 
 
-
-    vec2 tilePos = u_Remap(vec2(0), vec2(1024.0), vec2(0), vec2(32), vec2(gl_FragCoord));
-    tilePos.x = floor(tilePos.x);
-    tilePos.y = floor(tilePos.y);
-//    tilePos /= vec2(32);
-    int mapIndex = int(tilePos.x) * 32 + int(tilePos.y);
+    ivec2 tileId = ivec2(gl_FragCoord.xy/TILECOUNT);
+    
+    uint mapIndex = tileId.y * pc.tileCountX + tileId.x;
 
     int lightOffset = lightMap[mapIndex].offset;
     int lightsInTile = lightMap[mapIndex].size;
@@ -75,15 +77,15 @@ void main() {
     vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 3.0f + ambientCol;
     
     if(true){
-        for (int i = lightOffset; i< lightOffset + lightsInTile; i++) {
-            int lightIndex = lightIndices[i];
+        for (int i = 0; i< lightsInTile; i++) {
+            int lightIndex = lightIndices[lightOffset + i];
             finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
         }
     }
     if(lightsInTile>0){
-        float intensity= u_InvLerp(0.0, 5.0, float(lightsInTile));
-        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
-        finalCol += debugCol;
+        float intensity= u_InvLerp(0.0,40.0, float(lightsInTile));
+        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 0.3), vec3(0.3, 0.0, 0.0), intensity);
+//        finalCol += debugCol;
     }
     
 

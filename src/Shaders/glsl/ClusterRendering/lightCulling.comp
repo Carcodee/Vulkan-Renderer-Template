@@ -20,12 +20,15 @@ layout (set = 0, binding = 2, scalar) writeonly buffer LightIndices{
 layout(set = 0, binding = 3, scalar) uniform CameraProperties{
     mat4 invProj;
     mat4 invView;
+    vec3 camPos;
 }cProps;
 
 layout(push_constant)uniform pushConstants{
     int sWidth;
     int sHeight;
     int pointLightsCount;
+    uint tileCountX;
+    uint tileCountY;
 }pc;
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
@@ -37,51 +40,83 @@ void main() {
     
     uvec2 tileId = gl_GlobalInvocationID.xy;
     
-    vec2 tileSize = vec2(pc.sWidth / TILESIZE, pc.sHeight / TILESIZE);
+    vec2 tileSize = vec2(TILESIZE, TILESIZE);
     vec2 screenSize = vec2(pc.sWidth, pc.sHeight);
 
-    vec2 min = (tileSize * tileId);
-    vec2 max = (min + tileSize);
-
-//    min = 2 * min/screenSize  - 1.0;
-//    max = 2 * max/screenSize - 1.0;
-
-    min = min/screenSize;
-    max = max/screenSize;
+    vec2 ndcSizePerTile = 2 * (tileSize/screenSize);
+    vec2 upperLeft = vec2(-1.0);
     
-    vec3 minWs = u_ScreenToWorld(cProps.invProj, cProps.invView, 0.0f, min);
-    vec3 maxWs = u_ScreenToWorld(cProps.invProj, cProps.invView, 1.0f, max);
     
-    vec3 minBounds = u_Min(minWs, maxWs);
-    vec3 maxBounds = u_Max(minWs, maxWs);
+    vec2 topL = (upperLeft + tileId * ndcSizePerTile);
+    vec2 topR = vec2(topL.x + ndcSizePerTile.x, topL.y);
+    vec2 bottonR = (topL + ndcSizePerTile);
+    vec2 bottonL = vec2(topL.x, topL.y + ndcSizePerTile);
+    
 
+    vec3 nearTopL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 0.0, topL);
+    vec3 nearTopR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 0.0, topR);
+    vec3 nearBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 0.0,  bottonL);
+    vec3 nearBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 0.0,  bottonR);
+
+    vec3 farTopL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 1.0, topL);
+    vec3 farTopR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 1.0, topR);
+    vec3 farBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 1.0,  bottonL);
+    vec3 farBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView , 1.0,  bottonR);
+
+    u_Frustum tileFrustum;
     
+    //left
+    tileFrustum.planes[0] = u_GetPlane(nearTopL, cProps.camPos, nearBottomL);
+
+    // Right Plane
+    tileFrustum.planes[1] = u_GetPlane(cProps.camPos, nearTopR, nearBottomR);
+
+    // Top Plane
+    tileFrustum.planes[2] = u_GetPlane(cProps.camPos, nearTopL, nearTopR);
+
+    // Bottom Plane
+    tileFrustum.planes[3] = u_GetPlane(cProps.camPos, nearBottomR, nearBottomL);
+
+    // Near Plane
+    tileFrustum.planes[4] = u_GetPlane(nearTopL, nearBottomR, nearBottomL);
+
+    // Far Plane
+    tileFrustum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
+
     //just to prevent collision, even if is less likely to have all lights in the same tile
     int maxLightsPerTile= pc.pointLightsCount;
     
-    int idxIndexer = int(tileId.x) * TILESIZE + int(tileId.y);
-    int idxLightIndicesStart = idxIndexer * maxLightsPerTile;
+    
+    
+    uint idxIndexer = tileId.y * TILESIZE + tileId.x;
+    uint idxLightIndicesStart = (idxIndexer * maxLightsPerTile);
     
     int lightCount = 0;
+
     for(int i = 0; i < pc.pointLightsCount; i++){
-//        vec4 pointLightSp = inverse(cProps.invProj) * inverse(cProps.invView) * vec4(pointLights[i].pos,1.0);
-//        if(pointLightSp.w == 0) continue;
-//        pointLightSp/= pointLightSp.w;
-//        vec4 lightRadiusOffsetSp = inverse(cProps.invProj) * inverse(cProps.invView) * vec4(pointLights[i].pos + vec3(pointLights[i].radius, 0.0, 0.0),1.0);
-//        if(lightRadiusOffsetSp.w == 0) continue;
-//        lightRadiusOffsetSp /= lightRadiusOffsetSp.w;
-//        float radiusSp = distance(lightRadiusOffsetSp, pointLightSp);
-//        if(u_SDF_AABB_Sphere(min, max, pointLightSp.xy, radiusSp)){
-//            int idx = idxLightIndicesStart + lightCount;
-//            lightIndices[idx] = i; 
-//            lightCount++;
-//        };
-        if(u_SDF_AABB_Sphere(minBounds, maxBounds, pointLights[i].pos, pointLights[i].radius)){
-            int idx = idxLightIndicesStart + lightCount;
+
+//        vec4 pointLightVs = inverse(cProps.invView) * vec4(pointLights[i].pos,1.0);
+//        vec4 endPosVs = inverse(cProps.invView) * vec4(pointLights[i].pos + vec3(pointLights[i].radius, 0.0, 0.0), 1.0f);
+//        float radiusVs = distance(endPosVs, pointLightVs);
+        
+        bool insideFrustum = true;
+        for(int j = 0; j < 6; j++){
+            int planeIdx = j;
+            if(!u_SphereInsidePlane(pointLights[i].pos, pointLights[i].radius, tileFrustum.planes[planeIdx].xyz, tileFrustum.planes[planeIdx].w)){
+                insideFrustum = false;
+                break;
+            }
+        }
+        
+        if(insideFrustum){
+            int idx = int(idxLightIndicesStart + lightCount);
             lightIndices[idx] = i;
             lightCount++;
         };
     }
-    atomicAdd(lightMap[idxIndexer].offset, idxLightIndicesStart);
+
+//        lightMap[idxIndexer].offset= tileFrustum.planes[1].x;
+//        lightMap[idxIndexer].size= tileFrustum.planes[1].w;
+    atomicAdd(lightMap[idxIndexer].offset, int(idxLightIndicesStart));
     atomicAdd(lightMap[idxIndexer].size, lightCount);
 }

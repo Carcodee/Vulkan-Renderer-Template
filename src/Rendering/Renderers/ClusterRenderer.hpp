@@ -1,15 +1,11 @@
 ﻿//
+
+
+
+
+
 // Created by carlo on 2024-10-25.
 //
-
-
-
-
-
-
-
-
-
 
 
 #ifndef CLUSTERRENDERER_HPP
@@ -28,16 +24,146 @@ namespace Rendering
             this->renderGraphRef = core->renderGraphRef;
             this->windowProvider = windowProvider;
             this->descriptorAllocatorRef = descriptorAllocator;
-            auto logicalDevice = core->logicalDevice.get();
-            auto physicalDevice = core->physicalDevice;
-            camera.SetPerspective( 45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
-                0.1f, 512.0f);
 
-            screenDataPc.sWidth = windowProvider->GetWindowSize().x;
-            screenDataPc.sHeight = windowProvider->GetWindowSize().y;
-            screenDataPc.pointLightsCount = 0;
+            CreateResources();
+            CreateBuffers();
+            CreatePipelines();
+
+        }
+
+        void RecreateSwapChainResources() override
+        {
             
-            camera.SetLookAt(glm::vec3(0.0f));
+        }
+        void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
+        {
+            auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
+                [this](vk::CommandBuffer& commandBuffer)
+                {
+                    vk::DeviceSize offset = 0;
+                    commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
+                                                     renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0, 1,
+                                                     &gDstSet.get(), 0 , nullptr);
+
+                    commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
+                    commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
+                    
+                    for (int i = 0; i < model.meshCount; ++i)
+                    {
+
+                        pc.projView = camera.matrices.perspective * camera.matrices.view;
+                        pc.model = model.modelsMat[i];
+                        commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
+                                                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                                                    0, sizeof(ForwardPc), &pc);
+                    
+                        commandBuffer.drawIndexed(model.indicesCount[i], 1, model.firstIndices[i],
+                                                  static_cast<int32_t>(model.firstVertices[i]), 0);
+                    }
+           
+                });
+
+                renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
+
+                auto cullTask = new std::function<void()>([this, inflightQueue]()
+                {
+                    lightsMap.clear();
+                    for (int i = 0; i < tileSize * tileSize; ++i)
+                    {
+                        lightsMap.emplace_back(ArrayIndexer{});
+                    }
+                    memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
+                    
+                    lightsIndices.clear();
+                    for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
+                    {
+                        lightsIndices.emplace_back(-1);
+                    }
+                    memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
+                    
+                    cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
+                    cPropsUbo.invView = glm::inverse(camera.matrices.view);
+                    cPropsUbo.pos = camera.position;
+                    
+                    memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
+                    
+                    screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
+                    screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
+                    screenDataPc.pointLightsCount = pointLights.size();
+                    screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width- 1) / tileSize + 1);
+                    screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+             
+
+                    memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
+                });
+            
+                auto cullRenderOp =  new std::function<void(vk::CommandBuffer& command_buffer)>(
+                    [this](vk::CommandBuffer& commandBuffer)
+                    {
+                        auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
+                        commandBuffer.bindDescriptorSets(renderNode->pipelineType,
+                                                         renderNode->pipelineLayout.get(), 0,
+                                                         1,
+                                                         &cullDstSet.get(), 0, nullptr);
+                        commandBuffer.pushConstants(renderGraphRef->GetNode(computePassName)->pipelineLayout.get(),
+                                                    vk::ShaderStageFlagBits::eCompute,
+                                                    0, sizeof(ScreenDataPc), &screenDataPc);
+                        commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
+                        int xGpCount = tileSize / localSize;
+                        int yGpCount = tileSize / localSize;
+                        commandBuffer.dispatch(xGpCount, yGpCount, 1);
+                    });
+
+                renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
+                renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);
+                auto lSetViewTask = new std::function<void()>([this, inflightQueue]()
+                {
+                    lightPc.xTileCount = static_cast<uint32_t>((static_cast<int>(core->swapchainRef->extent.width) - 1) / tileSize + 1);
+                    lightPc.yTileCount = static_cast<uint32_t>((static_cast<int>(core->swapchainRef->extent.height) - 1) / tileSize + 1);
+                    auto* currImage = inflightQueue->currentSwapchainImageView;
+                    renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
+                    renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
+                    
+                });
+                auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
+                    [this](vk::CommandBuffer& commandBuffer)
+                    {
+                        vk::DeviceSize offset = 0;
+                        commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(lightPassName)->pipelineType,
+                                                         renderGraphRef->GetNode(lightPassName)->pipelineLayout.get(),
+                                                         0, 1,
+                                                         &lDstSet.get(), 0, nullptr);
+                        commandBuffer.bindVertexBuffers(0, 1, &lVertexBuffer->bufferHandle.get(), &offset);
+                        commandBuffer.bindIndexBuffer(lIndexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
+
+                        commandBuffer.pushConstants(renderGraphRef->GetNode(lightPassName)->pipelineLayout.get(),
+                                                    vk::ShaderStageFlagBits::eFragment,
+                                                    0, sizeof(LightPc), &lightPc);
+                        commandBuffer.drawIndexed(quadIndices.size(), 1, 0,
+                                                  0, 0);
+                    });
+            
+                renderGraphRef->GetNode(lightPassName)->AddTask(lSetViewTask);
+                renderGraphRef->GetNode(lightPassName)->SetRenderOperation(lRenderOp);
+            
+        }
+        void ReloadShaders() override
+        {
+            
+            auto* gRenderNode = renderGraphRef->GetNode(gBufferPassName);
+            auto* renderNode = renderGraphRef->GetNode(lightPassName);
+            auto* cRenderNode = renderGraphRef->GetNode(computePassName);
+            
+            gRenderNode->RecreateResources();
+            renderNode->RecreateResources();
+            cRenderNode->RecreateResources();
+            
+        }
+
+        void CreateResources()
+        {
+            auto& physicalDevice = core->physicalDevice;
+            auto& logicalDevice = core->logicalDevice.get();
             auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          vk::Format::eR32G32B32A32Sfloat,
                                                          vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled);
@@ -75,8 +201,14 @@ namespace Rendering
                                                                     vk::ImageLayout::eUndefined);
             depthAttachmentView = std::make_unique<ENGINE::ImageView>(logicalDevice, depthAttachmentData.get(), 0, 1, 0, 1);
 
+            //gbuff
+            camera.SetPerspective(
+                45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
+                0.1f, 512.0f);
 
-
+           
+            camera.SetLookAt(glm::vec3(0.0f));
+            
             imageShipperCol.SetDataFromPath(
                 "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
             imageShipperCol.BuildImage(core, 1, 1, core->swapchainRef->GetFormat(),
@@ -89,15 +221,120 @@ namespace Rendering
                 "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\3d_pbr_curved_sofa\\scene.gltf",
                 model);
 
+            //compute
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            
+            pointLights.reserve(40);
+            for (int i = 0; i < 40; ++i)
+            {
+                std::uniform_real_distribution<> distributionPos(-3.0f, 3.0f);
+                glm::vec3 pos = glm::vec3(distributionPos(gen), 0.4f, distributionPos(gen));
+                
+                std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
+                glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
+                
+                std::uniform_real_distribution<> distributionIntensity(0.5f, 2.0f);
+                float intensity =static_cast<float> (distributionIntensity(gen));
+                
+                std::uniform_real_distribution<> distributionRadius(0.5f, 10.0f);
+                float radius = 2.0f;
+                
+                
+                std::uniform_real_distribution<> distributionAttenuation(0.3f, 10.0f);
+                float lAttenuation =0.01f;
+                float qAttenuation =static_cast<float> (distributionAttenuation(gen));
+
+                
+                pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, 0.0f});
+
+            
+            }
+            lightsMap.reserve(tileSize * tileSize);
+            for (int i = 0; i < tileSize * tileSize; ++i)
+            {
+                lightsMap.emplace_back(ArrayIndexer{});
+            }
+            
+            lightsIndices.reserve(lightsMap.size() * pointLights.size());
+            for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
+            {
+                lightsIndices.emplace_back(-1);
+            }
+            
+            screenDataPc.sWidth = windowProvider->GetWindowSize().x;
+            screenDataPc.sHeight = windowProvider->GetWindowSize().y;
+            screenDataPc.pointLightsCount = 0;
+            screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSize + 1);
+            screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+            screenDataPc.pointLightsCount = pointLights.size();
+
+            //light
+            quadVert = Vertex2D::GetQuadVertices();
+            quadIndices = Vertex2D::GetQuadIndices();
+            cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
+            cPropsUbo.invView = glm::inverse(camera.matrices.view);
+            cPropsUbo.pos = camera.position;
+            lightPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSize + 1);
+            lightPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+                    
+            
+
+        }
+        void CreateBuffers()
+        {
+            auto& physicalDevice = core->physicalDevice;
+            auto& logicalDevice = core->logicalDevice.get();
             vertexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(M_Vertex3D) * model.vertices.size(), model.vertices.data());
+
             indexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
 
+            pointLightsBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(PointLight) * pointLights.size(), pointLights.data());
+
+            lightsMapBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
+
+            lightsIndicesBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(int32_t) * lightsIndices.size(), lightsIndices.data());
+
+            //light
+            camPropsBuff = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eUniformBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(CPropsUbo), &cPropsUbo);
+
+            lVertexBuffer = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(Vertex2D) * quadVert.size(), quadVert.data());
+
+            lIndexBuffer = std::make_unique<ENGINE::Buffer>(
+                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(uint32_t) * quadIndices.size(), quadIndices.data());
+            
+            pointLightsBuff->Map();
+            lightsMapBuff->Map();
+            lightsIndicesBuff->Map();
+            camPropsBuff->Map(); 
+
+        }
+        void CreatePipelines()
+        {
+            auto& logicalDevice = core->logicalDevice.get();
             gVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
             gFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
@@ -158,78 +395,9 @@ namespace Rendering
             renderNode->BuildRenderGraphNode();
             
             //Cull pass//
-
-            std::random_device rd;
-            std::mt19937 gen(rd());
-
-            pointLights.reserve(40);
-            for (int i = 0; i < 40; ++i)
-            {
-                std::uniform_real_distribution<> distributionPos(-3.0f, 3.0f);
-                glm::vec3 pos = glm::vec3(distributionPos(gen), 0.4f, distributionPos(gen));
-                
-                std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
-                glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
-                
-                std::uniform_real_distribution<> distributionIntensity(0.5f, 2.0f);
-                float intensity =static_cast<float> (distributionIntensity(gen));
-                
-                std::uniform_real_distribution<> distributionRadius(0.5f, 10.0f);
-                float radius = 2.0f;
-                
-                
-                std::uniform_real_distribution<> distributionAttenuation(0.3f, 10.0f);
-                float lAttenuation =0.01f;
-                float qAttenuation =static_cast<float> (distributionAttenuation(gen));
-
-                
-                pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, 0.0f});
-            }
-            lightsMap.reserve(tileSize * tileSize);
-            for (int i = 0; i < tileSize * tileSize; ++i)
-            {
-                lightsMap.emplace_back(ArrayIndexer{});
-            }
-            
-            lightsIndices.reserve(lightsMap.size() * pointLights.size());
-            for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
-            {
-                lightsIndices.emplace_back(-1);
-            }
-            screenDataPc.pointLightsCount = pointLights.size();
-            
-
-            pointLightsBuff = std::make_unique<ENGINE::Buffer>(
-                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(PointLight) * pointLights.size(), pointLights.data());
-            pointLightsBuff->Map();
-            
-
-            lightsMapBuff = std::make_unique<ENGINE::Buffer>(
-                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
-            lightsMapBuff->Map();
-            
-            lightsIndicesBuff = std::make_unique<ENGINE::Buffer>(
-                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(int32_t) * lightsIndices.size(), lightsIndices.data());
-            lightsIndicesBuff->Map();
-            
-            
-            camPropsBuff = std::make_unique<ENGINE::Buffer>(
-                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eUniformBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(CPropsUbo), &cPropsUbo);
-            camPropsBuff->Map();
-            
-            
             
             cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
                                                               "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
-
 
             ENGINE::ShaderParser::GetLayout(*cullCompShader->sParser, builder);
             
@@ -264,19 +432,6 @@ namespace Rendering
 
             //light pass//
 
-            quadVert = Vertex2D::GetQuadVertices();
-            quadIndices = Vertex2D::GetQuadIndices();
-            cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
-            cPropsUbo.invView = glm::inverse(camera.matrices.view);
-            
-            lVertexBuffer = std::make_unique<ENGINE::Buffer>(
-                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(Vertex2D) * quadVert.size(), quadVert.data());
-            lIndexBuffer = std::make_unique<ENGINE::Buffer>(
-                physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(uint32_t) * quadIndices.size(), quadIndices.data());
            
             lVertShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
             lFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
@@ -287,9 +442,15 @@ namespace Rendering
             lDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
+            auto lPushConstantRange = vk::PushConstantRange()
+                                     .setOffset(0)
+                                     .setStageFlags(vk::ShaderStageFlagBits::eFragment)
+                                     .setSize(sizeof(LightPc));
+
             auto lLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
-                                    .setSetLayoutCount(1)
-                                    .setPSetLayouts(&lDstLayout.get());
+                                     .setPushConstantRanges(lPushConstantRange)
+                                     .setSetLayoutCount(1)
+                                     .setPSetLayouts(&lDstLayout.get());
           
             lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
 
@@ -334,128 +495,8 @@ namespace Rendering
             lRenderNode->AddSamplerResource("depthGSampler", depthAttachmentView.get());
             lRenderNode->DependsOn(computePassName);
             lRenderNode->BuildRenderGraphNode();
-        }
-
-        void RecreateSwapChainResources() override
-        {
             
         }
-        void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
-        {
-            auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
-                [this](vk::CommandBuffer& commandBuffer)
-                {
-                    vk::DeviceSize offset = 0;
-                    commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
-                                                     renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0, 1,
-                                                     &gDstSet.get(), 0 , nullptr);
-
-                    commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
-                    commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
-                    
-                    for (int i = 0; i < model.meshCount; ++i)
-                    {
-
-                        pc.projView = camera.matrices.perspective * camera.matrices.view;
-                        pc.model = model.modelsMat[i];
-                        commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
-                                                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                                                    0, sizeof(ForwardPc), &pc);
-                    
-                        commandBuffer.drawIndexed(model.indicesCount[i], 1, model.firstIndices[i],
-                                                  static_cast<int32_t>(model.firstVertices[i]), 0);
-                    }
-           
-                });
-
-                renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
-
-                auto cullTask = new std::function<void()>([this, inflightQueue]()
-                {
-                    lightsMap.clear();
-                    for (int i = 0; i < tileSize * tileSize; ++i)
-                    {
-                        lightsMap.emplace_back(ArrayIndexer{});
-                    }
-                    memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
-                    
-                    lightsIndices.clear();
-                    for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
-                    {
-                        lightsIndices.emplace_back(-1);
-                    }
-                    memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
-                    
-                    cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
-                    cPropsUbo.invView = glm::inverse(camera.matrices.view);
-                    memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
-                    
-                    screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
-                    screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
-                    screenDataPc.pointLightsCount = pointLights.size();
-
-                    memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
-                });
-            
-                auto cullRenderOp =  new std::function<void(vk::CommandBuffer& command_buffer)>(
-                    [this](vk::CommandBuffer& commandBuffer)
-                    {
-                        auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
-                        commandBuffer.bindDescriptorSets(renderNode->pipelineType,
-                                                         renderNode->pipelineLayout.get(), 0,
-                                                         1,
-                                                         &cullDstSet.get(), 0, nullptr);
-                        commandBuffer.pushConstants(renderGraphRef->GetNode(computePassName)->pipelineLayout.get(),
-                                                    vk::ShaderStageFlagBits::eCompute,
-                                                    0, sizeof(ScreenDataPc), &screenDataPc);
-                        commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
-                        int xGpCount = tileSize / localSize;
-                        int yGpCount = tileSize / localSize;
-                        commandBuffer.dispatch(xGpCount, yGpCount, 1);
-                    });
-
-                renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
-                renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);
-                auto lSetViewTask = new std::function<void()>([this, inflightQueue]()
-                {
-                    auto* currImage = inflightQueue->currentSwapchainImageView;
-                    auto& currDepthImage = core->swapchainRef->depthImagesFull.at(inflightQueue->frameIndex);
-                    renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
-                    renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
-                    
-                });
-                auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
-                    [this](vk::CommandBuffer& commandBuffer)
-                    {
-                        vk::DeviceSize offset = 0;
-                        commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(lightPassName)->pipelineType,
-                                                         renderGraphRef->GetNode(lightPassName)->pipelineLayout.get(),
-                                                         0, 1,
-                                                         &lDstSet.get(), 0, nullptr);
-                        commandBuffer.bindVertexBuffers(0, 1, &lVertexBuffer->bufferHandle.get(), &offset);
-                        commandBuffer.bindIndexBuffer(lIndexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
-
-                        commandBuffer.drawIndexed(quadIndices.size(), 1, 0,
-                                                  0, 0);
-                    });
-            
-                renderGraphRef->GetNode(lightPassName)->AddTask(lSetViewTask);
-                renderGraphRef->GetNode(lightPassName)->SetRenderOperation(lRenderOp);
-            
-        }
-        void ReloadShaders() override
-        {
-            
-            auto* gRenderNode = renderGraphRef->GetNode(gBufferPassName);
-            auto* renderNode = renderGraphRef->GetNode(lightPassName);
-            auto* cRenderNode = renderGraphRef->GetNode(computePassName);
-            
-            gRenderNode->RecreateResources();
-            renderNode->RecreateResources();
-            cRenderNode->RecreateResources();
-            
-        }
-        
         ENGINE::DescriptorAllocator* descriptorAllocatorRef;
         WindowProvider* windowProvider;
         ENGINE::Core* core;
@@ -526,14 +567,15 @@ namespace Rendering
         std::vector<int32_t> lightsIndices;
         ScreenDataPc screenDataPc;
         //std::vector<DirectionalLight> directionalLights;
-        int tileSize = 32;
-        int localSize = 1;
+        uint32_t tileSize = 32;
+        uint32_t localSize = 1;
         
 
         //light
         std::vector<Vertex2D> quadVert;
         std::vector<uint32_t> quadIndices;
         CPropsUbo cPropsUbo;
+        LightPc lightPc;
     };   
 }
 
