@@ -37,6 +37,57 @@ namespace Rendering
         }
         void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
         {
+            auto cullTask = new std::function<void()>([this, inflightQueue]()
+            {
+                screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
+                screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
+                screenDataPc.pointLightsCount = pointLights.size();
+                screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSizePx +
+                    1);
+                screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSizePx +
+                    1);
+
+                lightsMap.clear();
+                for (int i = 0; i < screenDataPc.xTileCount * screenDataPc.yTileCount; ++i)
+                {
+                    lightsMap.emplace_back(ArrayIndexer{});
+                }
+                memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
+
+                lightsIndices.clear();
+                for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
+                {
+                    lightsIndices.emplace_back(-1);
+                }
+                memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
+
+                cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
+                cPropsUbo.invView = glm::inverse(camera.matrices.view);
+                cPropsUbo.pos = camera.position;
+
+                memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
+
+                memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
+            });
+
+            auto cullRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
+                [this](vk::CommandBuffer& commandBuffer)
+                {
+                    auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
+                    commandBuffer.bindDescriptorSets(renderNode->pipelineType,
+                                                     renderNode->pipelineLayout.get(), 0,
+                                                     1,
+                                                     &cullDstSet.get(), 0, nullptr);
+                    commandBuffer.pushConstants(renderGraphRef->GetNode(computePassName)->pipelineLayout.get(),
+                                                vk::ShaderStageFlagBits::eCompute,
+                                                0, sizeof(ScreenDataPc), &screenDataPc);
+                    commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
+                    commandBuffer.dispatch(screenDataPc.xTileCount/localSize, screenDataPc.xTileCount/localSize, 1);
+                });
+
+            renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
+            renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);
+            
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
@@ -65,61 +116,11 @@ namespace Rendering
 
                 renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
 
-                auto cullTask = new std::function<void()>([this, inflightQueue]()
-                {
-                                        
-                    screenDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
-                    screenDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
-                    screenDataPc.pointLightsCount = pointLights.size();
-                    screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width- 1) / tileSize + 1);
-                    screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
 
-                    lightsMap.clear();
-                    for (int i = 0; i < screenDataPc.xTileCount * screenDataPc.yTileCount; ++i)
-                    {
-                        lightsMap.emplace_back(ArrayIndexer{});
-                    }
-                    memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
-                    
-                    lightsIndices.clear();
-                    for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
-                    {
-                        lightsIndices.emplace_back(-1);
-                    }
-                    memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
-                    
-                    cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
-                    cPropsUbo.invView = glm::inverse(camera.matrices.view);
-                    cPropsUbo.pos = camera.position;
-                    
-                    memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
-
-                    memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
-                });
-            
-                auto cullRenderOp =  new std::function<void(vk::CommandBuffer& command_buffer)>(
-                    [this](vk::CommandBuffer& commandBuffer)
-                    {
-                        auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
-                        commandBuffer.bindDescriptorSets(renderNode->pipelineType,
-                                                         renderNode->pipelineLayout.get(), 0,
-                                                         1,
-                                                         &cullDstSet.get(), 0, nullptr);
-                        commandBuffer.pushConstants(renderGraphRef->GetNode(computePassName)->pipelineLayout.get(),
-                                                    vk::ShaderStageFlagBits::eCompute,
-                                                    0, sizeof(ScreenDataPc), &screenDataPc);
-                        commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
-                        int xGpCount = screenDataPc.xTileCount / localSize;
-                        int yGpCount = screenDataPc.xTileCount / localSize;
-                        commandBuffer.dispatch(screenDataPc.xTileCount, screenDataPc.xTileCount, 1);
-                    });
-
-                renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
-                renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);
                 auto lSetViewTask = new std::function<void()>([this, inflightQueue]()
                 {
-                    lightPc.xTileCount = static_cast<uint32_t>((static_cast<int>(core->swapchainRef->extent.width) - 1) / tileSize + 1);
-                    lightPc.yTileCount = static_cast<uint32_t>((static_cast<int>(core->swapchainRef->extent.height) - 1) / tileSize + 1);
+                    lightPc.xTileCount = static_cast<uint32_t>((static_cast<int>(core->swapchainRef->extent.width) - 1) / tileSizePx + 1);
+                    lightPc.yTileCount = static_cast<uint32_t>((static_cast<int>(core->swapchainRef->extent.height) - 1) / tileSizePx + 1);
                     auto* currImage = inflightQueue->currentSwapchainImageView;
                     renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
                     renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
@@ -225,10 +226,10 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
             
-            pointLights.reserve(40);
-            for (int i = 0; i < 40; ++i)
+            pointLights.reserve(100);
+            for (int i = 0; i < 100; ++i)
             {
-                std::uniform_real_distribution<> distributionPos(-3.0f, 3.0f);
+                std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 glm::vec3 pos = glm::vec3(distributionPos(gen), 1.0f, distributionPos(gen));
                 
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
@@ -252,8 +253,8 @@ namespace Rendering
             screenDataPc.sWidth = windowProvider->GetWindowSize().x;
             screenDataPc.sHeight = windowProvider->GetWindowSize().y;
             screenDataPc.pointLightsCount = 0;
-            screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSize + 1);
-            screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+            screenDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSizePx + 1);
+            screenDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSizePx + 1);
             screenDataPc.pointLightsCount = pointLights.size();
 
             lightsMap.reserve(screenDataPc.xTileCount * screenDataPc.yTileCount);
@@ -274,8 +275,8 @@ namespace Rendering
             cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
             cPropsUbo.invView = glm::inverse(camera.matrices.view);
             cPropsUbo.pos = camera.position;
-            lightPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSize + 1);
-            lightPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSize + 1);
+            lightPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSizePx + 1);
+            lightPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSizePx + 1);
                     
             
 
@@ -338,14 +339,49 @@ namespace Rendering
             gFragShader =std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
             ENGINE::DescriptorLayoutBuilder builder;
+             
+            //Cull pass//
+            
+            cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+                                                              "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
+
+            ENGINE::ShaderParser::GetLayout(*cullCompShader->sParser, builder);
+            
+            auto cullPushConstantRange = vk::PushConstantRange()
+                                     .setOffset(0)
+                                     .setStageFlags(vk::ShaderStageFlagBits::eCompute)
+                                     .setSize(sizeof(ScreenDataPc));
+            
+            cullDstLayout = builder.BuildBindings(logicalDevice,
+                                                  vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment
+                                                  | vk::ShaderStageFlagBits::eFragment);
+
+            auto cullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
+            .setSetLayoutCount(1)
+            .setPushConstantRanges(cullPushConstantRange)
+            .setPSetLayouts(&cullDstLayout.get());
+            
+            cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
+
+            writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor,vk::DescriptorType::eStorageBuffer);
+            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor,vk::DescriptorType::eUniformBuffer);
+            
+            writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
+
+            auto* cullRenderNode = renderGraphRef->AddPass(computePassName);
+            cullRenderNode->SetCompShader(cullCompShader.get());
+            cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
+            cullRenderNode->BuildRenderGraphNode();
+            
+
 
             ENGINE::ShaderParser::GetLayout(*gVertShader.get()->sParser, builder);
             ENGINE::ShaderParser::GetLayout(*gFragShader.get()->sParser, builder);
 
             gDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-
-            
 
             auto pushConstantRange = vk::PushConstantRange()
                                      .setOffset(0)
@@ -393,43 +429,7 @@ namespace Rendering
             renderNode->AddColorImageResource("gNorm", normAttachmentView.get());
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView.get());
             renderNode->BuildRenderGraphNode();
-            
-            //Cull pass//
-            
-            cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
-                                                              "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
-
-            ENGINE::ShaderParser::GetLayout(*cullCompShader->sParser, builder);
-            
-            auto cullPushConstantRange = vk::PushConstantRange()
-                                     .setOffset(0)
-                                     .setStageFlags(vk::ShaderStageFlagBits::eCompute)
-                                     .setSize(sizeof(ScreenDataPc));
-            
-            cullDstLayout = builder.BuildBindings(logicalDevice,
-                                                  vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment
-                                                  | vk::ShaderStageFlagBits::eFragment);
-
-            auto cullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
-            .setSetLayoutCount(1)
-            .setPushConstantRanges(cullPushConstantRange)
-            .setPSetLayouts(&cullDstLayout.get());
-            
-            cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
-
-            writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor,vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor,vk::DescriptorType::eUniformBuffer);
-            
-            writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
-
-            auto* cullRenderNode = renderGraphRef->AddPass(computePassName);
-            cullRenderNode->SetCompShader(cullCompShader.get());
-            cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
-            cullRenderNode->BuildRenderGraphNode();
-            
-
+           
             //light pass//
 
            
@@ -567,7 +567,7 @@ namespace Rendering
         std::vector<int32_t> lightsIndices;
         ScreenDataPc screenDataPc;
         //std::vector<DirectionalLight> directionalLights;
-        uint32_t tileSize = 32;
+        uint32_t tileSizePx = 16;
         uint32_t localSize = 1;
         
 

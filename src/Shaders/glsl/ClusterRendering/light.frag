@@ -83,7 +83,7 @@ void main() {
         }
     }
     if(lightsInTile>0){
-        float intensity= u_InvLerp(0.0,40.0, float(lightsInTile));
+        float intensity= u_InvLerp(0.0,100.0, float(lightsInTile));
         vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 0.3), vec3(0.3, 0.0, 0.0), intensity);
         finalCol += debugCol;
     }

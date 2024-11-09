@@ -675,7 +675,7 @@ namespace ENGINE
             {
                 RenderGraphNode* node = renderNode;
                 bool dependancyNeed = false;
-                std::string dependancyName = "";
+                std::string dependancyName;
                 for (auto& passName : allPassesNames)
                 {
                     if (node->dependencies.contains(passName))
