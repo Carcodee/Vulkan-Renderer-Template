@@ -219,7 +219,7 @@ namespace Rendering
             imageShipperNorm.BuildImage(core, 1, 1, core->swapchainRef->GetFormat(),
                                         ENGINE::GRAPHICS_READ);
             ModelLoader::GetInstance()->LoadGLTF(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\3d_pbr_curved_sofa\\scene.gltf",
+                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\sponza\\scene.gltf",
                 model);
 
             //compute
@@ -230,7 +230,7 @@ namespace Rendering
             for (int i = 0; i < 100; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
-                glm::vec3 pos = glm::vec3(distributionPos(gen), 1.0f, distributionPos(gen));
+                glm::vec3 pos = glm::vec3(distributionPos(gen), distributionPos(gen), distributionPos(gen));
                 
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));

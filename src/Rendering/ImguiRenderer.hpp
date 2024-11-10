@@ -93,6 +93,16 @@ namespace Rendering
         void ClusterRendererInfo()
         {
             ImGui::Begin("Light Options");
+            float speed = 0.2f;
+            for (auto& pointLight : clusterRenderer->pointLights)
+            {
+                if (pointLight.pos.y >= 20.0f)
+                {
+                    pointLight.pos.y = 0;
+                }
+                pointLight.pos+= glm::vec3(0.0f, 1.0f, 0.0f) * speed;
+                pointLight.CalculateQAttenuationFromRadius();
+            }
             static float pointLightRadiuses = 1.0f;
             if(ImGui::SliderFloat("Point lights Radiuses", &pointLightRadiuses, 1.0f, 10.0f))
             {
