@@ -699,7 +699,6 @@ namespace ENGINE
                 }
                 node->Execute(currentFrame->commandBuffer.get());
                 allPassesNames.push_back(node->passName);
-                
             }
         }
     };

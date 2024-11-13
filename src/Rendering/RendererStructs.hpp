@@ -88,6 +88,8 @@ namespace Rendering
 		glm::mat4 invProj;
 		glm::mat4 invView;
 		glm::vec3 pos = glm::vec3(0.0);
+		float zNear;
+		float zFar;
 	};
 	struct ArrayIndexer 
 	{
@@ -101,6 +103,8 @@ namespace Rendering
 		int pointLightsCount; 
 		uint32_t xTileCount; 
 		uint32_t yTileCount; 
+		float zNear; 
+		float zFar; 
 	};
 	struct LightPc 
 	{

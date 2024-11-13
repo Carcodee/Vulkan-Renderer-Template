@@ -26,7 +26,7 @@ struct PointLight
         this->intensity = intensity;
         this->lAttenuation = lAttenuation;
         this->qAttenuation = qAttenuation;
-        CalculateRadiusFromAttenuation();
+        CalculateRadiusFromParams();
     }
 
     PointLight(glm::vec3 pos, glm::vec3 col, float radius, float intensity, float lAttenuation, float qAttenuation)
@@ -38,30 +38,31 @@ struct PointLight
         this->radius = radius;
         CalculateQAttenuationFromRadius();
     }
-    
-    
-    void CalculateRadiusFromAttenuation()
-    {
-        //lAtt * r + qAtt * r *r + c + 100= 0;
-        float a = lAttenuation;
-        float b = qAttenuation;
-        float c =  1 - (1 / 0.01f);
-        float discriminant = static_cast<float>((b * b) - (4 * a * c));
-        if (discriminant < 0)
-        {
-            std::cout<< "Invalid parameters for attenuation";
-            radius = -1.0;
-            return;
+    void CalculateRadiusFromParams () {
+
+        float a = qAttenuation;
+        float b = lAttenuation;
+        float c = 1.0 - (1.0 / 0.01);
+        // Calculate the discriminant
+        float discriminant = (b * b) - (4 * a * c);
+        if (discriminant < 0) {
+            std::cout << "Invalid parameters for attenuation or intensity threshold" << std::endl;
         }
-        float r1 = (-b + sqrt(discriminant))/ (2.0f * a);
-        float r2 = (-b - sqrt(discriminant))/ (2.0f * a);
+
+        // Calculate possible solutions for the radius
+        float r1 = (-b + sqrt(discriminant)) / (2.0f * a);
+        float r2 = (-b - sqrt(discriminant)) / (2.0f * a);
+
+        // Choose the positive radius
         radius = std::max(r1, r2);
-    }
+    } 
+    
     void CalculateQAttenuationFromRadius()
     {
         float threshold = 0.01f; // Define the threshold
         qAttenuation = (1.0f / threshold - 1.0f - lAttenuation * radius) / (radius * radius);
     }
+
     
 };
 

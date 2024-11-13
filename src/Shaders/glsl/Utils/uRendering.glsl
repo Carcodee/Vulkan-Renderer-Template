@@ -37,6 +37,17 @@ vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos, vec2 screenSize){
 
     return vec3(viewPos.xyz);
 }
+
+vec4 u_ScreenToViewNDC(mat4 invProj, float depth, vec2 ndcCoords){
+    vec4 ndcPos = vec4(1.0f);
+    ndcPos.x = ndcPos.x;
+    ndcPos.y = ndcPos.y;
+    ndcPos.z = depth;
+
+    vec4 viewPos = invProj * ndcPos;
+    viewPos = viewPos / viewPos.w;
+    return viewPos;
+}
 vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
     vec4 ndcPos = vec4(1.0f);
     ndcPos.x = 2 * screenPos.x - 1.0f;
@@ -49,48 +60,18 @@ vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
     return vec3(viewPos.xyz);
 }
 
+float u_LinearDepth(float d, float zNear, float zFar)
+{
+    return zNear * zFar / (zFar - d * (zNear + zFar));
+}
+
+//linear depth
+float u_GetZSlice(float Z, float near, float far, float numSlices) {
+    return floor((log2(Z) * numSlices / log2(far / near)) - (numSlices * log2(near) / log2(far / near)));
+}
+
 float u_SDF_Sphere(float radius, vec3 spherePos, vec3 pos){
     
     return distance(spherePos, pos);
 }
-bool u_SDF_AABB(vec2 minAABB, vec2 maxAABB, vec2 pos){
-    bool xCheck = bool(pos.x > minAABB.x && pos.x < maxAABB.x);
-    bool yCheck = bool(pos.y > minAABB.y && pos.y < maxAABB.y);
-    return xCheck && yCheck;
-}
-bool u_SDF_AABB(vec3 minAABB, vec3 maxAABB, vec3 pos){
-    bool xCheck = bool(pos.x > minAABB.x && pos.x < maxAABB.x);
-    bool yCheck = bool(pos.y > minAABB.y && pos.y < maxAABB.y);
-    bool zCheck = bool(pos.z > minAABB.z && pos.z < maxAABB.z);
-    return xCheck && yCheck;
-}
-
-bool u_SDF_AABB_Sphere(vec2 min, vec2 max, vec2 lightPos, float lightRadius){
-    
-    float closestX = clamp(lightPos.x, min.x, max.x);
-    float closestY = clamp(lightPos.y, min.y, max.y);
-    
-    float dx = lightPos.x - closestX;
-    float dy = lightPos.y - closestY;
-    
-    float distanceSqr = dx * dx + dy * dy;
-    
-    return distanceSqr < (lightRadius * lightRadius);
-}
-bool u_SDF_AABB_Sphere(vec3 min, vec3 max, vec3 lightPos, float lightRadius){
-
-    float closestX = clamp(lightPos.x, min.x, max.x);
-    float closestY = clamp(lightPos.y, min.y, max.y);
-    float closestZ = clamp(lightPos.z, min.z, max.z);
-
-    float dx = lightPos.x - closestX;
-    float dy = lightPos.y - closestY;
-    float dz = lightPos.z - closestZ;
-
-    float distanceSqr = dx * dx + dy * dy + dz * dz ;
-
-    return distanceSqr < (lightRadius * lightRadius);
-}
-
-
 #endif 

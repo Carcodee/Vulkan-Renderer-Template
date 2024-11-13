@@ -93,7 +93,7 @@ namespace Rendering
         void ClusterRendererInfo()
         {
             ImGui::Begin("Light Options");
-            float speed = 0.2f;
+            float speed = 0.09f;
             for (auto& pointLight : clusterRenderer->pointLights)
             {
                 if (pointLight.pos.y >= 20.0f)
@@ -104,7 +104,7 @@ namespace Rendering
                 pointLight.CalculateQAttenuationFromRadius();
             }
             static float pointLightRadiuses = 1.0f;
-            if(ImGui::SliderFloat("Point lights Radiuses", &pointLightRadiuses, 1.0f, 10.0f))
+            if(ImGui::SliderFloat("Point lights Radiuses", &pointLightRadiuses, 1.0f, 20.0f))
             {
                 for (auto& pointLight : clusterRenderer->pointLights)
                 {
@@ -113,26 +113,45 @@ namespace Rendering
                 }
             }
             static float pointQuadraticAttenuation = 1.0f;
-            if (ImGui::SliderFloat("Point lights Attenuation", &pointQuadraticAttenuation, 1.0f, 10.0f))
+            if (ImGui::SliderFloat("Point lights Quadratic Attenuation", &pointQuadraticAttenuation, 1.0f, 30.0f))
             {
                 for (auto& pointLight : clusterRenderer->pointLights)
                 {
                     pointLight.qAttenuation = pointQuadraticAttenuation;
-                    pointLight.CalculateRadiusFromAttenuation();
+                    pointLight.CalculateRadiusFromParams();
+                    pointLightRadiuses = pointLight.radius;
+                }
+            }
+            static float pointLightLinearAttenuation = 1.0f;
+            if (ImGui::SliderFloat("Point lights Linear Attenuation", &pointLightLinearAttenuation, 1.0f, 30.0f))
+            {
+                for (auto& pointLight : clusterRenderer->pointLights)
+                {
+                    pointLight.lAttenuation = pointLightLinearAttenuation;
+                    pointLight.CalculateRadiusFromParams();
+                    pointLightRadiuses = pointLight.radius;
                 }
             }
             static float pointLightIntensity = 1.0f;
-            if (ImGui::SliderFloat("Point lights Intensity", &pointLightIntensity, 1.0f, 10.0f))
+            if (ImGui::SliderFloat("Point lights Intensity", &pointLightIntensity, 0.0f, 30.0f))
             {
                 for (auto& pointLight : clusterRenderer->pointLights)
                 {
                     pointLight.intensity = pointLightIntensity;
+                    pointLight.CalculateRadiusFromParams();
+                    pointLightRadiuses = pointLight.radius;
                 }
             }
             ImGui::LabelText(":X", "%f.3f", clusterRenderer->camera.position.x);
             ImGui::LabelText(":Y", "%f.3f", clusterRenderer->camera.position.y);
             ImGui::LabelText(":Z", "%f.3f", clusterRenderer->camera.position.z);
+            
+            ImGui::LabelText("Forward :X", "%f.3f", clusterRenderer->camera.forward.x);
+            ImGui::LabelText("Forward :Y", "%f.3f", clusterRenderer->camera.forward.y);
+            ImGui::LabelText("Forward :Z", "%f.3f", clusterRenderer->camera.forward.z);
             ImGui::End();
+
+            
         }
 
         ENGINE::DynamicRenderPass dynamicRenderPass;

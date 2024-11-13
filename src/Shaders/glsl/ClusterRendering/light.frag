@@ -20,6 +20,9 @@ layout(set = 0, binding = 2) uniform sampler2D gDepth;
 layout(set = 0, binding = 3, scalar) uniform CameraProperties{
     mat4 invProj;
     mat4 invView;
+    vec3 pos;
+    float zNear;
+    float zFar;
 }cProps;
 layout (set = 0, binding = 4, scalar) buffer PointLights{
     u_PointLight[] pointLights;
@@ -47,26 +50,32 @@ vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
     return vec3(0.0);
 }
 
-#define TILE_PX_SIZE 32
+#define TILE_X_PX_SIZE 256
+#define TILE_Y_PX_SIZE 256
+#define SLICES_SIZE 24 
 void main() {
-
-
-    ivec2 tileId = ivec2(gl_FragCoord.xy/TILE_PX_SIZE);
     
-    uint mapIndex = tileId.y * pc.tileCountX + tileId.x;
-
-    int lightOffset = lightMap[mapIndex].offset;
-    int lightsInTile = lightMap[mapIndex].size;
-
-    vec2 fragCoord = vec2(textCoord.x , textCoord.y);
-    float depth = texture(gDepth, textCoord).r;
-    vec4 col = texture(gCol, textCoord);
-    col =vec4(0.01);
     vec4 norm = texture(gNormals, textCoord);
+    vec2 fragCoord = vec2(textCoord.x , textCoord.y);
+    vec4 col = texture(gCol, textCoord);
+    float depth = texture(gDepth, textCoord).r;
+    col =vec4(0.01);
     if(norm == vec4(0.0)){
 
         discard;
     }
+    
+    ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(TILE_X_PX_SIZE, TILE_Y_PX_SIZE));
+    float linearDepth = u_LinearDepth(depth, cProps.zNear, cProps.zFar);
+    int zId =int(u_GetZSlice(linearDepth, cProps.zNear, cProps.zFar, float(SLICES_SIZE)));
+    
+    //this is the problem I think :D
+    uint mapIndex = tileId.x + (tileId.y * pc.tileCountX) + (zId * pc.tileCountX * pc.tileCountY);
+
+    int lightOffset = lightMap[mapIndex].offset;
+    int lightsInTile = lightMap[mapIndex].size;
+
+   
 
     vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
     
@@ -79,16 +88,28 @@ void main() {
     if(true){
         for (int i = 0; i< lightsInTile; i++) {
             int lightIndex = lightIndices[lightOffset + i];
-            finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
+            if(lightIndex != -1){
+                finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
+            }else{
+                finalCol = vec3(0.0);
+            }
         }
     }
-    if(lightsInTile>0){
-        float intensity= u_InvLerp(0.0,100.0, float(lightsInTile));
-        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 0.3), vec3(0.3, 0.0, 0.0), intensity);
-        finalCol += debugCol;
+    if(true){
+        float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(SLICES_SIZE), float(mapIndex));
+        
+//        
+        float hue = intensityId;
+        float saturation = 1.0;
+        float lightness = 0.8;
+        vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
+        
+//        finalCol = tileCol;
+        float intensity= u_InvLerp(0.0, 100.0 , float(lightsInTile));
+        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
+//        finalCol =  tileCol;
+         finalCol += debugCol * tileCol;
     }
-    
-
     outColor = vec4(finalCol, 1.0);
 
 }
