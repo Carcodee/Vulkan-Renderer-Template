@@ -93,8 +93,8 @@ namespace Rendering
 	};
 	struct ArrayIndexer 
 	{
-		int offset = 0;
-		int size = 0;
+		uint32_t offset = 0;
+		uint32_t size = 0;
 	};
 	struct ScreenDataPc
 	{
@@ -103,13 +103,17 @@ namespace Rendering
 		int pointLightsCount; 
 		uint32_t xTileCount; 
 		uint32_t yTileCount; 
-		float zNear; 
-		float zFar; 
+		uint32_t xTileSizePx; 
+		uint32_t yTileSizePx; 
 	};
 	struct LightPc 
 	{
 		uint32_t xTileCount;
 		uint32_t yTileCount;
+		uint32_t xTileSizePx;
+		uint32_t yTileSizePx;
+		uint32_t zSlices;
+		
 	};
 
 

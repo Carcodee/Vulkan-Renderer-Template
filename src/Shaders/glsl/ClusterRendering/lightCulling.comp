@@ -31,12 +31,11 @@ layout(push_constant)uniform pushConstants{
     int pointLightsCount;
     uint tileCountX;
     uint tileCountY;
+    int xTileSizePx;
+    int yTileSizePx;
 }pc;
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-
-#define TILE_X_PX_SIZE 256 
-#define TILE_Y_PX_SIZE 256 
 
 void main() {
 
@@ -44,32 +43,31 @@ void main() {
     uvec3 clusterId = gl_GlobalInvocationID;
     uint threatSize = gl_NumWorkGroups.x * gl_NumWorkGroups.y * gl_NumWorkGroups.z;
     
-    vec2 tileSizePX = vec2(TILE_X_PX_SIZE, TILE_Y_PX_SIZE);
+    vec2 tileSizePX = vec2(pc.xTileSizePx, pc.yTileSizePx);
     vec2 screenSize = vec2(pc.sWidth, pc.sHeight);
 
-    vec2 ndcSizePerTile = 2 * (tileSizePX/screenSize);
+    vec2 ndcSizePerTile = 2.0 * (tileSizePX/screenSize);
     vec2 upperLeft = vec2(-1.0);
     
     
+    //ndc space
     vec2 topL = (upperLeft + clusterId.xy * ndcSizePerTile);
     vec2 topR = vec2(topL.x + ndcSizePerTile.x, topL.y);
     vec2 bottonR = (topL + ndcSizePerTile);
     vec2 bottonL = vec2(topL.x, topL.y + ndcSizePerTile);
-    
-    float tileNear  = -cProps.zNear * pow(cProps.zFar/ cProps.zNear, gl_WorkGroupID.z/float(gl_NumWorkGroups.z));
-    float tileFar   = -cProps.zNear * pow(cProps.zFar/ cProps.zNear, (gl_WorkGroupID.z + 1) /float(gl_NumWorkGroups.z));
+
 
     //** TILE RENDERING START **//
     // screen to view
     vec3 nearTopL =  u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0, topL);
     vec3 nearTopR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0, topR);
-    vec3 nearBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,  bottonL);
-    vec3 nearBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,  bottonR);
+    vec3 nearBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0, bottonL);
+    vec3 nearBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0, bottonR);
 
     vec3 farTopL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, topL);
     vec3 farTopR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, topR);
-    vec3 farBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0,  bottonL);
-    vec3 farBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0,  bottonR);
+    vec3 farBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, bottonL);
+    vec3 farBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, bottonR);
 
     u_Frustum tileFrustum;
     
@@ -92,9 +90,13 @@ void main() {
     tileFrustum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
 
     //** TILE RENDERING END **//
-    
-    vec3 maxPointVs = u_ScreenToViewNDC(cProps.invProj, 1.0, topR).xyz;
-    vec3 minPointVs = u_ScreenToViewNDC(cProps.invProj, 1.0, bottonL).xyz;
+
+    float tileNear  = -cProps.zNear * pow(cProps.zFar / cProps.zNear, float(gl_WorkGroupID.z) / float(gl_NumWorkGroups.z));
+    float tileFar   = -cProps.zNear * pow(cProps.zFar / cProps.zNear, float(gl_WorkGroupID.z + 1) / float(gl_NumWorkGroups.z));
+
+
+    vec3 maxPointVs = u_ScreenToViewNDC(cProps.invProj, 0.0, topR.xy).xyz;
+    vec3 minPointVs = u_ScreenToViewNDC(cProps.invProj, 0.0, bottonL.xy).xyz;
     
     vec3 minPointNear = u_LineIntersectionToZPlane(vec3(0.0), minPointVs, tileNear);
     vec3 minPointFar = u_LineIntersectionToZPlane(vec3(0.0), minPointVs, tileFar);
@@ -104,11 +106,11 @@ void main() {
     vec3 minPointAABB = min(min(minPointNear, minPointFar), min(maxPointNear, maxPointFar));
     vec3 maxPointAABB = max(max(minPointNear, minPointFar), max(maxPointNear, maxPointFar));
     
-    //just to prevent collision, even if is less likely to have all lights in the same tile
+    //just to prevent collision for testing, even if is less likely to have all lights in the same tile
     int maxLightsPerTile= pc.pointLightsCount;
     
-    int idxIndexer =  int(clusterId.x + (clusterId.y * pc.tileCountX) + (clusterId.z * pc.tileCountX * pc.tileCountY));
-    int idxLightIndicesStart = idxIndexer * maxLightsPerTile;
+    uint idxIndexer = clusterId.x + (clusterId.y * pc.tileCountX) + (clusterId.z * pc.tileCountX * pc.tileCountY);
+    int idxLightIndicesStart = int(idxIndexer) * maxLightsPerTile;
     
     int lightCount = 0;
 
@@ -124,18 +126,31 @@ void main() {
 //            }
 //        }
         //** end tile rendering
-        vec4 posLightVs = inverse(cProps.invView) * vec4(pointLights[i].pos, 1.0);
-
-        if(u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, pointLights[i].radius)){
-
-            int idx = idxLightIndicesStart + lightCount;
-            lightIndices[idx] = i;
-            lightCount++;
+        mat4 view = inverse(cProps.invView);
+        vec4 posLightVs = view * vec4(pointLights[i].pos, 1.0) ;
+        float dstSqr;
+        if(u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, 4.0, dstSqr)){
+            if(lightCount < maxLightsPerTile){
+                int idx = idxLightIndicesStart + lightCount;
+                lightIndices[idx] = i;
+                lightCount++;
+            }
         };
     }
     atomicAdd(lightMap[idxIndexer].offset, idxLightIndicesStart);
     atomicAdd(lightMap[idxIndexer].size, lightCount);
+//        mat4 view = inverse(cProps.invView);
+//        vec4 posLightVs;
+//        if(idxIndexer< pc.pointLightsCount){
+//            posLightVs = view * vec4(pointLights[idxIndexer].pos, 1.0);
+//        }
+//
+//    mat4 view = inverse(cProps.invView);
+//    vec4 posLightVs = view * vec4(pointLights[0].pos, 1.0);
 
-//        lightMap[idxIndexer].offset= int(minPointAABB.z);
-//        lightMap[idxIndexer].size= int(maxPointAABB.z);
+    float dstSqr;
+    u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, 4.0, dstSqr);
+    dstSqr = sqrt(dstSqr);
+    lightMap[idxIndexer].offset= int(minPointAABB.z);
+    lightMap[idxIndexer].size= int(dstSqr);
 }

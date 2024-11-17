@@ -37,10 +37,13 @@ layout (set = 0, binding = 6, scalar) buffer LightIndices{
 layout(push_constant)uniform pushConstants{
     uint tileCountX;
     uint tileCountY;
+    int xTileSizePx;
+    int yTileSizePx;
+    int zSlicesSize;
 }pc;
 vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
-    float d = u_SDF_Sphere(light.radius, light.pos, pos);
-    if(d < light.radius){
+    float d = u_SDF_Sphere(light.pos, pos);
+    if(d < 4.0){
         vec3 lightDir = normalize(light.pos - pos);
         float diff = max(0.00, dot(lightDir, normal));
         float attenuation = 1.0 / (1.0 + (light.lAttenuation * d) + (light.qAttenuation * (d * d)));
@@ -50,9 +53,6 @@ vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
     return vec3(0.0);
 }
 
-#define TILE_X_PX_SIZE 256
-#define TILE_Y_PX_SIZE 256
-#define SLICES_SIZE 24 
 void main() {
     
     vec4 norm = texture(gNormals, textCoord);
@@ -65,9 +65,9 @@ void main() {
         discard;
     }
     
-    ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(TILE_X_PX_SIZE, TILE_Y_PX_SIZE));
+    ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
     float linearDepth = u_LinearDepth(depth, cProps.zNear, cProps.zFar);
-    int zId =int(u_GetZSlice(linearDepth, cProps.zNear, cProps.zFar, float(SLICES_SIZE)));
+    int zId =int(u_GetZSlice(linearDepth, cProps.zNear, cProps.zFar, float(pc.zSlicesSize)));
     
     //this is the problem I think :D
     uint mapIndex = tileId.x + (tileId.y * pc.tileCountX) + (zId * pc.tileCountX * pc.tileCountY);
@@ -95,20 +95,18 @@ void main() {
             }
         }
     }
-    if(true){
-        float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(SLICES_SIZE), float(mapIndex));
+    if(lightsInTile > 0){
+        float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
         
-//        
         float hue = intensityId;
-        float saturation = 1.0;
-        float lightness = 0.8;
+        float saturation = 0.8;
+        float lightness = 0.4;
         vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
         
-//        finalCol = tileCol;
         float intensity= u_InvLerp(0.0, 100.0 , float(lightsInTile));
         vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
-//        finalCol =  tileCol;
-         finalCol += debugCol * tileCol;
+         finalCol += (tileCol * 0.3);
+//        finalCol = (inverse(cProps.invView) * vec4(pos,1.0)).xyz;
     }
     outColor = vec4(finalCol, 1.0);
 

@@ -9,6 +9,8 @@
 
 
 
+
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -54,7 +56,7 @@ namespace Rendering
                                                 0, sizeof(ScreenDataPc), &cullDataPc);
                     commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
                     commandBuffer.dispatch(cullDataPc.xTileCount / localSize, cullDataPc.yTileCount / localSize,
-                                           tileSizeZ);
+                                           zSlicesSize);
                 });
 
             renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
@@ -93,6 +95,10 @@ namespace Rendering
             {
                 lightPc.xTileCount = cullDataPc.xTileCount;
                 lightPc.yTileCount = cullDataPc.yTileCount;
+                lightPc.xTileSizePx = xTileSizePx;
+                lightPc.yTileSizePx = yTileSizePx;
+                lightPc.zSlices = zSlicesSize;
+                
                 auto* currImage = inflightQueue->currentSwapchainImageView;
                 renderGraphRef->AddColorImageResource(lightPassName, "lColor", currImage);
                 renderGraphRef->GetNode(lightPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
@@ -124,13 +130,13 @@ namespace Rendering
             cullDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
             cullDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
             cullDataPc.pointLightsCount = pointLights.size();
-            cullDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSizePxX +
+            cullDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / xTileSizePx +
                 1);
-            cullDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSizePxY +
+            cullDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / yTileSizePx +
                 1);
 
             lightsMap.clear();
-            for (int i = 0; i < cullDataPc.xTileCount * cullDataPc.yTileCount * tileSizeZ; ++i)
+            for (int i = 0; i < cullDataPc.xTileCount * cullDataPc.yTileCount * zSlicesSize; ++i)
             {
                 lightsMap.emplace_back(ArrayIndexer{});
             }
@@ -235,11 +241,11 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(1000);
-            for (int i = 0; i < 1000; ++i)
+            pointLights.reserve(10);
+            for (int i = 0; i < 10; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
-                glm::vec3 pos = glm::vec3(distributionPos(gen), distributionPos(gen), distributionPos(gen));
+                glm::vec3 pos = glm::vec3(0.0f, 1.0f, 0.0f);
 
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
@@ -250,11 +256,9 @@ namespace Rendering
                 std::uniform_real_distribution<> distributionRadius(0.5f, 10.0f);
                 float radius = 2.0f;
 
-
                 std::uniform_real_distribution<> distributionAttenuation(0.3f, 10.0f);
                 float lAttenuation = 0.01f;
                 float qAttenuation = static_cast<float>(distributionAttenuation(gen));
-
 
                 pointLights.emplace_back(PointLight{pos, col, radius, intensity, lAttenuation, 0.0f});
             }
@@ -262,11 +266,13 @@ namespace Rendering
             cullDataPc.sWidth = windowProvider->GetWindowSize().x;
             cullDataPc.sHeight = windowProvider->GetWindowSize().y;
             cullDataPc.pointLightsCount = 0;
-            cullDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / tileSizePxX + 1);
-            cullDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / tileSizePxY + 1);
+            cullDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / xTileSizePx + 1);
+            cullDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / yTileSizePx + 1);
+            cullDataPc.xTileSizePx = xTileSizePx;
+            cullDataPc.yTileSizePx = yTileSizePx;
             cullDataPc.pointLightsCount = (int)pointLights.size();
 
-            lightsMap.reserve(cullDataPc.xTileCount * cullDataPc.yTileCount * tileSizeZ);
+            lightsMap.reserve(cullDataPc.xTileCount * cullDataPc.yTileCount * zSlicesSize);
             for (int i = 0; i < lightsMap.capacity(); ++i)
             {
                 lightsMap.emplace_back(ArrayIndexer{});
@@ -289,6 +295,9 @@ namespace Rendering
             
             lightPc.xTileCount = cullDataPc.xTileCount;
             lightPc.yTileCount = cullDataPc.yTileCount;
+            lightPc.xTileSizePx = xTileSizePx;
+            lightPc.yTileSizePx = yTileSizePx;
+             lightPc.zSlices = zSlicesSize;
         }
 
         void CreateBuffers()
@@ -578,9 +587,9 @@ namespace Rendering
         std::vector<ArrayIndexer> lightsMap;
         std::vector<int32_t> lightsIndices;
         ScreenDataPc cullDataPc;
-        uint32_t tileSizePxX = 256;
-        uint32_t tileSizePxY = 256;
-        uint32_t tileSizeZ = 24;
+        uint32_t xTileSizePx = 128;
+        uint32_t yTileSizePx = 128;
+        uint32_t zSlicesSize = 24;
         uint32_t localSize = 1;
 
 

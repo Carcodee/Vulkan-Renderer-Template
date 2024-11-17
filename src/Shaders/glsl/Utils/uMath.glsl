@@ -153,9 +153,9 @@ bool u_AABB_Sphere(vec2 min, vec2 max, vec2 spherePos, float r){
 
     float distanceSqr = dx * dx + dy * dy;
 
-    return distanceSqr < (r * r);
+    return distanceSqr < r * r;
 }
-bool u_AABB_Sphere(vec3 min, vec3 max, vec3 spherePos, float r){
+bool u_AABB_Sphere(vec3 min, vec3 max, vec3 spherePos, float r, out float distanceSqr){
 
     float closestX = clamp(spherePos.x, min.x, max.x);
     float closestY = clamp(spherePos.y, min.y, max.y);
@@ -165,7 +165,7 @@ bool u_AABB_Sphere(vec3 min, vec3 max, vec3 spherePos, float r){
     float dy = spherePos.y - closestY;
     float dz = spherePos.z - closestZ;
 
-    float distanceSqr = dx * dx + dy * dy + dz * dz ;
+    distanceSqr = dx * dx + dy * dy + dz * dz ;
 
     return distanceSqr <= (r * r);
 }

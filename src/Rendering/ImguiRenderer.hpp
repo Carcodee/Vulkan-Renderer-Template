@@ -93,7 +93,7 @@ namespace Rendering
         void ClusterRendererInfo()
         {
             ImGui::Begin("Light Options");
-            float speed = 0.09f;
+            float speed = 0.0f;
             for (auto& pointLight : clusterRenderer->pointLights)
             {
                 if (pointLight.pos.y >= 20.0f)
@@ -142,6 +142,29 @@ namespace Rendering
                     pointLightRadiuses = pointLight.radius;
                 }
             }
+
+            ImGui::SeparatorText("Tile/Cluster renderer");
+
+            static int xTileSizePx = 256;
+            static int yTileSizePx = 256;
+            static int zSlicesSize = 24;
+
+            if (ImGui::SliderInt("x tile size (px): ", &xTileSizePx, 32, 512))
+            {
+                clusterRenderer->xTileSizePx = xTileSizePx;
+            }
+            if (ImGui::SliderInt("y tile size (px): ", &yTileSizePx, 32, 512))
+            {
+                clusterRenderer->yTileSizePx = yTileSizePx;
+            }
+            if (ImGui::SliderInt("number of z slices: ", &zSlicesSize, 1, 28))
+            {
+                clusterRenderer->zSlicesSize = zSlicesSize;
+            }
+
+
+            ImGui::SeparatorText("Camera Info");
+            
             ImGui::LabelText(":X", "%f.3f", clusterRenderer->camera.position.x);
             ImGui::LabelText(":Y", "%f.3f", clusterRenderer->camera.position.y);
             ImGui::LabelText(":Z", "%f.3f", clusterRenderer->camera.position.z);

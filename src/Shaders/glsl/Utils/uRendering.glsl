@@ -2,10 +2,7 @@
 #define R_UTIL 
 
 vec3 u_ScreenToWorldNDC(mat4 invProj, mat4 invView, float depth, vec2 screenPos){
-    vec4 ndcPos = vec4(1.0f);
-    ndcPos.x = screenPos.x;
-    ndcPos.y = screenPos.y;
-    ndcPos.z = depth;
+    vec4 ndcPos = vec4(screenPos, depth, 1.0);
     
     vec4 viewPos = invProj * ndcPos;
     viewPos = viewPos / viewPos.w;
@@ -39,16 +36,13 @@ vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos, vec2 screenSize){
 }
 
 vec4 u_ScreenToViewNDC(mat4 invProj, float depth, vec2 ndcCoords){
-    vec4 ndcPos = vec4(1.0f);
-    ndcPos.x = ndcPos.x;
-    ndcPos.y = ndcPos.y;
-    ndcPos.z = depth;
-
+    vec4 ndcPos = vec4(ndcCoords, depth, 1.0);
     vec4 viewPos = invProj * ndcPos;
+    
     viewPos = viewPos / viewPos.w;
     return viewPos;
 }
-vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
+vec4 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
     vec4 ndcPos = vec4(1.0f);
     ndcPos.x = 2 * screenPos.x - 1.0f;
     ndcPos.y = 2 * screenPos.y - 1.0f;
@@ -57,7 +51,7 @@ vec3 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
     vec4 viewPos = invProj * ndcPos;
     viewPos = viewPos / viewPos.w;
 
-    return vec3(viewPos.xyz);
+    return viewPos;
 }
 
 float u_LinearDepth(float d, float zNear, float zFar)
@@ -70,7 +64,7 @@ float u_GetZSlice(float Z, float near, float far, float numSlices) {
     return floor((log2(Z) * numSlices / log2(far / near)) - (numSlices * log2(near) / log2(far / near)));
 }
 
-float u_SDF_Sphere(float radius, vec3 spherePos, vec3 pos){
+float u_SDF_Sphere(vec3 spherePos, vec3 pos){
     
     return distance(spherePos, pos);
 }
