@@ -93,7 +93,7 @@ namespace Rendering
         void ClusterRendererInfo()
         {
             ImGui::Begin("Light Options");
-            float speed = 0.0f;
+            float speed = 0.2f;
             for (auto& pointLight : clusterRenderer->pointLights)
             {
                 if (pointLight.pos.y >= 20.0f)

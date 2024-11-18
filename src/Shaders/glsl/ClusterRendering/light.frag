@@ -43,7 +43,7 @@ layout(push_constant)uniform pushConstants{
 }pc;
 vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
     float d = u_SDF_Sphere(light.pos, pos);
-    if(d < 4.0){
+    if(d < light.radius){
         vec3 lightDir = normalize(light.pos - pos);
         float diff = max(0.00, dot(lightDir, normal));
         float attenuation = 1.0 / (1.0 + (light.lAttenuation * d) + (light.qAttenuation * (d * d)));
@@ -64,12 +64,14 @@ void main() {
 
         discard;
     }
-    
+    vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
+
     ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
-    float linearDepth = u_LinearDepth(depth, cProps.zNear, cProps.zFar);
-    int zId =int(u_GetZSlice(linearDepth, cProps.zNear, cProps.zFar, float(pc.zSlicesSize)));
     
-    //this is the problem I think :D
+    float linearDepth = u_LinearDepth(depth, cProps.zNear, cProps.zFar);
+    
+    int zId =int(u_GetZSlice(abs(linearDepth), cProps.zNear * 2.0, cProps.zFar, float(pc.zSlicesSize)));
+    
     uint mapIndex = tileId.x + (tileId.y * pc.tileCountX) + (zId * pc.tileCountX * pc.tileCountY);
 
     int lightOffset = lightMap[mapIndex].offset;
@@ -77,7 +79,6 @@ void main() {
 
    
 
-    vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
     
     vec3 lightPos = vec3(0.0, 4.0, 0.0);
     vec3 lightDir = normalize(lightPos - pos);
@@ -86,7 +87,7 @@ void main() {
     vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 3.0f + ambientCol;
     
     if(true){
-        for (int i = 0; i< lightsInTile; i++) {
+        for (int i = 0; i < lightsInTile; i++) {
             int lightIndex = lightIndices[lightOffset + i];
             if(lightIndex != -1){
                 finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
@@ -105,9 +106,10 @@ void main() {
         
         float intensity= u_InvLerp(0.0, 100.0 , float(lightsInTile));
         vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
-         finalCol += (tileCol * 0.3);
+//         finalCol += debugCol /* (tileCol * 0.3)*/;
 //        finalCol = (inverse(cProps.invView) * vec4(pos,1.0)).xyz;
     }
+
     outColor = vec4(finalCol, 1.0);
 
 }

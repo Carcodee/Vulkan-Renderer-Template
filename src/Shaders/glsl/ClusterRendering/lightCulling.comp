@@ -127,9 +127,8 @@ void main() {
 //        }
         //** end tile rendering
         mat4 view = inverse(cProps.invView);
-        vec4 posLightVs = view * vec4(pointLights[i].pos, 1.0) ;
-        float dstSqr;
-        if(u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, 4.0, dstSqr)){
+        vec4 posLightVs = view * vec4(pointLights[i].pos, 1.0);
+        if(u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, pointLights[i].radius)){
             if(lightCount < maxLightsPerTile){
                 int idx = idxLightIndicesStart + lightCount;
                 lightIndices[idx] = i;
@@ -139,18 +138,4 @@ void main() {
     }
     atomicAdd(lightMap[idxIndexer].offset, idxLightIndicesStart);
     atomicAdd(lightMap[idxIndexer].size, lightCount);
-//        mat4 view = inverse(cProps.invView);
-//        vec4 posLightVs;
-//        if(idxIndexer< pc.pointLightsCount){
-//            posLightVs = view * vec4(pointLights[idxIndexer].pos, 1.0);
-//        }
-//
-//    mat4 view = inverse(cProps.invView);
-//    vec4 posLightVs = view * vec4(pointLights[0].pos, 1.0);
-
-    float dstSqr;
-    u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, 4.0, dstSqr);
-    dstSqr = sqrt(dstSqr);
-    lightMap[idxIndexer].offset= int(minPointAABB.z);
-    lightMap[idxIndexer].size= int(dstSqr);
 }

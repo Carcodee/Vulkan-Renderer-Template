@@ -56,12 +56,12 @@ vec4 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
 
 float u_LinearDepth(float d, float zNear, float zFar)
 {
-    return zNear * zFar / (zFar - d * (zNear + zFar));
+    return zNear * zFar / (zFar + d * (zFar - zNear));
 }
 
 //linear depth
 float u_GetZSlice(float Z, float near, float far, float numSlices) {
-    return floor((log2(Z) * numSlices / log2(far / near)) - (numSlices * log2(near) / log2(far / near)));
+    return max(log2(Z) * numSlices / log2(far / near) - numSlices * log2(near) / log2(far / near), 0.0);
 }
 
 float u_SDF_Sphere(vec3 spherePos, vec3 pos){
