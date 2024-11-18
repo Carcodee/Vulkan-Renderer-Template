@@ -34,6 +34,8 @@
 
 #include <spirv_glsl.hpp>
 
+#include <ProfilerTask.h>
+
 #include <vulkan/vulkan.hpp>
 #include "Structs.hpp"
 #include "UtilVk.hpp"

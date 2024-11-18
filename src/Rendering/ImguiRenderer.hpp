@@ -9,6 +9,11 @@
 
 
 
+
+
+
+
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -73,6 +78,7 @@ namespace Rendering
 
             ImGui::ShowDemoWindow();
             ClusterRendererInfo();
+            ProfilerInfo();
             
             ImGui::Render();
             ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f),core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
@@ -93,15 +99,14 @@ namespace Rendering
         {
             ImGui_ImplVulkan_Shutdown();
         }
+        void ProfilerInfo()
+        {
+             profilersWindow.Render();
+        }
         void ClusterRendererInfo()
         {
-            ImGui::Begin("Frame Info");
-
-            ImGui::Text("Gpu frame ms: %f.3f ms", gpuMs);
-            ImGui::Text("Cpu Frame ms: %f.3f ms", cpuMs);
-
             
-            ImGui::SeparatorText("Light Info");
+            ImGui::Begin("Light Info");
             
             float speed = 0.01f;
             for (auto& pointLight : clusterRenderer->pointLights)
@@ -192,6 +197,7 @@ namespace Rendering
         ENGINE::DescriptorAllocator descriptorAllocator;
         ENGINE::Core* core;
         ClusterRenderer* clusterRenderer;
+        ImGuiUtils::ProfilersWindow profilersWindow;
     };
 }
 

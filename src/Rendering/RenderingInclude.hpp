@@ -5,6 +5,7 @@
 
 
 
+
 #pragma once
 
 
@@ -16,8 +17,12 @@
 #include <imgui.h>
 
 
+#include <ImGuiProfilerRenderer.h>
+
 #include "backends/imgui_impl_vulkan.h"
 #include "backends/imgui_impl_glfw.h"
+
+
 #include "RendererStructs.hpp"
 
 #include "RThings/Lights.hpp"
