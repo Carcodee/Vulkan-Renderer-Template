@@ -85,14 +85,10 @@ void main() {
     vec3 ambientCol = vec3(0.0, 0.0, 0.0);
     vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 3.0f + ambientCol;
     
-    if(true){
-        for (int i = 0; i < lightsInTile; i++) {
-            int lightIndex = lightIndices[lightOffset + i];
-            if(lightIndex != -1){
-                finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
-            }else{
-                finalCol = vec3(0.0);
-            }
+    for (int i = 0; i < lightsInTile; i++) {
+        int lightIndex = lightIndices[lightOffset + i];
+        if(lightIndex != -1){
+            finalCol += EvalPointLight(pointLights[i], finalCol, pos, norm.xyz);
         }
     }
     if(lightsInTile>0){
