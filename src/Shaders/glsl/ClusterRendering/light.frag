@@ -68,17 +68,16 @@ void main() {
 
     ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
     
-    float linearDepth = u_LinearDepth(depth, cProps.zNear, cProps.zFar);
     
-    int zId =int(u_GetZSlice(abs(linearDepth), cProps.zNear * 2.0, cProps.zFar, float(pc.zSlicesSize)));
+    vec4 linearDepth = cProps.invProj * vec4(0.0, 0.0, depth, 1.0);
+    linearDepth.z = linearDepth.z / linearDepth.w;
+
+    int zId =int(u_GetZSlice(abs(linearDepth.z), cProps.zNear, cProps.zFar, float(pc.zSlicesSize)));
     
     uint mapIndex = tileId.x + (tileId.y * pc.tileCountX) + (zId * pc.tileCountX * pc.tileCountY);
 
     int lightOffset = lightMap[mapIndex].offset;
     int lightsInTile = lightMap[mapIndex].size;
-
-   
-
     
     vec3 lightPos = vec3(0.0, 4.0, 0.0);
     vec3 lightDir = normalize(lightPos - pos);
@@ -96,7 +95,7 @@ void main() {
             }
         }
     }
-    if(lightsInTile > 0){
+    if(lightsInTile>0){
         float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
         
         float hue = intensityId;
@@ -106,10 +105,10 @@ void main() {
         
         float intensity= u_InvLerp(0.0, 100.0 , float(lightsInTile));
         vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
-//         finalCol += debugCol /* (tileCol * 0.3)*/;
-//        finalCol = (inverse(cProps.invView) * vec4(pos,1.0)).xyz;
+         finalCol += debugCol;
     }
 
+    
     outColor = vec4(finalCol, 1.0);
 
 }

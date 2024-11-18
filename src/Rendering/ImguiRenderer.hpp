@@ -6,6 +6,9 @@
 //
 
 
+
+
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -92,8 +95,15 @@ namespace Rendering
         }
         void ClusterRendererInfo()
         {
-            ImGui::Begin("Light Options");
-            float speed = 0.2f;
+            ImGui::Begin("Frame Info");
+
+            ImGui::Text("Gpu frame ms: %f.3f ms", gpuMs);
+            ImGui::Text("Cpu Frame ms: %f.3f ms", cpuMs);
+
+            
+            ImGui::SeparatorText("Light Info");
+            
+            float speed = 0.01f;
             for (auto& pointLight : clusterRenderer->pointLights)
             {
                 if (pointLight.pos.y >= 20.0f)
@@ -172,8 +182,8 @@ namespace Rendering
             ImGui::LabelText("Forward :X", "%f.3f", clusterRenderer->camera.forward.x);
             ImGui::LabelText("Forward :Y", "%f.3f", clusterRenderer->camera.forward.y);
             ImGui::LabelText("Forward :Z", "%f.3f", clusterRenderer->camera.forward.z);
+            
             ImGui::End();
-
             
         }
 

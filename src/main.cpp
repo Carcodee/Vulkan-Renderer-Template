@@ -9,6 +9,9 @@
 
 float deltaTime;
 float previousTime;
+double gpuMs = 0;
+double cpuMs = 0;
+float fps = 0;
 
 #include "WindowAPI/WindowInclude.hpp"
 #include "Engine/EngineInclude.hpp"
@@ -18,7 +21,6 @@ float previousTime;
 
 CONST int WINDOWS_WIDTH = 1920;
 CONST int WINDOWS_HEIGHT = 1080;
-
 
 void run(WindowProvider* windowProvider)
 {
@@ -73,9 +75,10 @@ void run(WindowProvider* windowProvider)
         float time = windowProvider->GetTime();
         deltaTime = time - previousTime;
         previousTime = time;
-        
+        std::chrono::time_point<std::chrono::steady_clock> gpuStart;
         windowProvider->PollEvents();
         {
+            auto cpuStart = std::chrono::high_resolution_clock::now();
             glm::uvec2 windowSize = windowProvider->GetWindowSize();
             if (core->resizeRequested || windowProvider->framebufferResized)
             {
@@ -120,6 +123,13 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->camera.RotateCamera(mouseInput);
                     clusterRenderer->camera.Move(deltaTime, input);
                 }
+
+                auto cpuEnd = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> cpuDeltaMs = cpuEnd - cpuStart;
+                cpuMs = cpuDeltaMs.count();
+
+                
+                gpuStart = std::chrono::high_resolution_clock::now();
                 inFlightQueue->EndFrame();
             }
             catch (vk::OutOfDateKHRError err)
@@ -127,7 +137,14 @@ void run(WindowProvider* windowProvider)
                 core->resizeRequested = true;
             }
         }
+        
         core->WaitIdle();
+        
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> deltaMs = end - gpuStart;
+        gpuMs = deltaMs.count();  
+        
+        
     }
     imguiRenderer->Destroy();
     windowProvider->DestroyWindow();

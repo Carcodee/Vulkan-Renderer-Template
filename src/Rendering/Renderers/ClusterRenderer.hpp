@@ -11,6 +11,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -219,7 +220,7 @@ namespace Rendering
             //gbuff
             camera.SetPerspective(
                 45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
-                0.100f, 512.0f);
+                0.1f, 512.0f);
 
 
             camera.SetLookAt(glm::vec3(0.0f, 0.0f, 1.0f));
@@ -241,8 +242,8 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(100);
-            for (int i = 0; i < 100; ++i)
+            pointLights.reserve(1000);
+            for (int i = 0; i < 1000; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
@@ -587,9 +588,9 @@ namespace Rendering
         std::vector<ArrayIndexer> lightsMap;
         std::vector<int32_t> lightsIndices;
         ScreenDataPc cullDataPc;
-        uint32_t xTileSizePx = 64;
-        uint32_t yTileSizePx = 64;
-        uint32_t zSlicesSize = 8;
+        uint32_t xTileSizePx = 256;
+        uint32_t yTileSizePx = 256;
+        uint32_t zSlicesSize = 24;
         uint32_t localSize = 1;
 
 

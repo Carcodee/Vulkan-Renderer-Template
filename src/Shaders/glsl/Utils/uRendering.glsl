@@ -54,11 +54,6 @@ vec4 u_ScreenToView(mat4 invProj, float depth, vec2 screenPos){
     return viewPos;
 }
 
-float u_LinearDepth(float d, float zNear, float zFar)
-{
-    return zNear * zFar / (zFar + d * (zFar - zNear));
-}
-
 //linear depth
 float u_GetZSlice(float Z, float near, float far, float numSlices) {
     return max(log2(Z) * numSlices / log2(far / near) - numSlices * log2(near) / log2(far / near), 0.0);
