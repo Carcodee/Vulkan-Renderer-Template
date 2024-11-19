@@ -50,7 +50,7 @@ public:
     {
         glfwPollEvents();
     }
-    float GetTime()
+    double GetTime()
     {
         return glfwGetTime();
     }

@@ -128,7 +128,7 @@ void main() {
         //** end tile rendering
         mat4 view = inverse(cProps.invView);
         vec4 posLightVs = view * vec4(pointLights[i].pos, 1.0);
-        if(u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, posLightVs.xyz, pointLights[i].radius)){
+        if(u_AABB_Sphere(minPointAABB.xyz, maxPointAABB.xyz, pointLights[i].pos, pointLights[i].radius)){
             if(lightCount < maxLightsPerTile){
                 int idx = idxLightIndicesStart + lightCount;
                 lightIndices[idx] = i;
