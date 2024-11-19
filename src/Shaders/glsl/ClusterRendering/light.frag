@@ -103,9 +103,9 @@ void main() {
         float lightness = 0.4;
         vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
         
-        float intensity= u_InvLerp(0.0, 100.0 , float(lightsInTile));
-        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
-         finalCol += debugCol;
+        float intensity= u_InvLerp(0.0, 400.0 , float(lightsInTile));
+        vec3 debugCol = u_Lerp(vec3(0.0, 0.5, 0.4), vec3(1.0, 0.0, 0.0), intensity);
+         finalCol += debugCol + tileCol*0.1;
     }
 
     

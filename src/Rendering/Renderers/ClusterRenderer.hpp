@@ -242,8 +242,8 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(1000);
-            for (int i = 0; i < 1000; ++i)
+            pointLights.reserve(400);
+            for (int i = 0; i < 400; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
@@ -590,7 +590,7 @@ namespace Rendering
         ScreenDataPc cullDataPc;
         uint32_t xTileSizePx = 256;
         uint32_t yTileSizePx = 256;
-        uint32_t zSlicesSize = 24;
+        uint32_t zSlicesSize = 12;
         uint32_t localSize = 1;
 
 

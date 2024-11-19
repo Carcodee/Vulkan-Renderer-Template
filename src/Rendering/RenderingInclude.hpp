@@ -18,6 +18,8 @@
 
 #include "backends/imgui_impl_vulkan.h"
 #include "backends/imgui_impl_glfw.h"
+#include "ImGuiProfilerRenderer.h"
+
 #include "RendererStructs.hpp"
 
 #include "RThings/Lights.hpp"

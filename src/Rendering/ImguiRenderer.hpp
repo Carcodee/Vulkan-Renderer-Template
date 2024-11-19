@@ -9,6 +9,7 @@
 
 
 
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -73,6 +74,7 @@ namespace Rendering
 
             ImGui::ShowDemoWindow();
             ClusterRendererInfo();
+            RenderGraphProfiler();
             
             ImGui::Render();
             ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f),core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
@@ -89,21 +91,30 @@ namespace Rendering
 
             commandBuffer.endRendering();
         }
-        void Destroy()
+        void RenderGraphProfiler()
         {
-            ImGui_ImplVulkan_Shutdown();
+            std::vector<legit::ProfilerTask> cpuTask =
+                {{0.0f, cpuMs/1000.0, "Cpu", legit::Colors::amethyst}};
+            std::vector<legit::ProfilerTask> gpuTask= 
+                {{0.0f, gpuMs/1000.0, "Gpu", legit::Colors::carrot}};
+
+            profilersWindow.cpuGraph.LoadFrameData(cpuTask.data(), cpuTask.size());
+            profilersWindow.gpuGraph.LoadFrameData(gpuTask.data(), gpuTask.size());
+            profilersWindow.Render();
+            
         }
+        
         void ClusterRendererInfo()
         {
-            ImGui::Begin("Frame Info");
+            ImGui::Begin("Debug Info");
 
-            ImGui::Text("Gpu frame ms: %f.3f ms", gpuMs);
-            ImGui::Text("Cpu Frame ms: %f.3f ms", cpuMs);
+            // ImGui::Text("Gpu frame ms: %f.3f ms", gpuMs);
+            // ImGui::Text("Cpu Frame ms: %f.3f ms", cpuMs);
 
             
             ImGui::SeparatorText("Light Info");
             
-            float speed = 0.01f;
+            float speed = 0.1f;
             for (auto& pointLight : clusterRenderer->pointLights)
             {
                 if (pointLight.pos.y >= 20.0f)
@@ -187,11 +198,16 @@ namespace Rendering
             
         }
 
+        void Destroy()
+        {
+            ImGui_ImplVulkan_Shutdown();
+        }
         ENGINE::DynamicRenderPass dynamicRenderPass;
         WindowProvider* windowProvider;
         ENGINE::DescriptorAllocator descriptorAllocator;
         ENGINE::Core* core;
         ClusterRenderer* clusterRenderer;
+        ImGuiUtils::ProfilersWindow profilersWindow{};
     };
 }
 

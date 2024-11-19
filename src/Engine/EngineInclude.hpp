@@ -2,6 +2,7 @@
 // Created by carlo on 2024-09-22.
 //
 
+
 #pragma once
 #define VK_USE_PLATFORM_WIN32_KHR
 #define NOMINMAX
@@ -34,6 +35,7 @@
 
 #include <spirv_glsl.hpp>
 
+#include <ProfilerTask.h>
 #include <vulkan/vulkan.hpp>
 #include "Structs.hpp"
 #include "UtilVk.hpp"
