@@ -66,6 +66,7 @@ namespace Rendering
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+                    
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
                                                      renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0,
@@ -107,6 +108,7 @@ namespace Rendering
             auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+                    
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(lightPassName)->pipelineType,
                                                      renderGraphRef->GetNode(lightPassName)->pipelineLayout.get(),
@@ -242,12 +244,13 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(1000);
-            for (int i = 0; i < 1000; ++i)
+            pointLights.reserve(400);
+            for (int i = 0; i < 400; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
                 glm::vec3 pos = glm::vec3(distributionPos(gen), distributionPos(gen), distributionPos(gen));
+                // glm::vec3 pos = glm::vec3(0.0, 0.0, 0.0);
 
                 glm::vec3 col = glm::vec3(distributionCol(gen), distributionCol(gen), distributionCol(gen));
 
@@ -588,9 +591,9 @@ namespace Rendering
         std::vector<ArrayIndexer> lightsMap;
         std::vector<int32_t> lightsIndices;
         ScreenDataPc cullDataPc;
-        uint32_t xTileSizePx = 256;
-        uint32_t yTileSizePx = 256;
-        uint32_t zSlicesSize = 24;
+        uint32_t xTileSizePx = 240;
+        uint32_t yTileSizePx = 135;
+        uint32_t zSlicesSize = 8;
         uint32_t localSize = 1;
 
 

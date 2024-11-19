@@ -14,6 +14,7 @@
 
 
 
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -78,7 +79,7 @@ namespace Rendering
 
             ImGui::ShowDemoWindow();
             ClusterRendererInfo();
-            ProfilerInfo();
+            // ProfilerInfo();
             
             ImGui::Render();
             ENGINE::AttachmentInfo attachmentInfo = ENGINE::GetColorAttachmentInfo(glm::vec4(0.0f),core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad);
@@ -101,14 +102,25 @@ namespace Rendering
         }
         void ProfilerInfo()
         {
-             profilersWindow.Render();
+            static int frame = 1;
+           
+            // std::vector<legit::ProfilerTask> cpuTasks = {
+            //     {cpuTask.startTime, cpuTask.endTime, "Cpu", legit::Colors::alizarin}, // Red task
+            // };
+            // std::vector<legit::ProfilerTask> gpuTasks = {
+            //     {gpuTask.startTime, gpuTask.endTime, "Gpu", legit::Colors::carrot}, // Red task
+            // }; 
+            // profilersWindow.cpuGraph.LoadFrameData(cpuTasks.data(), cpuTasks.size());
+            // profilersWindow.gpuGraph.LoadFrameData(gpuTasks.data(), gpuTasks.size());
+            //
+            //  profilersWindow.Render();
         }
         void ClusterRendererInfo()
         {
             
             ImGui::Begin("Light Info");
             
-            float speed = 0.01f;
+            float speed = 0.06f;
             for (auto& pointLight : clusterRenderer->pointLights)
             {
                 if (pointLight.pos.y >= 20.0f)
@@ -197,7 +209,7 @@ namespace Rendering
         ENGINE::DescriptorAllocator descriptorAllocator;
         ENGINE::Core* core;
         ClusterRenderer* clusterRenderer;
-        ImGuiUtils::ProfilersWindow profilersWindow;
+        // ImGuiUtils::ProfilersWindow profilersWindow;
     };
 }
 

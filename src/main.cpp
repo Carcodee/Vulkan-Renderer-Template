@@ -16,6 +16,10 @@ double previousTime;
 
 #include "WindowAPI/WindowInclude.hpp"
 #include "Engine/EngineInclude.hpp"
+
+legit::ProfilerTask cpuTask;
+legit::ProfilerTask gpuTask;
+
 #include "Rendering/RenderingInclude.hpp"
 
 CONST int WINDOWS_WIDTH = 1920;
@@ -70,13 +74,21 @@ void run(WindowProvider* windowProvider)
     std::unique_ptr<Rendering::ImguiRenderer> imguiRenderer = std::make_unique<Rendering::ImguiRenderer>(
         core.get(), windowProvider, clusterRenderer.get());
 
-     
+
+    cpuTask.name = "Cpu";
+    cpuTask.color = legit::Colors::amethyst;
+    
+    gpuTask.name = "Gpu";
+    gpuTask.color = legit::Colors::carrot;
     while (!windowProvider->WindowShouldClose())
     {
         //handle time and frames better
         float time = windowProvider->GetTime();
         deltaTime = time - previousTime;
         previousTime = time;
+        cpuTask.startTime = 0.0f;
+        double now = windowProvider->GetTime();
+        double startGpu;
         
         windowProvider->PollEvents();
         {
@@ -124,6 +136,10 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->camera.RotateCamera(mouseInput);
                     clusterRenderer->camera.Move(deltaTime, input);
                 }
+                cpuTask.endTime = windowProvider->GetTime() - now;
+                
+                gpuTask.startTime = 0.0f;
+                startGpu = windowProvider->GetTime();
                 inFlightQueue->EndFrame();
             }
             catch (vk::OutOfDateKHRError err)
@@ -133,6 +149,7 @@ void run(WindowProvider* windowProvider)
         }
         
         core->WaitIdle();
+        gpuTask.endTime = windowProvider->GetTime() - startGpu; 
         
     }
     imguiRenderer->Destroy();

@@ -59,20 +59,22 @@ void main() {
     vec2 fragCoord = vec2(textCoord.x , textCoord.y);
     vec4 col = texture(gCol, textCoord);
     float depth = texture(gDepth, textCoord).r;
+    
     col =vec4(0.01);
     if(norm == vec4(0.0)){
 
         discard;
     }
     vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
-
-    ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
+    uvec2 tileId = uvec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
     
     
-    vec4 linearDepth = cProps.invProj * vec4(0.0, 0.0, depth, 1.0);
-    linearDepth.z = linearDepth.z / linearDepth.w;
+//    vec4 linearDepth = cProps.invProj * vec4(0.0, 0.0, depth, 1.0);
+//    linearDepth.z = linearDepth.z / linearDepth.w;
+    
+    float linearDepth = cProps.zNear * cProps.zFar / (cProps.zFar - depth * (cProps.zFar - cProps.zNear));
 
-    int zId =int(u_GetZSlice(abs(linearDepth.z), cProps.zNear, cProps.zFar, float(pc.zSlicesSize)));
+    int zId =int(u_GetZSlice(abs(linearDepth * 2.0), cProps.zNear, cProps.zFar, float(pc.zSlicesSize)));
     
     uint mapIndex = tileId.x + (tileId.y * pc.tileCountX) + (zId * pc.tileCountX * pc.tileCountY);
 
@@ -91,7 +93,7 @@ void main() {
             finalCol += EvalPointLight(pointLights[i], finalCol, pos, norm.xyz);
         }
     }
-    if(lightsInTile>0){
+    if(lightsInTile> 0){
         float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
         
         float hue = intensityId;
@@ -99,10 +101,12 @@ void main() {
         float lightness = 0.4;
         vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
         
-        float intensity= u_InvLerp(0.0, 100.0 , float(lightsInTile));
-        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0), intensity);
-         finalCol += debugCol;
+        float intensity= u_InvLerp(0.0, 400.0 , float(lightsInTile));
+        vec3 debugCol = u_Lerp(vec3(0.0, 0.0, 0.8), vec3(0.8, 0.0, 0.0), intensity);
+//         finalCol += debugCol * 0.2;
+        
     }
+    vec2 tilecol = vec2(tileId)/vec2(pc.tileCountX , pc.tileCountY);
 
     
     outColor = vec4(finalCol, 1.0);
