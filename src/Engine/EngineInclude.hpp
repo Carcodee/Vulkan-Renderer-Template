@@ -2,7 +2,6 @@
 // Created by carlo on 2024-09-22.
 //
 
-
 #pragma once
 #define VK_USE_PLATFORM_WIN32_KHR
 #define NOMINMAX

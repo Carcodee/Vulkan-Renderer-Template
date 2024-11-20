@@ -2,6 +2,7 @@
 
 
 
+
 // Created by carlo on 2024-10-10.
 //
 
@@ -93,13 +94,14 @@ namespace Rendering
         }
         void RenderGraphProfiler()
         {
-            std::vector<legit::ProfilerTask> cpuTask =
-                {{0.0f, cpuMs/1000.0, "Cpu", legit::Colors::amethyst}};
-            std::vector<legit::ProfilerTask> gpuTask= 
-                {{0.0f, gpuMs/1000.0, "Gpu", legit::Colors::carrot}};
+            std::vector<legit::ProfilerTask> cpuTasks=
+                {{0.0f, cpuTask.endTime, "Cpu", legit::Colors::amethyst},
+                {0.0f, cpuTask.endTime, "Cpu22", legit::Colors::carrot}};
+            std::vector<legit::ProfilerTask> gpuTasks= 
+                {{0.0f, gpuTask.endTime, "Gpu", legit::Colors::carrot}};
 
-            profilersWindow.cpuGraph.LoadFrameData(cpuTask.data(), cpuTask.size());
-            profilersWindow.gpuGraph.LoadFrameData(gpuTask.data(), gpuTask.size());
+            profilersWindow.cpuGraph.LoadFrameData(cpuTasks.data(), cpuTasks.size());
+            profilersWindow.gpuGraph.LoadFrameData(gpuTasks.data(), gpuTasks.size());
             profilersWindow.Render();
             
         }

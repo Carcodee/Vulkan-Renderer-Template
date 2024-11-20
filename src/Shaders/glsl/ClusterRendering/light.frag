@@ -59,11 +59,11 @@ void main() {
     vec2 fragCoord = vec2(textCoord.x , textCoord.y);
     vec4 col = texture(gCol, textCoord);
     float depth = texture(gDepth, textCoord).r;
-    col =vec4(0.01);
     if(norm == vec4(0.0)){
 
         discard;
     }
+    col =vec4(0.01);
     vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
 
     ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
@@ -88,14 +88,14 @@ void main() {
     if(true){
         for (int i = 0; i < lightsInTile; i++) {
             int lightIndex = lightIndices[lightOffset + i];
+            finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
             if(lightIndex != -1){
-                finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
             }else{
-                finalCol = vec3(0.0);
+//                finalCol = vec3(0.0);
             }
         }
     }
-    if(lightsInTile>0){
+    if(false){
         float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
         
         float hue = intensityId;
