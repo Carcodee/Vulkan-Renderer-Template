@@ -65,6 +65,7 @@ void run(WindowProvider* windowProvider)
         {vk::DescriptorType::eUniformBuffer, 1.5f},
         {vk::DescriptorType::eStorageImage, 1.5f},
     };
+    
     descriptorAllocator->BeginPool(core->logicalDevice.get(), 10, poolSizeRatios);
 
     std::unique_ptr<Rendering::ClusterRenderer> clusterRenderer = std::make_unique<Rendering::ClusterRenderer>(
