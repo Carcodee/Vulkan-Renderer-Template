@@ -90,6 +90,7 @@ namespace Rendering
             
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
+            
             commandBuffer.endRendering();
         }
         void RenderGraphProfiler()
