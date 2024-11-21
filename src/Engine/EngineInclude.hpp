@@ -59,4 +59,7 @@
 #include "CoreImpl.hpp"
 
 #include "PresentQueue.hpp"
+
 #include "ImageShipper.hpp"
+#include "DescriptorCache.hpp"
+

@@ -9,8 +9,15 @@
 
 
 
+
+
 // Created by carlo on 2024-10-07.
 //
+
+
+
+
+
 
 
 
@@ -35,6 +42,7 @@ namespace Rendering
             this->descriptorAllocatorRef = descriptorAllocator;
             auto logicalDevice = core->logicalDevice.get();
             auto physicalDevice = core->physicalDevice;
+            descriptorCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
 
             camera.SetLookAt(glm::vec3(0.0f));
             
@@ -51,18 +59,32 @@ namespace Rendering
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
             
+            imageShipper.SetDataFromPath("C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
+            imageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
+
+            
+            defaultImageShipper.SetDataFromPath("C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Engine\\Images\\default_texture.jpg");
+            defaultImageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
+ 
 
             vertShader = std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.vert.spv");
             fragShader = std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.frag.spv");
            
             ENGINE::DescriptorLayoutBuilder builder;
-
-            ENGINE::ShaderParser::GetLayout(*vertShader->sParser, builder);
-            ENGINE::ShaderParser::GetLayout(*fragShader->sParser, builder);
             
-             dstLayout = builder.BuildBindings(
-                core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+            vertShader->sParser->GetLayout(builder);
+            fragShader->sParser->GetLayout(builder);
 
+            ENGINE::ImageView* computeStorage = renderGraphRef->GetResource("storageImage");
+            
+            descriptorCache->AddDefaultSampler(imageShipper.sampler);
+            descriptorCache->AddDefaultImageView(imageShipper.imageView.get());
+            descriptorCache->AddDefaultStorageSampler(imageShipper.sampler);
+            descriptorCache->AddDefaultStorageImageView(computeStorage);
+            descriptorCache->AddShaderInfo(*vertShader->sParser.get(), "vert");
+            descriptorCache->AddShaderInfo(*fragShader->sParser.get(), "vert");
+            descriptorCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment );
+            
             auto pushConstantRange = vk::PushConstantRange()
             .setOffset(0)
             .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
@@ -71,22 +93,8 @@ namespace Rendering
             auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                     .setSetLayoutCount(1).
                                     setPushConstantRanges(pushConstantRange).
-                                    setPSetLayouts(&dstLayout.get());
+                                    setPSetLayouts(&descriptorCache->dstLayout.get());
             
-            imageShipper.SetDataFromPath("C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
-            imageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
-
-            dstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), dstLayout.get());
-
-            writerBuilder.AddWriteImage(0, imageShipper.imageView.get(), imageShipper.sampler->samplerHandle.get(),
-                                        vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler);
-
-            auto* storageImageView = renderGraphRef->GetResource("storageImage");
-            writerBuilder.AddWriteImage(1, storageImageView, imageShipper.sampler->samplerHandle.get(),
-                                        vk::ImageLayout::eGeneral, vk::DescriptorType::eStorageImage);
-            
-            writerBuilder.UpdateSet(core->logicalDevice.get(), dstSet.get());
- 
             
             ENGINE::VertexInput vertexInput= M_Vertex3D::GetVertexInput();
 
@@ -106,7 +114,7 @@ namespace Rendering
             renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
             renderNode->AddSamplerResource("sampler", imageShipper.imageView.get());
-            renderNode->AddStorageResource("sampler", imageShipper.imageView.get());
+            renderNode->AddStorageResource("storageImage", computeStorage);
             renderNode->BuildRenderGraphNode();
             
         }
@@ -132,10 +140,16 @@ namespace Rendering
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+
+                    //IMPORTANT
+                    //image binding always should be done in the render operation, because it guarantees that the layout will be correct, otherwise layout errors can happen
+
+                    
+                    descriptorCache->SetImage("testImage", imageShipper.imageView.get(), imageShipper.sampler);
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(forwardPassName)->pipelineType,
                                                      renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(), 0, 1,
-                                                     &dstSet.get(), 0 , nullptr);
+                                                     &descriptorCache->dstSet.get(), 0 , nullptr);
 
                     commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
@@ -175,13 +189,15 @@ namespace Rendering
         WindowProvider* windowProvider;
         ENGINE::Core* core;
         ENGINE::RenderGraph* renderGraphRef;
-        
+
+        std::unique_ptr<ENGINE::DescriptorCache> descriptorCache;
         ENGINE::DescriptorWriterBuilder writerBuilder;
         vk::UniqueDescriptorSetLayout dstLayout;
         vk::UniqueDescriptorSet dstSet;
 
         std::string forwardPassName;
         ENGINE::ImageShipper imageShipper;
+        ENGINE::ImageShipper defaultImageShipper;
         std::unique_ptr<ENGINE::Buffer> vertexBuffer;
         std::unique_ptr<ENGINE::Buffer> indexBuffer;
         

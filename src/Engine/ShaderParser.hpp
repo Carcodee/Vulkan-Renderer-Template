@@ -1,6 +1,8 @@
 ﻿//
+
 // Created by carlo on 2024-10-09.
 //
+
 
 #ifndef SHADERPARSER_HPP
 #define SHADERPARSER_HPP
@@ -18,14 +20,7 @@ namespace ENGINE
             S_COMP,
             S_UNKNOWN
         };
-        struct ShaderResource
-        {
-            std::string name;
-            uint32_t binding;
-            uint32_t set;
-            bool array = false;
-            vk::DescriptorType type;
-        };
+
 
         ShaderParser(std::vector<uint32_t>& byteCode)
         {
@@ -119,27 +114,66 @@ namespace ENGINE
             
         }
 
-        static void GetBinding(std::vector<ShaderResource>& resources, DescriptorLayoutBuilder& builder, std::set <uint32_t>& bindings)
+        void GetBinding(std::vector<ShaderResource>& resources, DescriptorLayoutBuilder& builder)
         {
             for (auto& resource : resources)
             {
-                if (bindings.contains(resource.binding))
+                if (builder.uniqueBindings.contains(resource.binding))
                 {
                     continue;
                 }
                 builder.AddBinding(resource.binding, resource.type);
-                bindings.insert(resource.binding);
             }
-            
         }
-        static void GetLayout(ShaderParser& parser, DescriptorLayoutBuilder& builder)
+
+        void GetBinding(std::vector<ShaderResource>& resources, std::vector<ShaderResource>& uniqueResources, std::set<uint32_t> uniqueBindings)
+        {
+            for (auto& resource : resources)
+            {
+                if (uniqueBindings.contains(resource.binding))
+                {
+                    continue;
+                }
+                uniqueResources.emplace_back(resource);
+            }
+        }
+        void GetLayout(DescriptorLayoutBuilder& builder)
         {
             std::set<uint32_t> repeatedBindings;
-            GetBinding(parser.sampledImages, builder, repeatedBindings);
-            GetBinding(parser.storageImages, builder, repeatedBindings);
-            GetBinding(parser.uniformBuffers, builder, repeatedBindings);
-            GetBinding(parser.storageBuffers, builder, repeatedBindings);
+            GetBinding(sampledImages, builder);
+            GetBinding(storageImages, builder);
+            GetBinding(uniformBuffers, builder);
+            GetBinding(storageBuffers, builder);
         }
+
+        void GetLayout(std::vector<ShaderResource>& uniqueResources)
+        {
+            std::set<uint32_t> uniqueBindings;
+            GetBinding(sampledImages, uniqueResources, uniqueBindings);
+            GetBinding(storageImages, uniqueResources, uniqueBindings);
+            GetBinding(uniformBuffers,uniqueResources, uniqueBindings);
+            GetBinding(storageBuffers,uniqueResources, uniqueBindings);
+        }
+
+        vk::ShaderStageFlags GetVkStage()
+        {
+            switch (stage)
+            {
+            case S_VERT:
+                return vk::ShaderStageFlagBits::eVertex;
+                break;
+            case S_FRAG:
+                return vk::ShaderStageFlagBits::eFragment;
+                break;
+            case S_COMP:
+                return vk::ShaderStageFlagBits::eCompute;
+                break;
+            case S_UNKNOWN:
+                assert(false&& "not valid stage");
+                break;
+            }
+        }
+
         std::vector<ShaderResource> uniformBuffers;
         std::vector<ShaderResource> storageBuffers;
         std::vector<ShaderResource> sampledImages;

@@ -33,7 +33,7 @@ namespace ENGINE
             }
 
             auto poolInfo = vk::DescriptorPoolCreateInfo()
-            .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet)
+            .setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet | vk::DescriptorPoolCreateFlagBits::eUpdateAfterBind)
             .setMaxSets(maxSets)
             .setPPoolSizes(poolSizes.data())
             .setPoolSizeCount(static_cast<uint32_t>(poolSizes.size()));

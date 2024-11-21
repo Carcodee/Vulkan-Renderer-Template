@@ -3,6 +3,7 @@
 //
 
 
+
 #ifndef IMAGESHIPPER_HPP
 #define IMAGESHIPPER_HPP
 
@@ -40,6 +41,7 @@ namespace ENGINE
             imageView = std::make_unique<ImageView>(core->logicalDevice.get(), image->imageData.get(),
                                                     0, mipsCount, 0, arrayLayersCount);
 
+            
             auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
             auto commandBuffer = commandExecutor->BeginCommandBuffer();
             std::unique_ptr<Buffer> stagedBuffer = std::make_unique<Buffer>(core->physicalDevice, core->logicalDevice.get(), vk::BufferUsageFlagBits::eTransferSrc,

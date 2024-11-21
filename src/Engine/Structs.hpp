@@ -105,6 +105,15 @@ namespace ENGINE
         vk::AccessFlags accessMask;
         QueueFamilyTypes queueFamilyType;
     };
+
+    struct ShaderResource
+    {
+        std::string name;
+        uint32_t binding;
+        uint32_t set;
+        bool array = false;
+        vk::DescriptorType type;
+    };
 }
 #define STRUCTS_HPP
 

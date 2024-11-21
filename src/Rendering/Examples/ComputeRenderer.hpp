@@ -1,5 +1,7 @@
 ﻿//
 
+
+
 // Created by carlo on 2024-10-08.
 //
 
@@ -44,7 +46,7 @@ namespace Rendering
             
             ENGINE::DescriptorLayoutBuilder builder;
 
-            ENGINE::ShaderParser::GetLayout(*compShader->sParser.get(), builder);
+            compShader->sParser.get()->GetLayout(builder);
 
             dstLayout= builder.BuildBindings(logicalDevice, vk::ShaderStageFlagBits::eCompute);
 
