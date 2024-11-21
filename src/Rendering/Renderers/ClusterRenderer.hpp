@@ -370,7 +370,7 @@ namespace Rendering
             cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
                                                               "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
 
-            ENGINE::ShaderParser::GetLayout(*cullCompShader->sParser, builder);
+            cullCompShader->sParser->GetLayout(builder);
 
             auto cullPushConstantRange = vk::PushConstantRange()
                                          .setOffset(0)
@@ -400,12 +400,12 @@ namespace Rendering
             cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
             cullRenderNode->BuildRenderGraphNode();
 
-            ENGINE::ShaderParser::GetLayout(*gVertShader.get()->sParser, builder);
-            ENGINE::ShaderParser::GetLayout(*gFragShader.get()->sParser, builder);
+            gVertShader.get()->sParser->GetLayout(builder);
+            gFragShader.get()->sParser->GetLayout(builder);
 
             gDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-
+            
             auto pushConstantRange = vk::PushConstantRange()
                                      .setOffset(0)
                                      .setStageFlags(
@@ -461,8 +461,8 @@ namespace Rendering
             lFragShader = std::make_unique<ENGINE::Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
 
-            ENGINE::ShaderParser::GetLayout(*lVertShader->sParser, builder);
-            ENGINE::ShaderParser::GetLayout(*lFragShader->sParser, builder);
+            lVertShader.get()->sParser->GetLayout(builder);
+            lFragShader.get()->sParser->GetLayout(builder);
 
             lDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
@@ -503,7 +503,7 @@ namespace Rendering
             writerBuilder.AddWriteBuffer(6, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
 
             writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
-
+            
             ENGINE::AttachmentInfo lColInfo = ENGINE::GetColorAttachmentInfo(
                 glm::vec4(0.0f), core->swapchainRef->GetFormat());
 
