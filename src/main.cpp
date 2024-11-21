@@ -127,15 +127,20 @@ void run(WindowProvider* windowProvider)
                                            inFlightQueue->currentSwapchainImageView->imageView.get());
                 
                 glm::vec2 input = glm::vec2(0.0f);
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input = glm::vec2(0.0f, 1.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input = glm::vec2(0.0f, -1.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_D)) { input = glm::vec2(1.0f, 0.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_A)) { input = glm::vec2(-1.0f, 0.0f); }
+                if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input += glm::vec2(0.0f, 1.0f); }
+                if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input += glm::vec2(0.0f, -1.0f); }
+                if (glfwGetKey(windowProvider->window, GLFW_KEY_D)) { input += glm::vec2(1.0f, 0.0f); }
+                if (glfwGetKey(windowProvider->window, GLFW_KEY_A)) { input += glm::vec2(-1.0f, 0.0f); }
+                input =glm::clamp(input, glm::vec2(-1.0, -1.0), glm::vec2(1.0, 1.0));
+                glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+                clusterRenderer->camera.mouseInput = mouseInput;
                 if (glfwGetMouseButton(windowProvider->window, GLFW_MOUSE_BUTTON_2))
                 {
-                    glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
-                    clusterRenderer->camera.RotateCamera(mouseInput);
+                    clusterRenderer->camera.RotateCamera();
                     clusterRenderer->camera.Move(deltaTime, input);
+                }else
+                {
+                    clusterRenderer->camera.firstMouse = true;
                 }
                 cpuTask.endTime = windowProvider->GetTime() - now;
                 
