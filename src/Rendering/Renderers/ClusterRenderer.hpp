@@ -12,6 +12,8 @@
 
 
 
+
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -59,6 +61,7 @@ namespace Rendering
                     commandBuffer.dispatch(cullDataPc.xTileCount / localSize, cullDataPc.yTileCount / localSize,
                                            zSlicesSize);
                 });
+
 
             renderGraphRef->GetNode(computePassName)->AddTask(cullTask);
             renderGraphRef->GetNode(computePassName)->SetRenderOperation(cullRenderOp);

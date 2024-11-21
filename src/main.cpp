@@ -20,6 +20,7 @@ double previousTime;
 legit::ProfilerTask cpuTask;
 legit::ProfilerTask gpuTask;
 
+#include "Systems/LoggerSystem.hpp"
 #include "Rendering/RenderingInclude.hpp"
 
 CONST int WINDOWS_WIDTH = 1920;
@@ -87,7 +88,6 @@ void run(WindowProvider* windowProvider)
         float time = windowProvider->GetTime();
         deltaTime = time - previousTime;
         previousTime = time;
-        cpuTask.startTime = 0.0f;
         double now = windowProvider->GetTime();
         double startGpu;
         
@@ -139,7 +139,6 @@ void run(WindowProvider* windowProvider)
                 }
                 cpuTask.endTime = windowProvider->GetTime() - now;
                 
-                gpuTask.startTime = 0.0f;
                 startGpu = windowProvider->GetTime();
                 inFlightQueue->EndFrame();
             }
