@@ -34,7 +34,6 @@ namespace ENGINE
                                           .setPBindings(bindings.data())
                                           .setBindingCount(static_cast<uint32_t>(bindings.size()))
                                           .setFlags(flags);
-
             clear();
             return device.createDescriptorSetLayoutUnique(dstSetLayoutCreateInfo);
         }
@@ -42,6 +41,7 @@ namespace ENGINE
         void clear()
         {
             bindings.clear();
+            uniqueBindings.clear();
         }       
         std::vector<vk::DescriptorSetLayoutBinding> bindings;
         std::set<int> uniqueBindings;
