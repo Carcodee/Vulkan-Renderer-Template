@@ -5,20 +5,8 @@
 
 
 
-
-
-
-
-
-
 // Created by carlo on 2024-10-07.
 //
-
-
-
-
-
-
 
 
 
@@ -30,7 +18,7 @@
 
 namespace Rendering
 {
-    class ForwardRenderer : BaseRenderer
+    class ForwardRenderer : BaseRenderer 
     {
     public:
         ForwardRenderer(ENGINE::Core* core, WindowProvider* windowProvider,
@@ -45,10 +33,10 @@ namespace Rendering
             descriptorCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
 
             camera.SetLookAt(glm::vec3(0.0f));
-            
-            ModelLoader::GetInstance()->LoadGLTF(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\3d_pbr_curved_sofa\\scene.gltf",
-                model);
+
+            std::string modelPath = SYSTEMS::OS::GetInstance()->GetAssetsPath() + "\\Models\\3d_pbr_curved_sofa\\scene.gltf";
+
+            ModelLoader::GetInstance()->LoadGLTF(modelPath, model);
 
             vertexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
@@ -59,32 +47,39 @@ namespace Rendering
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
             
-            imageShipper.SetDataFromPath("C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
+            std::string resourcesPath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath();
+            
+            imageShipper.SetDataFromPath(resourcesPath + "\\Images\\default_texture.jpg");
             imageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
 
             
-            defaultImageShipper.SetDataFromPath("C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Engine\\Images\\default_texture.jpg");
+            defaultImageShipper.SetDataFromPath(resourcesPath + "\\Images\\default_texture.jpg");
             defaultImageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
  
+            ENGINE::ImageView* computeStorage = renderGraphRef->GetResource("storageImage");
 
-            vertShader = std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.vert.spv");
-            fragShader = std::make_unique<ENGINE::Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\fSample.frag.spv");
+            //sample for storage bindless
+            imagesArray.push_back(computeStorage);
+            imagesArray.push_back(computeStorage);
+            imagesArray.push_back(computeStorage);
+
+            std::string shadersPath = SYSTEMS::OS::GetInstance()->GetShadersPath();
+            
+            vertShader = std::make_unique<ENGINE::Shader>(logicalDevice, shadersPath + "\\spirv\\Examples\\fSample.vert.spv");
+            fragShader = std::make_unique<ENGINE::Shader>(logicalDevice, shadersPath + "\\spirv\\Examples\\fSample.frag.spv");
            
             ENGINE::DescriptorLayoutBuilder builder;
             
             vertShader->sParser->GetLayout(builder);
             fragShader->sParser->GetLayout(builder);
 
-            ENGINE::ImageView* computeStorage = renderGraphRef->GetResource("storageImage");
-            
-            descriptorCache->AddDefaultSampler(imageShipper.sampler);
-            descriptorCache->AddDefaultImageView(imageShipper.imageView.get());
-            descriptorCache->AddDefaultStorageSampler(imageShipper.sampler);
-            descriptorCache->AddDefaultStorageImageView(computeStorage);
-            descriptorCache->AddShaderInfo(*vertShader->sParser.get(), "vert");
-            descriptorCache->AddShaderInfo(*fragShader->sParser.get(), "vert");
+            //automatic descriptor handler
+            descriptorCache->SetDefaultSamplerInfo(imageShipper.imageView.get(), imageShipper.sampler);
+            descriptorCache->SetDefaultStorageInfo(computeStorage, imageShipper.sampler);
+            descriptorCache->AddShaderInfo(*vertShader->sParser.get());
+            descriptorCache->AddShaderInfo(*fragShader->sParser.get());
             descriptorCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment );
-            
+
             auto pushConstantRange = vk::PushConstantRange()
             .setOffset(0)
             .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
@@ -118,15 +113,15 @@ namespace Rendering
             renderNode->BuildRenderGraphNode();
             
         }
-        ~ForwardRenderer() override
+        ~ForwardRenderer() override 
         {
         }
 
-        void RecreateSwapChainResources() override
+        void RecreateSwapChainResources() override 
         {
         }
 
-        void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
+        void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override 
         {
             auto setViewTask = new std::function<void()>([this, inflightQueue]()
             {
@@ -141,11 +136,19 @@ namespace Rendering
                 [this](vk::CommandBuffer& commandBuffer)
                 {
 
+                    //ssbo sample
+                    ssbo.clear();
+                    ssbo.push_back(pc);
+                    ssbo.push_back(pc);
+                    ssbo.push_back(pc);
+                    
                     //IMPORTANT
                     //image binding always should be done in the render operation, because it guarantees that the layout will be correct, otherwise layout errors can happen
 
-                    
-                    descriptorCache->SetImage("testImage", imageShipper.imageView.get(), imageShipper.sampler);
+                    descriptorCache->SetSampler("testImage", imageShipper.imageView.get(), imageShipper.sampler);
+                    descriptorCache->SetStorageImageArray("storagesImgs", imagesArray);
+                    descriptorCache->SetBuffer("Camera", pc);
+                    descriptorCache->SetBuffer("CameraBuffer", ssbo);
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(forwardPassName)->pipelineType,
                                                      renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(), 0, 1,
@@ -153,7 +156,6 @@ namespace Rendering
 
                     commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
-                    
                     for (int i = 0; i < model.meshCount; ++i)
                     {
                         camera.SetPerspective(
@@ -178,7 +180,7 @@ namespace Rendering
         }
 
 
-        void ReloadShaders() override
+        void ReloadShaders() override 
         {
             auto renderNode = renderGraphRef->GetNode(forwardPassName);
             renderNode->RecreateResources();
@@ -198,6 +200,8 @@ namespace Rendering
         std::string forwardPassName;
         ENGINE::ImageShipper imageShipper;
         ENGINE::ImageShipper defaultImageShipper;
+        std::vector<ENGINE::ImageView*> imagesArray;
+        
         std::unique_ptr<ENGINE::Buffer> vertexBuffer;
         std::unique_ptr<ENGINE::Buffer> indexBuffer;
         
@@ -208,6 +212,7 @@ namespace Rendering
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
         Model model{};
         ForwardPc pc{};
+        std::vector<ForwardPc> ssbo{};
 
     };
 }

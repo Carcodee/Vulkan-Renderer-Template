@@ -6,7 +6,9 @@ CodeVk_Renderer is a lightweight Vulkan-based rendering engine utilizing a Rende
 
 - **RenderGraph-Based Architecture**: Flexible setup of rendering pipelines designed to facilitate rapid prototyping. This system is functional but still undergoing optimization for improved performance.
 
-- **Modular Vulkan Interface**: Built with modularity in mind, allowing rapid iteration and customization.
+- **Modular Vulkan Interface**: Built with modularity in mind, allowing rapid iteration and customization (including automatic descriptor setup).
+  
+- Simple shaders hot reload/reflection system
 
 - **GLTF Loader**: Import and render GLTF models with ease, streamlining 3D asset integration.
 
@@ -49,121 +51,192 @@ The project is organized into two primary branches: **Main** and **Personal**.
    ```sh
    make
    ```
+   
+## Dependencies
 
-## Example Usage: Setting Up a Forward Renderer
+CodeVk_Renderer relies on several third-party libraries, including:
 
-Below is an example of setting up a forward rendering pipeline using CodeVk_Renderer.
+- **Vulkan**: Graphics API
+- **GLFW**: For window management and input.
+- **GLM**: For linear algebra and math operations.
+- **tinygltf**: For loading GLTF models.
+- **ImGui**: For graphical user interface support.
 
-### Shader Setup
+All dependencies can be resolved through the `CMakeLists.txt` included in the repository.
 
-To begin, create shader modules for the vertex and fragment shaders:
+### Directory Structure
 
-```cpp
-std::vector<uint32_t> vertCode = ENGINE::GetByteCode("path/to/vertex_shader.vert.spv");
-std::vector<uint32_t> fragCode = ENGINE::GetByteCode("path/to/fragment_shader.frag.spv");
-
-ENGINE::ShaderParser vertParser(vertCode);
-ENGINE::ShaderParser fragParser(fragCode);
-
-ENGINE::ShaderModule vertShaderModule(logicalDevice, vertCode);
-ENGINE::ShaderModule fragShaderModule(logicalDevice, fragCode);
+```
+CodeVk_Renderer/
+  |- src/
+    |- Core/                # Core Vulkan setup (instance, device, etc.)
+    |- Rendering/           # RenderGraph and rendering utilities
+      |- Examples/          # Example renderers
+    |- Systems/             # Utility systems (OS, Shaders, ModelLoader, etc.)
+  |- shaders/               # SPIR-V shaders
+  |- assets/                # Assets like models and textures
+  |- include/               # Header files
+  |- build/                 # Build directory (not included in repo)
 ```
 
-### Descriptor Setup
+# CodeVk_Renderer: A Vulkan-Based RenderGraph Renderer
 
-Automatically generate descriptor set layouts based on the parsed shaders:
+CodeVk_Renderer is a lightweight Vulkan-based rendering engine that leverages a RenderGraph architecture. It aims to simplify the development of graphics applications by providing an easy-to-use interface for rapid prototyping while maintaining the flexibility and control of Vulkan's explicit API.
+
+## Code Usage
+
+### Basic Usage
+
+To get started with developing your own renderer, follow these steps:
+
+1. **Create a Renderer Class**
+   
+   Inherit from `BaseRenderer` and create your own renderer (e.g., `ForwardRenderer`). You can use the provided examples as references.
+
+   ```cpp
+   class ForwardRenderer : public BaseRenderer {
+       public:
+           ForwardRenderer(ENGINE::Core* core, WindowProvider* windowProvider,
+                          ENGINE::DescriptorAllocator* descriptorAllocator);
+           ~ForwardRenderer() override;
+           void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override;
+           void ReloadShaders() override;
+   };
+   ```
+
+2. **Initialize Buffers, Shaders, and Images**
+   
+   - **Load Models**: Use `ModelLoader` to load 3D models into the application. For example, you can load a GLTF model and create vertex and index buffers.
+   - **Vertex and Index Buffers**: Create these buffers using `ENGINE::Buffer`. The buffers store the vertex data and indices required for rendering your model.
+   - **Shaders**: Load vertex and fragment shaders using the `ENGINE::Shader` utility. Paths for these shaders can be configured to point to custom shader files.
+   
+   ```cpp
+   ModelLoader::GetInstance()->LoadGLTF(modelPath, model);
+   vertexBuffer = std::make_unique<ENGINE::Buffer>(
+       physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
+       vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+       sizeof(M_Vertex3D) * model.vertices.size(), model.vertices.data());
+   indexBuffer = std::make_unique<ENGINE::Buffer>(
+       physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
+       vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+       sizeof(uint32_t) * model.indices.size(), model.indices.data());
+   ```
+
+3. **Render Pass Configuration**
+   
+   Define a render pass in the RenderGraph using `AddPass()`. Configure attachments, shaders, and pipeline layout. The `AddPass()` function is used to create a new rendering pass, which specifies how the rendering pipeline is organized and which resources are needed.
+
+   ```cpp
+   auto renderNode = renderGraphRef->AddPass(forwardPassName);
+   renderNode->SetVertShader(vertShader.get());
+   renderNode->SetFragShader(fragShader.get());
+   renderNode->SetFramebufferSize(windowProvider->GetWindowSize());
+   renderNode->SetPipelineLayoutCI(layoutCreateInfo);
+   renderNode->SetVertexInput(vertexInput);
+   renderNode->AddColorAttachmentOutput("color", colInfo);
+   renderNode->SetDepthAttachmentOutput("depth", depthInfo);
+   renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
+   renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
+   renderNode->AddSamplerResource("sampler", imageShipper.imageView.get());
+   renderNode->AddStorageResource("storageImage", computeStorage);
+   renderNode->BuildRenderGraphNode();
+   ```
+
+4. **Set Render Operations**
+   
+   Define the rendering logic by setting render operations within the `SetRenderOperation()` function, using `vk::CommandBuffer` to bind resources and draw. This includes:
+   - Binding descriptor sets.
+   - Binding vertex and index buffers.
+   - Issuing draw commands for the loaded model.
+
+   ```cpp
+   commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(forwardPassName)->pipelineType,
+                                    renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(), 0, 1,
+                                    &descriptorCache->dstSet.get(), 0 , nullptr);
+
+   commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
+   commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
+   commandBuffer.drawIndexed(model.indicesCount[i], 1, model.firstIndices[i],
+                             static_cast<int32_t>(model.firstVertices[i]), 0);
+   ```
+
+5. **Recreate Resources as Needed**
+
+   Implement `ReloadShaders()` to support shader reloading. This function allows you to modify shaders and reload them without restarting the entire application, making the development cycle more iterative.
+
+   ```cpp
+   void ReloadShaders() override {
+       auto renderNode = renderGraphRef->GetNode(forwardPassName);
+       renderNode->RecreateResources();
+   }
+   ```
+
+### Descriptor Handling Methods
+
+CodeVk_Renderer supports two different methods for handling descriptors: **Descriptor Cache** and **Descriptor Writer**. Below, we describe each method and its application in the rendering engine.
+
+#### 1. Descriptor Cache (Automatic Management)
+
+The **Descriptor Cache** approach is used primarily in `ForwardRenderer`. It automatically manages descriptors required by different shaders. This method abstracts away the low-level descriptor management, making it easier to set up a rendering pipeline without repetitive and manual descriptor binding logic.
+
+- **Setup**: The `Descriptor Cache` is configured by extracting the layout information from the shaders, and the cache builds descriptor sets accordingly.
+- **Usage**: During the initialization of `ForwardRenderer`, descriptors are populated by calling `descriptorCache->AddShaderInfo()`, followed by `descriptorCache->BuildDescriptorsCache()`. This setup handles the descriptor requirements for vertex and fragment shaders seamlessly.
 
 ```cpp
-ENGINE::DescriptorLayoutBuilder builder;
-ENGINE::ShaderParser::GetLayout(vertParser, builder);
-ENGINE::ShaderParser::GetLayout(fragParser, builder);
-
-vk::DescriptorSetLayout dstLayout = builder.BuildBindings(
-    core->logicalDevice.get(),
-    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment
-);
+vertShader->sParser->GetLayout(builder);
+fragShader->sParser->GetLayout(builder);
+descriptorCache->AddShaderInfo(*vertShader->sParser.get());
+descriptorCache->AddShaderInfo(*fragShader->sParser.get());
+descriptorCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 ```
 
-### RenderGraph Node Setup
+#### 2. Descriptor Writer (Manual Management)
 
-Next, create a render pass node for the forward rendering pass:
+The **Descriptor Writer** approach is used in `ComputeRenderer`. This method provides explicit control over how descriptors are allocated and written to, giving developers more fine-grained control over the descriptor lifecycle.
+
+- **Setup**: The `Descriptor Writer` uses a builder (`writerBuilder`) to create descriptor sets manually. This approach involves creating descriptor layouts and using a descriptor allocator to allocate descriptor sets.
+- **Usage**: In `ComputeRenderer`, descriptors are configured using `writerBuilder.AddWriteImage()`, and the set is updated explicitly with `writerBuilder.UpdateSet()`. This allows full control over each descriptor’s configuration and usage.
 
 ```cpp
-forwardPassName = "ForwardPass";
-auto renderNode = renderGraphRef->AddPass(forwardPassName);
-
-renderNode->SetVertModule(&vertShaderModule);
-renderNode->SetFragModule(&fragShaderModule);
-renderNode->SetFramebufferSize(windowProvider->GetWindowSize());
-renderNode->SetPipelineLayoutCI(layoutCreateInfo);
-renderNode->SetVertexInput(ENGINE::VertexInput::GetVertexInput());
-renderNode->AddColorAttachmentOutput("color", ENGINE::GetColorAttachmentInfo());
-renderNode->SetDepthAttachmentOutput("depth", ENGINE::GetDepthAttachmentInfo());
-renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
-renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
-renderNode->BuildRenderGraphNode();
+compShader->sParser.get()->GetLayout(builder);
+dstLayout = builder.BuildBindings(logicalDevice, vk::ShaderStageFlagBits::eCompute);
+dstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), dstLayout.get());
+writerBuilder.AddWriteImage(0, computeImageView.get(), computeImageSampler->samplerHandle.get(), vk::ImageLayout::eGeneral, vk::DescriptorType::eStorageImage);
+writerBuilder.UpdateSet(core->logicalDevice.get(), dstSet.get());
 ```
 
-### Frame Tasks and Render Operation
+### Example: Forward Renderer Setup
 
-Define the tasks that must be executed before the render operation. The RenderGraph manages image transitions and pipeline barriers automatically.
+Here's a detailed example of how `ForwardRenderer` is set up:
 
-```cpp
-void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override {
-    auto setViewTask = new std::function<void()>([this, inflightQueue]() {
-        auto* currImage = inflightQueue->currentSwapchainImageView;
-        auto* currDepthImage = core->swapchainRef->depthImagesFull.at(inflightQueue->frameIndex).imageView.get();
-        renderGraphRef->AddColorImageResource("ForwardPass", "color", currImage);
-        renderGraphRef->AddDepthImageResource("ForwardPass", "depth", currDepthImage);
-        renderGraphRef->GetNode("ForwardPass")->SetFramebufferSize(windowProvider->GetWindowSize());
-    });
+1. **Initialization**
+   - The `ForwardRenderer` class initializes by loading a GLTF model and creating Vulkan buffers (`vertexBuffer` and `indexBuffer`).
+   - Default image and shader paths are established for the resources required.
+   - The descriptor cache is configured to manage the shader's descriptor requirements automatically.
 
-    auto renderOp = new std::function<void(vk::CommandBuffer&)>([this](vk::CommandBuffer& commandBuffer) {
-        vk::DeviceSize offset = 0;
-        commandBuffer.bindDescriptorSets(
-            renderGraphRef->GetNode(forwardPassName)->pipelineType,
-            renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(),
-            0, 1, &dstSet.get(), 0, nullptr
-        );
+2. **Render Pass Setup**
+   - A RenderGraph node (`AddPass`) is created to add the rendering pass with attachments and pipeline configurations.
+   - Vertex and fragment shaders are loaded, and descriptors are configured for managing resource bindings.
 
-        commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
-        commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
+3. **Render Operation Logic**
+   - In `SetRenderOperation()`, use the `vk::CommandBuffer` to bind resources, issue draw commands, and execute the rendering of the GLTF model.
 
-        for (int i = 0; i < model.meshCount; ++i) {
-            camera.SetPerspective(45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y, 0.1f, 512.0f);
-            pc.projView = camera.matrices.perspective * camera.matrices.view;
-            pc.model = model.modelsMat[i];
+4. **Swapchain Handling**
+   - Handles recreating the swapchain and updating framebuffer resources if the window is resized or the swapchain becomes invalid.
 
-            commandBuffer.pushConstants(
-                renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(),
-                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                0, sizeof(ForwardPc), &pc
-            );
 
-            commandBuffer.drawIndexed(
-                model.indicesCount[i], 1, model.firstIndices[i],
-                static_cast<int32_t>(model.firstVertices[i]), 0
-            );
-        }
-    });
+## Hot Reloading Shaders
 
-    renderGraphRef->GetNode(forwardPassName)->AddTask(setViewTask);
-    renderGraphRef->GetNode(forwardPassName)->SetRenderOperation(renderOp);
-}
-```
+To reload shaders during runtime, press the `R` key or invoke the `ReloadShaders()` function in `ForwardRenderer`. This enables quick iteration and testing of shader modifications without restarting the application.
 
-## Current Status
 
-CodeVk_Renderer is actively under development. More features, optimizations, and examples will be added in future updates.
+### Customization Tips
 
-## Contributions
+- **Shaders**: Add your custom shaders under the shaders path and update `ForwardRenderer` to use them.
+- **Models**: Replace the GLTF model path to use your own models.
+- **UI**: Use the ImGui integration to add custom UI elements for controlling your scene.
 
-Contributions are welcome! If you'd like to contribute, please feel free to open an issue or submit a pull request. Suggestions for features, optimizations, and code improvements are highly appreciated.
+###Contribution
 
-## Future Improvements
-
-- **Extended Documentation**: More detailed usage guides and API documentation are in the pipeline.
-- **Stability Improvements**: Ongoing efforts to refactor and optimize for robust performance.
-- **Feature Expansion**: Addition of new rendering paths, advanced shading techniques, and improved debugging tools to enhance development capabilities.
-
+Contributions are welcome! Feel free to submit issues, bug fixes, or feature requests via GitHub. Pull requests are encouraged to improve the engine, especially around its modular Vulkan setup and the RenderGraph optimizations.
 

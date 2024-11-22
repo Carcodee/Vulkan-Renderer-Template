@@ -7,10 +7,11 @@
 
 namespace SYSTEMS
 {
+    //template singleton for imput system, why is this here? :D
     class InputSystem
     {
         InputSystem();
-        InputSystem* GetInstance()
+        static InputSystem* GetInstance()
         {
             if (instance == nullptr)
             {

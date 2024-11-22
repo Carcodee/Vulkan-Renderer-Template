@@ -17,6 +17,11 @@
 #include <vector>
 
 #include "LoggerSystem.hpp"
+#include <iostream>
+#include <filesystem>
+#include <assert.h>
+
 #include "InputSystem.hpp"
+#include "OS.hpp"
 
 #endif //SYSTEMSINCLUDE_HPP

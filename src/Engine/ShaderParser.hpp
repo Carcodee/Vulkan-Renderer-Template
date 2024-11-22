@@ -134,6 +134,7 @@ namespace ENGINE
                 {
                     continue;
                 }
+                
                 uniqueResources.emplace_back(resource);
             }
         }

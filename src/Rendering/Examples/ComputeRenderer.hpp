@@ -42,7 +42,8 @@ namespace Rendering
             ENGINE::Sampler* computeImageSampler = renderGraphRef->samplerPool.GetSampler(
                 vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
 
-            compShader = std::make_unique<ENGINE::Shader>(logicalDevice,"C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Examples\\cSample.comp.spv");
+            std::string shaderPath = SYSTEMS::OS::GetInstance()->GetShadersPath();
+            compShader = std::make_unique<ENGINE::Shader>(logicalDevice,shaderPath + "\\spirv\\Examples\\cSample.comp.spv");
             
             ENGINE::DescriptorLayoutBuilder builder;
 
