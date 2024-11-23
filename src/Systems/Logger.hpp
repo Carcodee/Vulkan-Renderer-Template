@@ -30,8 +30,8 @@ namespace SYSTEMS
     class Logger
     {
     public:
-        void SetLogPreferences(std::string logFileName = "",
-                               LogLevel level = LogLevel::L_ERROR,
+        void SetLogPreferences(LogLevel level = LogLevel::L_ERROR,
+                               std::string logFileName = "",
                                LogOutput output = LogOutput::CONSOLE)
         {
             logLevel = level;

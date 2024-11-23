@@ -10,6 +10,7 @@ namespace ENGINE
 {
     class StagedBuffer
     {
+    public:
         StagedBuffer(vk::PhysicalDevice physicalDevice, vk::Device logicalDevice, vk::BufferUsageFlags usage,
                      vk::DeviceSize size)
         {
