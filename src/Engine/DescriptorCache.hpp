@@ -51,6 +51,11 @@ namespace ENGINE
             this->defaultStorageImageView = defaultStorageImageView;
             this->defaultStorageImage = defaultStorageImage;
         }
+        template <typename T>
+        void SetSharedBufferPool(T)
+        {
+            
+        }
         
         void AddShaderInfo(ShaderParser* parser)
         {
@@ -62,8 +67,8 @@ namespace ENGINE
                 {
                     continue;
                 }
-                std::unique_ptr<Buffer> ubo;
-                std::unique_ptr<Buffer> ssbo;
+                Buffer* ubo;
+                Buffer* ssbo;
                 std::unique_ptr<Image> storageImage;
                 std::unique_ptr<ImageData> storageImageData;
                 std::unique_ptr<ImageView> storageImageView;
@@ -96,16 +101,14 @@ namespace ENGINE
                     break;
                 case vk::DescriptorType::eUniformBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ubo = std::make_unique<Buffer>(core->physicalDevice, core->logicalDevice.get(),
-                                                        vk::BufferUsageFlagBits::eUniformBuffer,
+                    ubo = ResourcesManager::GetInstance()->GetBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer,
                                                         vk::MemoryPropertyFlagBits::eHostVisible |
                                                         vk::MemoryPropertyFlagBits::eHostCoherent, 1);
                     buffersResources.try_emplace(resource.binding, std::move(ubo));
                     break;
                 case vk::DescriptorType::eStorageBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ssbo = std::make_unique<Buffer>(core->physicalDevice, core->logicalDevice.get(),
-                                                        vk::BufferUsageFlagBits::eStorageBuffer,
+                    ssbo = ResourcesManager::GetInstance()->GetBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer,
                                                         vk::MemoryPropertyFlagBits::eHostVisible |
                                                         vk::MemoryPropertyFlagBits::eHostCoherent, 1);
                     buffersResources.try_emplace(resource.binding,std::move(ssbo));
@@ -142,7 +145,7 @@ namespace ENGINE
 
             for (auto& buffBinding : bufferBindingsKeys)
             {
-                Buffer* buffer = buffersResources.at(buffBinding.second.binding).get();
+                Buffer* buffer = buffersResources.at(buffBinding.second.binding);
                 writerBuilder.AddWriteBuffer(buffBinding.second.binding, buffer->descriptor, buffBinding.second.type);
             }
 
@@ -186,7 +189,7 @@ namespace ENGINE
         {
             for (auto& buffBinding : bufferBindingsKeys)
             {
-                Buffer* buffer = buffersResources.at(buffBinding.second.binding).get();
+                Buffer* buffer = buffersResources.at(buffBinding.second.binding);
                 writerBuilder.AddWriteBuffer(buffBinding.second.binding, buffer->descriptor, buffBinding.second.type);
             }
 
@@ -244,12 +247,13 @@ namespace ENGINE
             }
             if (sizeof(T) * bufferData.size()> bufferRef->deviceSize)
             {
-                buffersResources.at(binding.binding).reset(new Buffer(core->physicalDevice, core->logicalDevice.get(),
-                                                     usageFlags,
-                                                     vk::MemoryPropertyFlagBits::eHostVisible |
-                                                     vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                     sizeof(T) * bufferData.size(), bufferData.data()));
-                UpdateDescriptor();
+                buffersResources.at(binding.binding) = ResourcesManager::GetInstance()->SetBuffer(
+                    name,
+                    usageFlags,
+                    vk::MemoryPropertyFlagBits::eHostVisible |
+                    vk::MemoryPropertyFlagBits::eHostCoherent,
+                    sizeof(T) * bufferData.size(), bufferData.data());
+            UpdateDescriptor();
             }else
             {
                 //pending to handle this if is a staged resource
@@ -287,11 +291,12 @@ namespace ENGINE
             }
             if (sizeof(T) > bufferRef->deviceSize)
             {
-                buffersResources.at(binding.binding).reset(new Buffer(core->physicalDevice, core->logicalDevice.get(),
-                                                     usageFlags,
-                                                     vk::MemoryPropertyFlagBits::eHostVisible |
-                                                     vk::MemoryPropertyFlagBits::eHostCoherent,
-                                                     sizeof(T), &bufferData));
+                buffersResources.at(binding.binding) = ResourcesManager::GetInstance()->SetBuffer(
+                    name,
+                    usageFlags,
+                    vk::MemoryPropertyFlagBits::eHostVisible |
+                    vk::MemoryPropertyFlagBits::eHostCoherent,
+                    sizeof(T), &bufferData);
                 UpdateDescriptor();
             }else
             {
@@ -480,7 +485,7 @@ namespace ENGINE
                 std::cout << text;
                 return nullptr;
             }
-            return buffersResources.at(binding.binding).get();
+            return buffersResources.at(binding.binding);
         }
         SamplerBinding* GetSamplerByName(std::string name)
         {
@@ -555,7 +560,7 @@ namespace ENGINE
         std::unordered_map<std::string, ShaderResource> bufferBindingsKeys;
         std::unordered_map<std::string, ShaderResource> imageBindingsKeys;
         
-        std::map<uint32_t, std::unique_ptr<Buffer>> buffersResources;
+        std::map<uint32_t, Buffer*> buffersResources;
         std::map<uint32_t, SamplerBinding> imageSamplers;
         std::map<uint32_t, StorageBinding> storageImages;
         std::map<uint32_t, SamplerArray> samplerArrayResources;
@@ -574,6 +579,7 @@ namespace ENGINE
         
         ImageView* defaultStorageImageView;
         Sampler* defaultStorageImage;
+        bool useSharedPool;
          
     };
    
