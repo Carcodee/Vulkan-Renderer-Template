@@ -61,7 +61,7 @@ void run(WindowProvider* windowProvider)
    
     Rendering::ModelLoader::GetInstance(core.get());
 
-    Rendering::ResourcesManager::GetInstance(core.get());
+    ENGINE::ResourcesManager::GetInstance(core.get());
     
     std::vector<ENGINE::DescriptorAllocator::PoolSizeRatio> poolSizeRatios ={
         {vk::DescriptorType::eSampler, 1.5f},
@@ -161,7 +161,7 @@ void run(WindowProvider* windowProvider)
         gpuTask.endTime = windowProvider->GetTime() - startGpu; 
         
     }
-    Rendering::ResourcesManager::GetInstance()->DestroyResources();
+    ENGINE::ResourcesManager::GetInstance()->DestroyResources();
     imguiRenderer->Destroy();
     windowProvider->DestroyWindow();
 }
