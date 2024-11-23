@@ -52,10 +52,10 @@ namespace ENGINE
             this->defaultStorageImage = defaultStorageImage;
         }
         
-        void AddShaderInfo(ShaderParser& parser)
+        void AddShaderInfo(ShaderParser* parser)
         {
             std::vector<ShaderResource> uniqueResources;
-            parser.GetLayout(uniqueResources);
+            parser->GetLayout(uniqueResources);
             for (auto& resource : uniqueResources)
             {
                 if (dstSetBuilder.uniqueBindings.contains(resource.binding))

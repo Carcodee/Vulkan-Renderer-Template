@@ -5,6 +5,7 @@
 #ifndef SYSTEMSINCLUDE_HPP
 #define SYSTEMSINCLUDE_HPP
 
+#include <any>
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -15,13 +16,15 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <typeindex>
 
-#include "LoggerSystem.hpp"
 #include <iostream>
 #include <filesystem>
 #include <assert.h>
 
-#include "InputSystem.hpp"
+#include "SingletonStorage.hpp"
+#include "Logger.hpp"
 #include "OS.hpp"
+#include "InputSystem.hpp"
 
 #endif //SYSTEMSINCLUDE_HPP

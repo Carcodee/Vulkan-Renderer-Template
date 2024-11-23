@@ -20,7 +20,7 @@ double previousTime;
 legit::ProfilerTask cpuTask;
 legit::ProfilerTask gpuTask;
 
-#include "Systems/LoggerSystem.hpp"
+#include "Systems/SystemsInclude.hpp"
 #include "Rendering/RenderingInclude.hpp"
 
 CONST int WINDOWS_WIDTH = 1920;

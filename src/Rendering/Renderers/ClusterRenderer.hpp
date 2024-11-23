@@ -14,6 +14,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -29,6 +30,9 @@ namespace Rendering
             this->renderGraphRef = core->renderGraphRef;
             this->windowProvider = windowProvider;
             this->descriptorAllocatorRef = descriptorAllocator;
+            computeDescCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
+            gBufferDescCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
+            lightDecCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
 
             CreateResources();
             CreateBuffers();
@@ -53,7 +57,7 @@ namespace Rendering
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
                                                      renderNode->pipelineLayout.get(), 0,
                                                      1,
-                                                     &cullDstSet.get(), 0, nullptr);
+                                                     &computeDescCache.get()->dstSet.get(), 0, nullptr);
                     commandBuffer.pushConstants(renderGraphRef->GetNode(computePassName)->pipelineLayout.get(),
                                                 vk::ShaderStageFlagBits::eCompute,
                                                 0, sizeof(ScreenDataPc), &cullDataPc);
@@ -144,14 +148,14 @@ namespace Rendering
             {
                 lightsMap.emplace_back(ArrayIndexer{});
             }
-            memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
+            // memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
 
             lightsIndices.clear();
             for (int i = 0; i < lightsIndices.capacity(); ++i)
             {
                 lightsIndices.emplace_back(-1);
             }
-            memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
+            // memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
 
             cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
             cPropsUbo.invView = glm::inverse(camera.matrices.view);
@@ -159,9 +163,14 @@ namespace Rendering
             cPropsUbo.zNear = camera.cameraProperties.zNear;
             cPropsUbo.zFar = camera.cameraProperties.zFar;
 
-            memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
+            // memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
 
-            memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
+            // memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
+
+            computeDescCache->SetBuffer("PointLights", pointLights);
+            computeDescCache->SetBuffer("LightMap", lightsMap);
+            computeDescCache->SetBuffer("LightIndices", lightsIndices);
+            computeDescCache->SetBuffer("CameraProperties", cPropsUbo);
         }
 
         void ReloadShaders() override
@@ -370,7 +379,8 @@ namespace Rendering
             cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
                                                               "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
 
-            cullCompShader->sParser->GetLayout(builder);
+            computeDescCache->AddShaderInfo(cullCompShader.get()->sParser.get());
+            computeDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
 
             auto cullPushConstantRange = vk::PushConstantRange()
                                          .setOffset(0)
@@ -384,16 +394,7 @@ namespace Rendering
             auto cullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                         .setSetLayoutCount(1)
                                         .setPushConstantRanges(cullPushConstantRange)
-                                        .setPSetLayouts(&cullDstLayout.get());
-
-            cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
-
-            writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
-
-            writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
+                                        .setPSetLayouts(&computeDescCache->dstLayout.get());
 
             auto* cullRenderNode = renderGraphRef->AddPass(computePassName);
             cullRenderNode->SetCompShader(cullCompShader.get());
@@ -577,6 +578,9 @@ namespace Rendering
         std::unique_ptr<ENGINE::Buffer> lightsIndicesBuff;
 
 
+        std::unique_ptr<ENGINE::DescriptorCache> computeDescCache;
+        std::unique_ptr<ENGINE::DescriptorCache> gBufferDescCache;
+        std::unique_ptr<ENGINE::DescriptorCache> lightDecCache;
         std::string gBufferPassName = "gBuffer";
         std::string computePassName = "cullLight";
         std::string lightPassName = "light";
@@ -590,7 +594,7 @@ namespace Rendering
         std::vector<PointLight> pointLights;
         std::vector<ArrayIndexer> lightsMap;
         std::vector<int32_t> lightsIndices;
-        ScreenDataPc cullDataPc;
+        ScreenDataPc cullDataPc{};
         uint32_t xTileSizePx = 256;
         uint32_t yTileSizePx = 256;
         uint32_t zSlicesSize = 12;
@@ -601,7 +605,7 @@ namespace Rendering
         std::vector<Vertex2D> quadVert;
         std::vector<uint32_t> quadIndices;
         CPropsUbo cPropsUbo;
-        LightPc lightPc;
+        LightPc lightPc{};
     };
 }
 
