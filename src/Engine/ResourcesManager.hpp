@@ -70,7 +70,10 @@ namespace ENGINE
                 imageShipper = GetShipperFromName(name);
                 return imageShipper;
             }
-            imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern);
+            if (imageShipper->image == nullptr)
+            {
+                imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern);
+            }
             return imageShipper;
         }
         
@@ -79,6 +82,13 @@ namespace ENGINE
                             int mipLevelCount, int baseArrayLayer, int arrayLayerCount)
         {
             assert(core!= nullptr &&"core must be set");
+
+            if (imagesNames.contains(name))
+            {
+                ImageView* imageViewRef = GetImageViewFromName(name);
+                return imageViewRef;
+            }
+            
             auto image = std::make_unique<
                 Image>(core->physicalDevice, core->logicalDevice.get(), imageInfo);
             if (imageInfo.usage == vk::ImageUsageFlagBits::eStorage)
@@ -104,14 +114,15 @@ namespace ENGINE
             }
         }
         
-        
-        
         Buffer* GetBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags,
                           vk::MemoryPropertyFlags memPropertyFlags, vk::DeviceSize deviceSize
                           , void* data = nullptr)
         {
             assert(core!= nullptr &&"core must be set");
-            assert(!bufferNames.contains(name) && "Buffer name already exist");
+            if (bufferNames.contains(name))
+            {
+                return GetBuffFromName(name);
+            }
         
             auto buffer = std::make_unique<Buffer>(
                 core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, memPropertyFlags, deviceSize,
@@ -126,7 +137,10 @@ namespace ENGINE
         )
         {
             assert(core!= nullptr &&"core must be set");
-            assert(!stagedBufferNames.contains(name) && "Buffer name already exist");
+            if (stagedBufferNames.contains(name))
+            {
+                return GetStagedBuffFromName(name);
+            }
         
             auto buffer = std::make_unique<StagedBuffer>(
                 core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, deviceSize);
@@ -143,11 +157,6 @@ namespace ENGINE
             assert(core!= nullptr &&"core must be set");
             assert(bufferNames.contains(name) && "Buffer dont exist");
         
-            auto buffer = std::make_unique<Buffer>(
-                core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, memPropertyFlags, deviceSize,
-                data);
-        
-        
             buffers.at(bufferNames.at(name)).reset(new Buffer(core->physicalDevice, core->logicalDevice.get(),
                                                               bufferUsageFlags, memPropertyFlags, deviceSize, data));
             return buffers.at(bufferNames.at(name)).get();
@@ -160,11 +169,9 @@ namespace ENGINE
             assert(core!= nullptr &&"core must be set");
             assert(!stagedBufferNames.contains(name) && "staged buffer dont exist");
         
-            auto buffer = std::make_unique<StagedBuffer>(
-                core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, deviceSize);
-        
             stagedBuffers.at(stagedBufferNames.at(name)).reset(
                 new StagedBuffer(core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, deviceSize));
+            
             return stagedBuffers.at(stagedBufferNames.at(name)).get();
         }
         
@@ -242,6 +249,7 @@ namespace ENGINE
             }
             return instance;
         }
+        
         std::unordered_map<std::string, int32_t> bufferNames;
         std::unordered_map<std::string, int32_t> stagedBufferNames;
         std::unordered_map<std::string, int32_t> imagesNames;
