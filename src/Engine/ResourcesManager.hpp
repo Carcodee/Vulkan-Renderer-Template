@@ -104,6 +104,8 @@ namespace ENGINE
             }
         }
         
+        
+        
         Buffer* GetBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags,
                           vk::MemoryPropertyFlags memPropertyFlags, vk::DeviceSize deviceSize
                           , void* data = nullptr)
@@ -240,7 +242,6 @@ namespace ENGINE
             }
             return instance;
         }
-        
         std::unordered_map<std::string, int32_t> bufferNames;
         std::unordered_map<std::string, int32_t> stagedBufferNames;
         std::unordered_map<std::string, int32_t> imagesNames;

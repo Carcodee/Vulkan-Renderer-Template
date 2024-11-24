@@ -32,16 +32,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Moved ResourcesManager.hpp">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/CoreImpl.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/CoreImpl.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/DescriptorCache.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/DescriptorCache.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/EngineInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/EngineInclude.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Systems/SystemsInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Systems/SystemsInclude.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

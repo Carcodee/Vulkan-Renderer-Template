@@ -330,12 +330,11 @@ namespace Rendering
 
             //Cull pass//
 
-            cullCompShader = std::make_unique<Shader>(logicalDevice,
-                                                              "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
+            cullCompShader = std::make_unique<Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
 
             cullCompShader.get()->sParser->GetLayout(builder);
-            // computeDescCache->AddShaderInfo(cullCompShader.get()->sParser.get());
-            // computeDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
+            computeDescCache->AddShaderInfo(cullCompShader.get()->sParser.get());
+            computeDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
 
             auto cullPushConstantRange = vk::PushConstantRange()
                                          .setOffset(0)
@@ -349,7 +348,7 @@ namespace Rendering
             auto cullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                         .setSetLayoutCount(1)
                                         .setPushConstantRanges(cullPushConstantRange)
-                                        .setPSetLayouts(&cullDstLayout.get());
+                                        .setPSetLayouts(&computeDescCache->dstLayout.get());
 
             
 
@@ -357,6 +356,8 @@ namespace Rendering
             cullRenderNode->SetCompShader(cullCompShader.get());
             cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
             cullRenderNode->BuildRenderGraphNode();
+
+            
 
             cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
             writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
