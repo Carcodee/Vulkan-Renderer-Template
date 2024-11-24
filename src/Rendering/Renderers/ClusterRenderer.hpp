@@ -3,40 +3,29 @@
 
 
 
+
 // Created by carlo on 2024-10-25.
 //
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
 namespace Rendering
 {
+    using namespace ENGINE;
     class ClusterRenderer : BaseRenderer
     {
     public:
-        ClusterRenderer(ENGINE::Core* core, WindowProvider* windowProvider,
-                        ENGINE::DescriptorAllocator* descriptorAllocator)
+        ClusterRenderer(Core* core, WindowProvider* windowProvider,
+                        DescriptorAllocator* descriptorAllocator)
         {
             this->core = core;
             this->renderGraphRef = core->renderGraphRef;
             this->windowProvider = windowProvider;
             this->descriptorAllocatorRef = descriptorAllocator;
-            computeDescCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
-            gBufferDescCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
-            lightDecCache = std::make_unique<ENGINE::DescriptorCache>(this->core);
+            computeDescCache = std::make_unique<DescriptorCache>(this->core);
+            gBufferDescCache = std::make_unique<DescriptorCache>(this->core);
+            lightDecCache = std::make_unique<DescriptorCache>(this->core);
 
             CreateResources();
             CreateBuffers();
@@ -47,7 +36,7 @@ namespace Rendering
         {
         }
 
-        void SetRenderOperation(ENGINE::InFlightQueue* inflightQueue) override
+        void SetRenderOperation(InFlightQueue* inflightQueue) override
         {
             auto cullTask = new std::function<void()>([this, inflightQueue]()
             {
@@ -192,11 +181,11 @@ namespace Rendering
         {
             auto& physicalDevice = core->physicalDevice;
             auto& logicalDevice = core->logicalDevice.get();
-            auto imageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
+            auto imageInfo = Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          vk::Format::eR32G32B32A32Sfloat,
                                                          vk::ImageUsageFlagBits::eColorAttachment |
                                                          vk::ImageUsageFlagBits::eSampled);
-            auto depthImageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
+            auto depthImageInfo = Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                               core->swapchainRef->depthFormat,
                                                               vk::ImageUsageFlagBits::eDepthStencilAttachment |
                                                               vk::ImageUsageFlagBits::eSampled);
@@ -217,10 +206,10 @@ namespace Rendering
 
             imageShipperCol = ResourcesManager::GetInstance()->SetShipperPath( "Color", "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
             imageShipperCol = ResourcesManager::GetInstance()->GetShipper("Color", 1, 1, core->swapchainRef->GetFormat(),
-                                       ENGINE::GRAPHICS_READ);
+                                       GRAPHICS_READ);
             imageShipperNorm=ResourcesManager::GetInstance()->SetShipperPath("Norm","C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
             imageShipperNorm=ResourcesManager::GetInstance()->GetShipper("Norm", 1, 1, core->swapchainRef->GetFormat(),
-                                        ENGINE::GRAPHICS_READ);
+                                        GRAPHICS_READ);
             ModelLoader::GetInstance()->LoadGLTF(
                 "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\sponza\\scene.gltf",
                 model);
@@ -290,16 +279,14 @@ namespace Rendering
 
         void CreateBuffers()
         {
-            auto& physicalDevice = core->physicalDevice;
-            auto& logicalDevice = core->logicalDevice.get();
             pointLightsBuff = ResourcesManager::GetInstance()->GetBuffer("pointLightsBuff", vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(PointLight) * pointLights.size(), pointLights.data());
-
+            
             vertexBuffer = ResourcesManager::GetInstance()->GetBuffer("vertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(M_Vertex3D) * model.vertices.size(), model.vertices.data());
-
+            
             indexBuffer = ResourcesManager::GetInstance()->GetBuffer("indexBuffer",vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
@@ -307,20 +294,20 @@ namespace Rendering
             lightsMapBuff = ResourcesManager::GetInstance()->GetBuffer("lightsMapBuff",vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
-
+            
             lightsIndicesBuff =  ResourcesManager::GetInstance()->GetBuffer("lightsIndicesBuff",vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(int32_t) * lightsIndices.size(), lightsIndices.data());
-
+            
             //light
             camPropsBuff =  ResourcesManager::GetInstance()->GetBuffer("camPropsBuff",vk::BufferUsageFlagBits::eUniformBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(CPropsUbo), &cPropsUbo);
-
+            
             lVertexBuffer =  ResourcesManager::GetInstance()->GetBuffer("lVertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(Vertex2D) * quadVert.size(), quadVert.data());
-
+            
             lIndexBuffer =  ResourcesManager::GetInstance()->GetBuffer("lIndexBuffer",vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * quadIndices.size(), quadIndices.data());
@@ -334,16 +321,16 @@ namespace Rendering
         void CreatePipelines()
         {
             auto& logicalDevice = core->logicalDevice.get();
-            gVertShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+            gVertShader = std::make_unique<Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
-            gFragShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+            gFragShader = std::make_unique<Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
-            ENGINE::DescriptorLayoutBuilder builder;
+            DescriptorLayoutBuilder builder;
 
             //Cull pass//
 
-            cullCompShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+            cullCompShader = std::make_unique<Shader>(logicalDevice,
                                                               "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
 
             cullCompShader.get()->sParser->GetLayout(builder);
@@ -408,10 +395,10 @@ namespace Rendering
 
             writerBuilder.UpdateSet(core->logicalDevice.get(), gDstSet.get());
 
-            ENGINE::VertexInput vertexInput = M_Vertex3D::GetVertexInput();
-            ENGINE::AttachmentInfo colInfo = ENGINE::GetColorAttachmentInfo(
+            VertexInput vertexInput = M_Vertex3D::GetVertexInput();
+            AttachmentInfo colInfo = GetColorAttachmentInfo(
                 glm::vec4(0.0f), vk::Format::eR32G32B32A32Sfloat);
-            ENGINE::AttachmentInfo depthInfo = ENGINE::GetDepthAttachmentInfo();
+            AttachmentInfo depthInfo = GetDepthAttachmentInfo();
             auto renderNode = renderGraphRef->AddPass(gBufferPassName);
 
             renderNode->SetVertShader(gVertShader.get());
@@ -422,9 +409,9 @@ namespace Rendering
             renderNode->AddColorAttachmentOutput("gColor", colInfo);
             renderNode->AddColorAttachmentOutput("gNorm", colInfo);
             renderNode->SetDepthAttachmentOutput("gDepth", depthInfo);
-            renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
-            renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
-            renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
+            renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
+            renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
+            renderNode->SetDepthConfig(DepthConfigs::D_ENABLE);
             renderNode->AddSamplerResource("colGSampler", imageShipperCol->imageView.get());
             renderNode->AddSamplerResource("normGSampler", imageShipperNorm->imageView.get());
             renderNode->AddColorImageResource("gColor", colAttachmentView);
@@ -434,9 +421,9 @@ namespace Rendering
 
             //light pass//
 
-            lVertShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+            lVertShader = std::make_unique<Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
-            lFragShader = std::make_unique<ENGINE::Shader>(logicalDevice,
+            lFragShader = std::make_unique<Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
 
             lVertShader.get()->sParser->GetLayout(builder);
@@ -457,9 +444,9 @@ namespace Rendering
 
             lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
 
-            ENGINE::Sampler* sampler = renderGraphRef->samplerPool.AddSampler(
+            Sampler* sampler = renderGraphRef->samplerPool.AddSampler(
                 logicalDevice, vk::SamplerAddressMode::eRepeat, vk::Filter::eNearest, vk::SamplerMipmapMode::eNearest);
-            ENGINE::Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
+            Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
                 logicalDevice, vk::SamplerAddressMode::eClampToEdge, vk::Filter::eNearest,
                 vk::SamplerMipmapMode::eNearest);
 
@@ -482,10 +469,10 @@ namespace Rendering
 
             writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
             
-            ENGINE::AttachmentInfo lColInfo = ENGINE::GetColorAttachmentInfo(
+            AttachmentInfo lColInfo = GetColorAttachmentInfo(
                 glm::vec4(0.0f), core->swapchainRef->GetFormat());
 
-            ENGINE::VertexInput lVertexInput = Vertex2D::GetVertexInput();
+            VertexInput lVertexInput = Vertex2D::GetVertexInput();
 
             auto lRenderNode = renderGraphRef->AddPass(lightPassName);
             lRenderNode->SetVertShader(lVertShader.get());
@@ -494,7 +481,7 @@ namespace Rendering
             lRenderNode->SetPipelineLayoutCI(lLayoutCreateInfo);
             lRenderNode->SetVertexInput(lVertexInput);
             lRenderNode->AddColorAttachmentOutput("lColor", lColInfo);
-            lRenderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
+            lRenderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
             lRenderNode->AddSamplerResource("colGSampler", colAttachmentView);
             lRenderNode->AddSamplerResource("normGSampler", normAttachmentView);
             lRenderNode->AddSamplerResource("depthGSampler", depthAttachmentView);
@@ -502,12 +489,12 @@ namespace Rendering
             lRenderNode->BuildRenderGraphNode();
         }
 
-        ENGINE::DescriptorAllocator* descriptorAllocatorRef;
+        DescriptorAllocator* descriptorAllocatorRef;
         WindowProvider* windowProvider;
-        ENGINE::Core* core;
-        ENGINE::RenderGraph* renderGraphRef;
+        Core* core;
+        RenderGraph* renderGraphRef;
 
-        ENGINE::DescriptorWriterBuilder writerBuilder;
+        DescriptorWriterBuilder writerBuilder;
 
         vk::UniqueDescriptorSetLayout gDstLayout;
         vk::UniqueDescriptorSet gDstSet;
@@ -518,36 +505,36 @@ namespace Rendering
         vk::UniqueDescriptorSetLayout cullDstLayout;
         vk::UniqueDescriptorSet cullDstSet;
 
-        std::unique_ptr<ENGINE::Shader> gVertShader;
-        std::unique_ptr<ENGINE::Shader> gFragShader;
+        std::unique_ptr<Shader> gVertShader;
+        std::unique_ptr<Shader> gFragShader;
 
-        std::unique_ptr<ENGINE::Shader> lVertShader;
-        std::unique_ptr<ENGINE::Shader> lFragShader;
+        std::unique_ptr<Shader> lVertShader;
+        std::unique_ptr<Shader> lFragShader;
 
-        std::unique_ptr<ENGINE::Shader> cullCompShader;
+        std::unique_ptr<Shader> cullCompShader;
 
-        ENGINE::ImageShipper* imageShipperCol;
-        ENGINE::ImageShipper* imageShipperNorm;
+        ImageShipper* imageShipperCol;
+        ImageShipper* imageShipperNorm;
 
-        ENGINE::ImageView* colAttachmentView;
-        ENGINE::ImageView* normAttachmentView;
-        ENGINE::ImageView* depthAttachmentView;
+        ImageView* colAttachmentView;
+        ImageView* normAttachmentView;
+        ImageView* depthAttachmentView;
 
-        ENGINE::Buffer* vertexBuffer;
-        ENGINE::Buffer* indexBuffer;
+        Buffer* vertexBuffer;
+        Buffer* indexBuffer;
 
-        ENGINE::Buffer* lVertexBuffer;
-        ENGINE::Buffer* lIndexBuffer;
+        Buffer* lVertexBuffer;
+        Buffer* lIndexBuffer;
 
-        ENGINE::Buffer* camPropsBuff;
-        ENGINE::Buffer* pointLightsBuff;
-        ENGINE::Buffer* lightsMapBuff;
-        ENGINE::Buffer* lightsIndicesBuff;
+        Buffer* camPropsBuff;
+        Buffer* pointLightsBuff;
+        Buffer* lightsMapBuff;
+        Buffer* lightsIndicesBuff;
 
 
-        std::unique_ptr<ENGINE::DescriptorCache> computeDescCache;
-        std::unique_ptr<ENGINE::DescriptorCache> gBufferDescCache;
-        std::unique_ptr<ENGINE::DescriptorCache> lightDecCache;
+        std::unique_ptr<DescriptorCache> computeDescCache;
+        std::unique_ptr<DescriptorCache> gBufferDescCache;
+        std::unique_ptr<DescriptorCache> lightDecCache;
         std::string gBufferPassName = "gBuffer";
         std::string computePassName = "cullLight";
         std::string lightPassName = "light";

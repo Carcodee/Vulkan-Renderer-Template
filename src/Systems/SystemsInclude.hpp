@@ -17,6 +17,9 @@
 #include <string>
 #include <vector>
 #include <typeindex>
+#include <map>
+#include <unordered_map>
+#include <fstream>
 
 #include <iostream>
 #include <filesystem>

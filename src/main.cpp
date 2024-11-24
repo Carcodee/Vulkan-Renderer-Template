@@ -15,12 +15,12 @@ double previousTime;
 
 
 #include "WindowAPI/WindowInclude.hpp"
+#include "Systems/SystemsInclude.hpp"
 #include "Engine/EngineInclude.hpp"
 
 legit::ProfilerTask cpuTask;
 legit::ProfilerTask gpuTask;
 
-#include "Systems/SystemsInclude.hpp"
 #include "Rendering/RenderingInclude.hpp"
 
 CONST int WINDOWS_WIDTH = 1920;
@@ -47,6 +47,7 @@ void run(WindowProvider* windowProvider)
 
     std::unique_ptr<ENGINE::Core> core = std::make_unique<ENGINE::Core>(
         glfwExtensions, glfwExtensionCount, &windowDesc, enableDebugging);
+ 
     
     std::unique_ptr<ENGINE::RenderGraph> renderGraph = core->CreateRenderGraph();
     renderGraph->samplerPool.AddSampler(core->logicalDevice.get(), vk::SamplerAddressMode::eRepeat,
@@ -57,12 +58,13 @@ void run(WindowProvider* windowProvider)
         windowProvider->GetWindowSize());
     
     std::unique_ptr<ENGINE::DescriptorAllocator> descriptorAllocator = std::make_unique<ENGINE::DescriptorAllocator>();
-    auto resourceManager = ENGINE::ResourcesManager::GetInstance(core.get());
-   
-    Rendering::ModelLoader::GetInstance(core.get());
+
 
     ENGINE::ResourcesManager::GetInstance(core.get());
     
+    Rendering::ModelLoader::GetInstance(core.get());
+
+
     std::vector<ENGINE::DescriptorAllocator::PoolSizeRatio> poolSizeRatios ={
         {vk::DescriptorType::eSampler, 1.5f},
         {vk::DescriptorType::eStorageBuffer, 1.5f},
@@ -156,7 +158,6 @@ void run(WindowProvider* windowProvider)
                 core->resizeRequested = true;
             }
         }
-        
         core->WaitIdle();
         gpuTask.endTime = windowProvider->GetTime() - startGpu; 
         

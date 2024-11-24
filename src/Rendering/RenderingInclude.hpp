@@ -22,7 +22,6 @@
 
 #include "RendererStructs.hpp"
 
-#include "RManagers/ResourcesManager.hpp"
 #include "RThings/Lights.hpp"
 #include "RThings/Model.hpp"
 #include "RThings/ModelLoader.hpp"

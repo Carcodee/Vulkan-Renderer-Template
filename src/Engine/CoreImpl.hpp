@@ -72,6 +72,7 @@ namespace ENGINE
             (*func)();
         }
         deletionQueue.clear();
+        
     }
 
     void Core::ClearCaches()
