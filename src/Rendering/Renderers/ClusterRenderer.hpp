@@ -294,6 +294,7 @@ namespace Rendering
             lightsMapBuff = ResourcesManager::GetInstance()->GetBuffer("lightsMapBuff",vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
+
             
             lightsIndicesBuff =  ResourcesManager::GetInstance()->GetBuffer("lightsIndicesBuff",vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
