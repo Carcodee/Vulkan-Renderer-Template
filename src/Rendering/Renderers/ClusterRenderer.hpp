@@ -70,18 +70,11 @@ namespace Rendering
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
-                    lightDecCache->SetSampler("gCol", colAttachmentView);
-                    lightDecCache->SetSampler("gNormals", normAttachmentView);
-                    lightDecCache->SetSampler("gDepth", depthAttachmentView);
-                    lightDecCache->SetBuffer("CameraProperties", cPropsUbo);
-                    lightDecCache->SetBuffer("PointLights", pointLights);
-                    lightDecCache->SetBuffer("LightMap", lightsMap);
-                    lightDecCache->SetBuffer("LightIndices", lightsIndices);
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
                                                      renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0,
                                                      1,
-                                                     &lightDecCache->dstSet.get(), 0, nullptr);
+                                                     &gDstSet.get(), 0, nullptr);
 
                     commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
@@ -118,11 +111,19 @@ namespace Rendering
             auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+                    
+                    lightDecCache->SetSampler("gCol", colAttachmentView);
+                    lightDecCache->SetSampler("gNormals", normAttachmentView);
+                    lightDecCache->SetSampler("gDepth", depthAttachmentView);
+                    lightDecCache->SetBuffer("CameraProperties", cPropsUbo);
+                    lightDecCache->SetBuffer("PointLights", pointLights);
+                    lightDecCache->SetBuffer("LightMap", lightsMap);
+                    lightDecCache->SetBuffer("LightIndices", lightsIndices);
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(lightPassName)->pipelineType,
                                                      renderGraphRef->GetNode(lightPassName)->pipelineLayout.get(),
                                                      0, 1,
-                                                     &lDstSet.get(), 0, nullptr);
+                                                     &lightDecCache->dstSet.get(), 0, nullptr);
                     commandBuffer.bindVertexBuffers(0, 1, &lVertexBuffer->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(lIndexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
 
@@ -443,13 +444,14 @@ namespace Rendering
             Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
                 logicalDevice, vk::SamplerAddressMode::eClampToEdge, vk::Filter::eNearest,
                 vk::SamplerMipmapMode::eNearest);
+            
             lightDecCache->SetDefaultSamplerInfo(colAttachmentView, sampler);
             lightDecCache->AddShaderInfo(lVertShader->sParser.get());
             lightDecCache->AddShaderInfo(lFragShader->sParser.get());
             lightDecCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
             
-            lDstLayout = builder.BuildBindings(
-                core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+            // lDstLayout = builder.BuildBindings(
+                // core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
             auto lPushConstantRange = vk::PushConstantRange()
                                       .setOffset(0)
@@ -461,30 +463,30 @@ namespace Rendering
                                      .setSetLayoutCount(1)
                                      .setPSetLayouts(&lightDecCache->dstLayout.get());
 
-            lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
+            // lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
 
 
 
             
-            writerBuilder.AddWriteImage(0, colAttachmentView,
-                                        sampler->samplerHandle.get(),
-                                        vk::ImageLayout::eShaderReadOnlyOptimal,
-                                        vk::DescriptorType::eCombinedImageSampler);
-            writerBuilder.AddWriteImage(1, normAttachmentView,
-                                        sampler->samplerHandle.get(),
-                                        vk::ImageLayout::eShaderReadOnlyOptimal,
-                                        vk::DescriptorType::eCombinedImageSampler);
-            writerBuilder.AddWriteImage(2, depthAttachmentView,
-                                        depthSampler->samplerHandle.get(),
-                                        vk::ImageLayout::eShaderReadOnlyOptimal,
-                                        vk::DescriptorType::eCombinedImageSampler);
-            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
-            writerBuilder.AddWriteBuffer(4, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(5, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(6, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-
-            writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
-            
+            // writerBuilder.AddWriteImage(0, colAttachmentView,
+            //                             sampler->samplerHandle.get(),
+            //                             vk::ImageLayout::eShaderReadOnlyOptimal,
+            //                             vk::DescriptorType::eCombinedImageSampler);
+            // writerBuilder.AddWriteImage(1, normAttachmentView,
+            //                             sampler->samplerHandle.get(),
+            //                             vk::ImageLayout::eShaderReadOnlyOptimal,
+            //                             vk::DescriptorType::eCombinedImageSampler);
+            // writerBuilder.AddWriteImage(2, depthAttachmentView,
+            //                             depthSampler->samplerHandle.get(),
+            //                             vk::ImageLayout::eShaderReadOnlyOptimal,
+            //                             vk::DescriptorType::eCombinedImageSampler);
+            // writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
+            // writerBuilder.AddWriteBuffer(4, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            // writerBuilder.AddWriteBuffer(5, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            // writerBuilder.AddWriteBuffer(6, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            //
+            // writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
+            //
             AttachmentInfo lColInfo = GetColorAttachmentInfo(
                 glm::vec4(0.0f), core->swapchainRef->GetFormat());
 

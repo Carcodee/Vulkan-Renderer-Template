@@ -149,8 +149,9 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->camera.firstMouse = true;
                 }
                 cpuTask.endTime = windowProvider->GetTime() - now;
-                
+
                 startGpu = windowProvider->GetTime();
+
                 inFlightQueue->EndFrame();
             }
             catch (vk::OutOfDateKHRError err)
