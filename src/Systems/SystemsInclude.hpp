@@ -29,5 +29,6 @@
 #include "Logger.hpp"
 #include "OS.hpp"
 #include "InputSystem.hpp"
+#include "ObserverSystem.hpp"
 
 #endif //SYSTEMSINCLUDE_HPP

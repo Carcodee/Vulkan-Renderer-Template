@@ -184,7 +184,7 @@ namespace ENGINE
                 {
                     bufferRef->Map();
                 }
-                memcpy(bufferRef->mappedMem, &data, deviceSize);
+                memcpy(bufferRef->mappedMem, data, deviceSize);
                 if (bufferRef->usageFlags == vk::BufferUsageFlagBits::eStorageBuffer)
                 {
                     bufferRef->Unmap();
@@ -266,7 +266,7 @@ namespace ENGINE
         }
         void UpdateBuffers()
         {
-            if (!invalidateBuffers)
+            if (!invalidateBuffers) {return;}
             for (auto& name : bufferNames)
             {
                 BufferUpdateInfo& bufferUpdateInfo = buffersState.at(name.second);

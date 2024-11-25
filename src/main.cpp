@@ -122,6 +122,7 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->ReloadShaders(); 
                 }
 
+                ENGINE::ResourcesManager::GetInstance()->UpdateBuffers();
                 
                 inFlightQueue->BeginFrame();
 
