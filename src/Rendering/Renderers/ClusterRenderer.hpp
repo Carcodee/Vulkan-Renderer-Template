@@ -46,11 +46,15 @@ namespace Rendering
             auto cullRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+                    computeDescCache->SetBuffer("PointLights", pointLights);
+                    computeDescCache->SetBuffer("LightMap", lightsMap);
+                    computeDescCache->SetBuffer("LightIndices", lightsIndices);
+                    computeDescCache->SetBuffer("CameraProperties", cPropsUbo);
                     auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
                                                      renderNode->pipelineLayout.get(), 0,
                                                      1,
-                                                     &cullDstSet.get(), 0, nullptr);
+                                                     &computeDescCache->dstSet.get(), 0, nullptr);
                     commandBuffer.pushConstants(renderGraphRef->GetNode(computePassName)->pipelineLayout.get(),
                                                 vk::ShaderStageFlagBits::eCompute,
                                                 0, sizeof(ScreenDataPc), &cullDataPc);
@@ -66,11 +70,18 @@ namespace Rendering
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+                    lightDecCache->SetSampler("gCol", colAttachmentView);
+                    lightDecCache->SetSampler("gNormals", normAttachmentView);
+                    lightDecCache->SetSampler("gDepth", depthAttachmentView);
+                    lightDecCache->SetBuffer("CameraProperties", cPropsUbo);
+                    lightDecCache->SetBuffer("PointLights", pointLights);
+                    lightDecCache->SetBuffer("LightMap", lightsMap);
+                    lightDecCache->SetBuffer("LightIndices", lightsIndices);
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
                                                      renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0,
                                                      1,
-                                                     &gDstSet.get(), 0, nullptr);
+                                                     &lightDecCache->dstSet.get(), 0, nullptr);
 
                     commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
@@ -141,14 +152,14 @@ namespace Rendering
             {
                 lightsMap.emplace_back(ArrayIndexer{});
             }
-            memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
+            // memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
 
             lightsIndices.clear();
             for (int i = 0; i < lightsIndices.capacity(); ++i)
             {
                 lightsIndices.emplace_back(-1);
             }
-            memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
+            // memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
 
             cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
             cPropsUbo.invView = glm::inverse(camera.matrices.view);
@@ -156,14 +167,10 @@ namespace Rendering
             cPropsUbo.zNear = camera.cameraProperties.zNear;
             cPropsUbo.zFar = camera.cameraProperties.zFar;
 
-            memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
+            // memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
 
-            memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
+            // memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
 
-            // computeDescCache->SetBuffer("PointLights", pointLights);
-            // computeDescCache->SetBuffer("LightMap", lightsMap);
-            // computeDescCache->SetBuffer("LightIndices", lightsIndices);
-            // computeDescCache->SetBuffer("CameraProperties", cPropsUbo);
         }
 
         void ReloadShaders() override
@@ -360,13 +367,13 @@ namespace Rendering
 
             
 
-            cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
-            writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
-            writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
-            
+            // cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
+            // writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            // writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            // writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
+            // writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
+            // writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
+            //
             gVertShader.get()->sParser->GetLayout(builder);
             gFragShader.get()->sParser->GetLayout(builder);
 
@@ -430,7 +437,17 @@ namespace Rendering
 
             lVertShader.get()->sParser->GetLayout(builder);
             lFragShader.get()->sParser->GetLayout(builder);
-
+            
+            Sampler* sampler = renderGraphRef->samplerPool.AddSampler(
+                logicalDevice, vk::SamplerAddressMode::eRepeat, vk::Filter::eNearest, vk::SamplerMipmapMode::eNearest);
+            Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
+                logicalDevice, vk::SamplerAddressMode::eClampToEdge, vk::Filter::eNearest,
+                vk::SamplerMipmapMode::eNearest);
+            lightDecCache->SetDefaultSamplerInfo(colAttachmentView, sampler);
+            lightDecCache->AddShaderInfo(lVertShader->sParser.get());
+            lightDecCache->AddShaderInfo(lFragShader->sParser.get());
+            lightDecCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+            
             lDstLayout = builder.BuildBindings(
                 core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
@@ -442,16 +459,13 @@ namespace Rendering
             auto lLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                      .setPushConstantRanges(lPushConstantRange)
                                      .setSetLayoutCount(1)
-                                     .setPSetLayouts(&lDstLayout.get());
+                                     .setPSetLayouts(&lightDecCache->dstLayout.get());
 
             lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
 
-            Sampler* sampler = renderGraphRef->samplerPool.AddSampler(
-                logicalDevice, vk::SamplerAddressMode::eRepeat, vk::Filter::eNearest, vk::SamplerMipmapMode::eNearest);
-            Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
-                logicalDevice, vk::SamplerAddressMode::eClampToEdge, vk::Filter::eNearest,
-                vk::SamplerMipmapMode::eNearest);
 
+
+            
             writerBuilder.AddWriteImage(0, colAttachmentView,
                                         sampler->samplerHandle.get(),
                                         vk::ImageLayout::eShaderReadOnlyOptimal,
