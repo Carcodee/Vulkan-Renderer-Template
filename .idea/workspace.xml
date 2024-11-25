@@ -31,7 +31,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="changed buffers to staged resources" />
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="changed buffers to staged resources">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -728,7 +730,15 @@
       <option name="project" value="LOCAL" />
       <updated>1732505033182</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="changed buffers to staged resources">
+      <option name="closed" value="true" />
+      <created>1732550840248</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1732550840248</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -760,7 +770,8 @@
     <MESSAGE value="Adding resource manager" />
     <MESSAGE value="Fixed some weird stuff in the ResourcesManager.hpp" />
     <MESSAGE value="dynamic buffers updates" />
-    <option name="LAST_COMMIT_MESSAGE" value="dynamic buffers updates" />
+    <MESSAGE value="changed buffers to staged resources" />
+    <option name="LAST_COMMIT_MESSAGE" value="changed buffers to staged resources" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
