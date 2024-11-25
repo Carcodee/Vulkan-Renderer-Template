@@ -154,24 +154,18 @@ namespace Rendering
             {
                 lightsMap.emplace_back(ArrayIndexer{});
             }
-            // memcpy(lightsMapBuff->mappedMem, lightsMap.data(), sizeof(ArrayIndexer) * lightsMap.size());
 
             lightsIndices.clear();
             for (int i = 0; i < lightsIndices.capacity(); ++i)
             {
                 lightsIndices.emplace_back(-1);
             }
-            // memcpy(lightsIndicesBuff->mappedMem, lightsIndices.data(), sizeof(int32_t) * lightsIndices.size());
 
             cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
             cPropsUbo.invView = glm::inverse(camera.matrices.view);
             cPropsUbo.pos = camera.position;
             cPropsUbo.zNear = camera.cameraProperties.zNear;
             cPropsUbo.zFar = camera.cameraProperties.zFar;
-
-            // memcpy(camPropsBuff->mappedMem, &cPropsUbo, sizeof(CPropsUbo));
-
-            // memcpy(pointLightsBuff->mappedMem, pointLights.data(), sizeof(PointLight) * pointLights.size());
 
         }
 
@@ -188,8 +182,6 @@ namespace Rendering
 
         void CreateResources()
         {
-            auto& physicalDevice = core->physicalDevice;
-            auto& logicalDevice = core->logicalDevice.get();
             auto imageInfo = Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          vk::Format::eR32G32B32A32Sfloat,
                                                          vk::ImageUsageFlagBits::eColorAttachment |
@@ -283,7 +275,7 @@ namespace Rendering
             lightPc.yTileCount = cullDataPc.yTileCount;
             lightPc.xTileSizePx = xTileSizePx;
             lightPc.yTileSizePx = yTileSizePx;
-             lightPc.zSlices = zSlicesSize;
+            lightPc.zSlices = zSlicesSize;
         }
 
         void CreateBuffers()
@@ -295,22 +287,6 @@ namespace Rendering
             indexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("indexBuffer", vk::BufferUsageFlagBits::eIndexBuffer,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
             
-            lightsMapBuff = ResourcesManager::GetInstance()->GetBuffer("lightsMapBuff",vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
-            
-            pointLightsBuff = ResourcesManager::GetInstance()->GetBuffer("pointLightsBuff", vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(PointLight) * pointLights.size(), pointLights.data());
-            
-            lightsIndicesBuff =  ResourcesManager::GetInstance()->GetBuffer("lightsIndicesBuff",vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(int32_t) * lightsIndices.size(), lightsIndices.data());
-            
-            camPropsBuff =  ResourcesManager::GetInstance()->GetBuffer("camPropsBuff",vk::BufferUsageFlagBits::eUniformBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(CPropsUbo), &cPropsUbo);
-            
             lVertexBuffer =  ResourcesManager::GetInstance()->GetBuffer("lVertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(Vertex2D) * quadVert.size(), quadVert.data());
@@ -319,10 +295,6 @@ namespace Rendering
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(uint32_t) * quadIndices.size(), quadIndices.data());
 
-            pointLightsBuff->Map();
-            lightsMapBuff->Map();
-            lightsIndicesBuff->Map();
-            camPropsBuff->Map();
         }
 
         void CreatePipelines()
@@ -348,10 +320,6 @@ namespace Rendering
                                          .setStageFlags(vk::ShaderStageFlagBits::eCompute)
                                          .setSize(sizeof(ScreenDataPc));
 
-            cullDstLayout = builder.BuildBindings(logicalDevice,
-                                                  vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment
-                                                  | vk::ShaderStageFlagBits::eFragment);
-
             auto cullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                         .setSetLayoutCount(1)
                                         .setPushConstantRanges(cullPushConstantRange)
@@ -365,14 +333,6 @@ namespace Rendering
             cullRenderNode->BuildRenderGraphNode();
 
             
-
-            // cullDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), cullDstLayout.get());
-            // writerBuilder.AddWriteBuffer(0, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            // writerBuilder.AddWriteBuffer(1, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            // writerBuilder.AddWriteBuffer(2, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            // writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
-            // writerBuilder.UpdateSet(core->logicalDevice.get(), cullDstSet.get());
-            //
             gVertShader.get()->sParser->GetLayout(builder);
             gFragShader.get()->sParser->GetLayout(builder);
 
@@ -461,30 +421,7 @@ namespace Rendering
                                      .setSetLayoutCount(1)
                                      .setPSetLayouts(&lightDecCache->dstLayout.get());
 
-            // lDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), lDstLayout.get());
 
-
-
-            
-            // writerBuilder.AddWriteImage(0, colAttachmentView,
-            //                             sampler->samplerHandle.get(),
-            //                             vk::ImageLayout::eShaderReadOnlyOptimal,
-            //                             vk::DescriptorType::eCombinedImageSampler);
-            // writerBuilder.AddWriteImage(1, normAttachmentView,
-            //                             sampler->samplerHandle.get(),
-            //                             vk::ImageLayout::eShaderReadOnlyOptimal,
-            //                             vk::DescriptorType::eCombinedImageSampler);
-            // writerBuilder.AddWriteImage(2, depthAttachmentView,
-            //                             depthSampler->samplerHandle.get(),
-            //                             vk::ImageLayout::eShaderReadOnlyOptimal,
-            //                             vk::DescriptorType::eCombinedImageSampler);
-            // writerBuilder.AddWriteBuffer(3, camPropsBuff->descriptor, vk::DescriptorType::eUniformBuffer);
-            // writerBuilder.AddWriteBuffer(4, pointLightsBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            // writerBuilder.AddWriteBuffer(5, lightsMapBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            // writerBuilder.AddWriteBuffer(6, lightsIndicesBuff->descriptor, vk::DescriptorType::eStorageBuffer);
-            //
-            // writerBuilder.UpdateSet(logicalDevice, lDstSet.get());
-            //
             AttachmentInfo lColInfo = GetColorAttachmentInfo(
                 glm::vec4(0.0f), core->swapchainRef->GetFormat());
 
@@ -514,13 +451,7 @@ namespace Rendering
 
         vk::UniqueDescriptorSetLayout gDstLayout;
         vk::UniqueDescriptorSet gDstSet;
-
-        vk::UniqueDescriptorSetLayout lDstLayout;
-        vk::UniqueDescriptorSet lDstSet;
-
-        vk::UniqueDescriptorSetLayout cullDstLayout;
-        vk::UniqueDescriptorSet cullDstSet;
-
+       
         std::unique_ptr<Shader> gVertShader;
         std::unique_ptr<Shader> gFragShader;
 
@@ -542,15 +473,9 @@ namespace Rendering
         Buffer* lVertexBuffer;
         Buffer* lIndexBuffer;
 
-        Buffer* camPropsBuff;
-        Buffer* pointLightsBuff;
-        Buffer* lightsMapBuff;
-        Buffer* lightsIndicesBuff;
-
-
         std::unique_ptr<DescriptorCache> computeDescCache;
-        std::unique_ptr<DescriptorCache> gBufferDescCache;
         std::unique_ptr<DescriptorCache> lightDecCache;
+        
         std::string gBufferPassName = "gBuffer";
         std::string computePassName = "cullLight";
         std::string lightPassName = "light";

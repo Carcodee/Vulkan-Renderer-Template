@@ -93,8 +93,8 @@ void main() {
             }else{
 //                finalCol = vec3(0.0);
             }
-        }
-    }
+        };
+    };
     if(false){
         float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
         
