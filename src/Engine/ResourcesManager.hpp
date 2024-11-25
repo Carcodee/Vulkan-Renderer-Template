@@ -146,8 +146,7 @@ namespace ENGINE
             return buffers.back().get();
         }
         
-        StagedBuffer* GetStageBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags, vk::DeviceSize deviceSize
-        )
+        StagedBuffer* GetStageBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags, vk::DeviceSize deviceSize, void* data = nullptr)
         {
             assert(core!= nullptr &&"core must be set");
             if (stagedBufferNames.contains(name))
@@ -157,6 +156,15 @@ namespace ENGINE
         
             auto buffer = std::make_unique<StagedBuffer>(
                 core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, deviceSize);
+
+            if (data != nullptr)
+            {
+                buffer->Map();
+                memcpy(buffer->stagingBuffer->mappedMem, data, deviceSize);
+                auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
+                auto commandBuffer = commandExecutor->BeginCommandBuffer();
+                buffer->Unmap(commandBuffer);
+            }
         
             stagedBufferNames.try_emplace(name, (int32_t)buffers.size());
             stagedBuffers.emplace_back(std::move(buffer));
