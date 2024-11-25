@@ -7,6 +7,7 @@
 // Created by carlo on 2024-10-25.
 //
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -76,8 +77,8 @@ namespace Rendering
                                                      1,
                                                      &gDstSet.get(), 0, nullptr);
 
-                    commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
-                    commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
+                    commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->deviceBuffer.get()->bufferHandle.get(), &offset);
+                    commandBuffer.bindIndexBuffer(indexBuffer->deviceBuffer.get()->bufferHandle.get(), 0, vk::IndexType::eUint32);
 
                     for (int i = 0; i < model.meshCount; ++i)
                     {
@@ -287,28 +288,25 @@ namespace Rendering
 
         void CreateBuffers()
         {
-            pointLightsBuff = ResourcesManager::GetInstance()->GetBuffer("pointLightsBuff", vk::BufferUsageFlagBits::eStorageBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(PointLight) * pointLights.size(), pointLights.data());
-            
-            vertexBuffer = ResourcesManager::GetInstance()->GetBuffer("vertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+           
+            vertexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("vertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
                 sizeof(M_Vertex3D) * model.vertices.size(), model.vertices.data());
             
-            indexBuffer = ResourcesManager::GetInstance()->GetBuffer("indexBuffer",vk::BufferUsageFlagBits::eIndexBuffer,
-                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+            indexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("indexBuffer", vk::BufferUsageFlagBits::eIndexBuffer,
                 sizeof(uint32_t) * model.indices.size(), model.indices.data());
             
             lightsMapBuff = ResourcesManager::GetInstance()->GetBuffer("lightsMapBuff",vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(ArrayIndexer) * lightsMap.size(), lightsMap.data());
-
+            
+            pointLightsBuff = ResourcesManager::GetInstance()->GetBuffer("pointLightsBuff", vk::BufferUsageFlagBits::eStorageBuffer,
+                vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(PointLight) * pointLights.size(), pointLights.data());
             
             lightsIndicesBuff =  ResourcesManager::GetInstance()->GetBuffer("lightsIndicesBuff",vk::BufferUsageFlagBits::eStorageBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(int32_t) * lightsIndices.size(), lightsIndices.data());
             
-            //light
             camPropsBuff =  ResourcesManager::GetInstance()->GetBuffer("camPropsBuff",vk::BufferUsageFlagBits::eUniformBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                 sizeof(CPropsUbo), &cPropsUbo);
@@ -538,8 +536,8 @@ namespace Rendering
         ImageView* normAttachmentView;
         ImageView* depthAttachmentView;
 
-        Buffer* vertexBuffer;
-        Buffer* indexBuffer;
+        StagedBuffer* vertexBuffer;
+        StagedBuffer* indexBuffer;
 
         Buffer* lVertexBuffer;
         Buffer* lIndexBuffer;
