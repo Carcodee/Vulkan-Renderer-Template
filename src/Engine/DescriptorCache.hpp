@@ -15,7 +15,7 @@
 namespace ENGINE
 {
 #define DEFAULT_VAR_DESCRIPTOR_COUNT 1000
-    class DescriptorCache
+    class DescriptorCache : SYSTEMS::Watcher
     {
         struct SamplerBinding 
         {
@@ -41,6 +41,12 @@ namespace ENGINE
         DescriptorCache(Core* core)
         {
             this->core = core;
+            resourcesManagerRef = ResourcesManager::GetInstance();
+            resourcesManagerRef->Attach(this);
+        }
+        void UpdateWatcher() override
+        {
+            FlushBuffers();
         }
         void SetDefaultSamplerInfo(ImageView* defaultImageView, Sampler* defaultSampler)
         {
@@ -52,12 +58,6 @@ namespace ENGINE
             this->defaultStorageImageView = defaultStorageImageView;
             this->defaultStorageImage = defaultStorageImage;
         }
-        template <typename T>
-        void SetSharedBufferPool(T)
-        {
-            
-        }
-        
         void AddShaderInfo(ShaderParser* parser)
         {
             std::vector<ShaderResource> uniqueResources;
@@ -102,14 +102,14 @@ namespace ENGINE
                     break;
                 case vk::DescriptorType::eUniformBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ubo = ResourcesManager::GetInstance()->GetBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer,
+                    ubo = resourcesManagerRef->GetBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer,
                                                         vk::MemoryPropertyFlagBits::eHostVisible |
                                                         vk::MemoryPropertyFlagBits::eHostCoherent, 1);
                     buffersResources.try_emplace(resource.binding, std::move(ubo));
                     break;
                 case vk::DescriptorType::eStorageBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ssbo = ResourcesManager::GetInstance()->GetBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer,
+                    ssbo = resourcesManagerRef->GetBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer,
                                                         vk::MemoryPropertyFlagBits::eHostVisible |
                                                         vk::MemoryPropertyFlagBits::eHostCoherent, 1);
                     buffersResources.try_emplace(resource.binding,std::move(ssbo));
@@ -246,28 +246,13 @@ namespace ENGINE
             {
                 assert(false && "unusported buffer type");
             }
-            if (sizeof(T) * bufferData.size()> bufferRef->deviceSize)
-            {
-                buffersResources.at(binding.binding) = ResourcesManager::GetInstance()->SetBuffer(
-                    name,
-                    usageFlags,
-                    vk::MemoryPropertyFlagBits::eHostVisible |
-                    vk::MemoryPropertyFlagBits::eHostCoherent,
-                    sizeof(T) * bufferData.size(), bufferData.data());
-            UpdateDescriptor();
-            }else
-            {
-                //pending to handle this if is a staged resource
-                if (bufferRef->mappedMem == nullptr)
-                {
-                    bufferRef->Map();
-                }
-                memcpy(bufferRef->mappedMem, bufferData.data(), bufferData.size() * sizeof(T));
-                if (usageFlags == vk::BufferUsageFlagBits::eStorageBuffer)
-                {
-                    bufferRef->Unmap();
-                }
-            }
+            
+            buffersResources.at(binding.binding) = resourcesManagerRef->SetBuffer(
+                name,
+                usageFlags,
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(T) * bufferData.size(), bufferData.data());
             
         }
 
@@ -288,31 +273,14 @@ namespace ENGINE
                 usageFlags = vk::BufferUsageFlagBits::eStorageBuffer;
             }else
             {
-                assert(false && "unusported buffer type");
+                assert(false && "unsupported buffer type");
             }
-            if (sizeof(T) > bufferRef->deviceSize)
-            {
-                buffersResources.at(binding.binding) = ResourcesManager::GetInstance()->SetBuffer(
-                    name,
-                    usageFlags,
-                    vk::MemoryPropertyFlagBits::eHostVisible |
-                    vk::MemoryPropertyFlagBits::eHostCoherent,
-                    sizeof(T), &bufferData);
-                UpdateDescriptor();
-            }else
-            {
-                //pending to handle this if is a staged resource
-                if (bufferRef->mappedMem == nullptr)
-                {
-                    bufferRef->Map();
-                }
-                memcpy(bufferRef->mappedMem, &bufferData, sizeof(T));
-                if (usageFlags == vk::BufferUsageFlagBits::eStorageBuffer)
-                {
-                    bufferRef->Unmap();
-                }
-            }
-            
+            buffersResources.at(binding.binding) = resourcesManagerRef->SetBuffer(
+                name,
+                usageFlags,
+                vk::MemoryPropertyFlagBits::eHostVisible |
+                vk::MemoryPropertyFlagBits::eHostCoherent,
+                sizeof(T), &bufferData);
         }
         void SetSampler(std::string name, ImageView* imageView, Sampler* sampler = nullptr)
         {
@@ -556,8 +524,17 @@ namespace ENGINE
                 return nullptr;
             }
             return &storageArrayResources.at(binding.binding);
-        }       
-       
+        }
+        void FlushBuffers()
+        {
+            for (auto key : bufferBindingsKeys)
+            {
+                buffersResources.at(key.second.binding) = resourcesManagerRef->GetBuffFromName(key.first);
+            }
+            UpdateDescriptor();
+        }
+
+        ResourcesManager* resourcesManagerRef;
         std::unordered_map<std::string, ShaderResource> bufferBindingsKeys;
         std::unordered_map<std::string, ShaderResource> imageBindingsKeys;
         

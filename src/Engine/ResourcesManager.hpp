@@ -5,6 +5,9 @@
 //
 
 
+
+
+
 #ifndef RESOURCESMANAGER_HPP
 #define RESOURCESMANAGER_HPP
 
@@ -12,11 +15,20 @@
 
 namespace ENGINE 
 {
-    class ResourcesManager
+    class ResourcesManager : SYSTEMS::Subject
     {
     public:
-
-        
+        enum BufferState
+        {
+            VALID,
+            INVALID
+        };
+        struct BufferUpdateInfo 
+        {
+            BufferState state;
+            size_t size;
+            void* data;
+        };
         ImageShipper* SetShipperPath(std::string name, std::string path)
         {
             assert(core!= nullptr &&"core must be set");
@@ -35,7 +47,7 @@ namespace ENGINE
             return imageShipper;
         }
         
-        ~ResourcesManager() = default;
+        
         ImageShipper* SetShipperDataRaw(std::string name, void* data, int width, int height, vk::DeviceSize size)
         {
             assert(core!= nullptr &&"core must be set");
@@ -130,6 +142,7 @@ namespace ENGINE
         
             bufferNames.try_emplace(name, (int32_t)buffers.size());
             buffers.emplace_back(std::move(buffer));
+            buffersState.push_back({VALID, deviceSize, data});
             return buffers.back().get();
         }
         
@@ -147,6 +160,7 @@ namespace ENGINE
         
             stagedBufferNames.try_emplace(name, (int32_t)buffers.size());
             stagedBuffers.emplace_back(std::move(buffer));
+            buffersState.push_back({VALID, deviceSize});
             return stagedBuffers.back().get();
         }
         
@@ -156,11 +170,30 @@ namespace ENGINE
         {
             assert(core!= nullptr &&"core must be set");
             assert(bufferNames.contains(name) && "Buffer dont exist");
-        
-            buffers.at(bufferNames.at(name)).reset(new Buffer(core->physicalDevice, core->logicalDevice.get(),
-                                                              bufferUsageFlags, memPropertyFlags, deviceSize, data));
+
+            if (deviceSize > buffers.at(bufferNames.at(name))->deviceSize)
+            {
+                buffersState.at(bufferNames.at(name)) = {INVALID, deviceSize, data};
+                invalidateBuffers = true;
+                
+            }else
+            {
+                //pending to handle this if is a staged resource
+                Buffer* bufferRef = GetBuffFromName(name);
+                if (bufferRef->mappedMem == nullptr)
+                {
+                    bufferRef->Map();
+                }
+                memcpy(bufferRef->mappedMem, &data, deviceSize);
+                if (bufferRef->usageFlags == vk::BufferUsageFlagBits::eStorageBuffer)
+                {
+                    bufferRef->Unmap();
+                }
+            }
+
             return buffers.at(bufferNames.at(name)).get();
         }
+        
         
         StagedBuffer* SetStageBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags,
                                      vk::DeviceSize deviceSize
@@ -231,6 +264,24 @@ namespace ENGINE
             imageShippers.clear();
             images.clear();
         }
+        void UpdateBuffers()
+        {
+            if (!invalidateBuffers)
+            for (auto& name : bufferNames)
+            {
+                BufferUpdateInfo& bufferUpdateInfo = buffersState.at(name.second);
+                if (bufferUpdateInfo.state == INVALID)
+                {
+                    buffers.at(bufferNames.at(name.first)).reset(new Buffer(core->physicalDevice, core->logicalDevice.get(),
+                                                                  buffers.at(name.second)->usageFlags, buffers.at(name.second)->memPropertyFlags, bufferUpdateInfo.size,
+                                                                  bufferUpdateInfo.data));
+                    bufferUpdateInfo.state = VALID;
+                }
+            }
+            Notify();
+            invalidateBuffers = false;
+            
+        }
 
         ResourcesManager(Core* coreRefs)
         {
@@ -250,6 +301,28 @@ namespace ENGINE
             return instance;
         }
         
+        ~ResourcesManager() = default;
+
+        void Attach(SYSTEMS::Watcher* watcher) override
+        {
+           watchers.push_back(watcher); 
+        }
+
+        void Detach(SYSTEMS::Watcher* watcher) override
+        {
+           watchers.erase(std::remove(watchers.begin(), watchers.end(), watcher), watchers.end()); 
+        }
+
+        void Notify() override
+        {
+            for (auto& watcher : watchers)
+            {
+                watcher->UpdateWatcher();
+            }
+        }
+
+        std::vector<SYSTEMS::Watcher*> watchers;
+        
         std::unordered_map<std::string, int32_t> bufferNames;
         std::unordered_map<std::string, int32_t> stagedBufferNames;
         std::unordered_map<std::string, int32_t> imagesNames;
@@ -258,16 +331,20 @@ namespace ENGINE
         
         
         std::vector<std::unique_ptr<Buffer>> buffers;
+        std::vector<BufferUpdateInfo> buffersState;
         std::vector<std::unique_ptr<StagedBuffer>> stagedBuffers;
         std::vector<std::unique_ptr<ImageView>> imageViews;
         std::vector<std::unique_ptr<ImageView>> storageImagesViews;
         std::vector<std::unique_ptr<ImageShipper>> imageShippers;
         std::vector<std::unique_ptr<Image>> images;
+        bool invalidateBuffers = false;
         
         Core* core;
         static ResourcesManager* instance;
 
 
+        
+        
     };
 
     ResourcesManager* ResourcesManager::instance = nullptr;
