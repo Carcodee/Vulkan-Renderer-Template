@@ -103,16 +103,12 @@ namespace ENGINE
                     break;
                 case vk::DescriptorType::eUniformBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ubo = resourcesManagerRef->GetBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer,
-                                                        vk::MemoryPropertyFlagBits::eHostVisible |
-                                                        vk::MemoryPropertyFlagBits::eHostCoherent, 1);
+                    ubo = resourcesManagerRef->GetStageBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer, 1)->deviceBuffer.get();
                     buffersResources.try_emplace(resource.binding, std::move(ubo));
                     break;
                 case vk::DescriptorType::eStorageBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ssbo = resourcesManagerRef->GetBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer,
-                                                        vk::MemoryPropertyFlagBits::eHostVisible |
-                                                        vk::MemoryPropertyFlagBits::eHostCoherent, 1);
+                    ssbo = resourcesManagerRef->GetStageBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer, 1)->deviceBuffer.get();
                     buffersResources.try_emplace(resource.binding,std::move(ssbo));
                     break;
                 }
@@ -235,11 +231,10 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-            resourcesManagerRef->SetBuffer(
+            resourcesManagerRef->SetStageBuffer(
                 name,
                 sizeof(T) * bufferData.size(),
                 bufferData.data());
-            
         }
 
         template <typename T>
@@ -248,7 +243,7 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-            buffersResources.at(binding.binding) = resourcesManagerRef->SetBuffer(
+            resourcesManagerRef->SetStageBuffer(
                 name,
                 sizeof(T),
                 &bufferData);
@@ -500,7 +495,8 @@ namespace ENGINE
         {
             for (auto key : bufferBindingsKeys)
             {
-                buffersResources.at(key.second.binding) = resourcesManagerRef->GetBuffFromName(key.first);
+                buffersResources.at(key.second.binding) = resourcesManagerRef->GetStagedBuffFromName(key.first)->
+                                                                               deviceBuffer.get();
             }
             UpdateDescriptor();
         }

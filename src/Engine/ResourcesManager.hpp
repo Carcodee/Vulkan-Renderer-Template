@@ -174,7 +174,7 @@ namespace ENGINE
         }
         
         Buffer* SetBuffer(std::string name, vk::DeviceSize deviceSize
-                          , void* data = nullptr)
+                          , void* data)
         {
             assert(core!= nullptr &&"core must be set");
             assert(bufferNames.contains(name) && "Buffer dont exist");
@@ -202,18 +202,26 @@ namespace ENGINE
             return buffers.at(bufferNames.at(name)).get();
         }
         
-        
-        StagedBuffer* SetStageBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags,
-                                     vk::DeviceSize deviceSize
-        )
+        StagedBuffer* SetStageBuffer(std::string name, vk::DeviceSize deviceSize, void* data)
         {
             //todo
             assert(core!= nullptr &&"core must be set");
-            assert(!stagedBufferNames.contains(name) && "staged buffer dont exist");
-        
-            stagedBuffers.at(stagedBufferNames.at(name)).reset(
-                new StagedBuffer(core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, deviceSize));
-            
+            assert(stagedBufferNames.contains(name) && "staged buffer dont exist");
+
+            if (deviceSize > stagedBuffers.at(stagedBufferNames.at(name))->size)
+            {
+                stagedBuffersState.at(stagedBufferNames.at(name)) = {INVALID, deviceSize, data};
+                invalidateBuffers = true;
+            }else
+            {
+                StagedBuffer* buffer = GetStagedBuffFromName(name);
+                void* mappedMem = buffer->Map();
+                memcpy(mappedMem, data, deviceSize);
+                auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
+                auto commandBuffer = commandExecutor->BeginCommandBuffer();
+                buffer->Unmap(commandBuffer);
+                commandExecutor->EndCommandBuffer();
+            }
             return stagedBuffers.at(stagedBufferNames.at(name)).get();
         }
         
@@ -286,6 +294,27 @@ namespace ENGINE
                                                                   bufferUpdateInfo.data));
                     bufferUpdateInfo.state = VALID;
                 }
+            }
+            for (auto& name : stagedBufferNames)
+            {
+                BufferUpdateInfo& bufferUpdateInfo = stagedBuffersState.at(name.second);
+                if (bufferUpdateInfo.state == INVALID)
+                {
+                    stagedBuffers.at(stagedBufferNames.at(name.first)).reset(new StagedBuffer(
+                        core->physicalDevice, core->logicalDevice.get(),
+                        stagedBuffers.at(name.second)->deviceBuffer->usageFlags,
+                        bufferUpdateInfo.size));
+                    StagedBuffer* buffer = GetStagedBuffFromName(name.first);
+                    void* mappedMem = buffer->Map();
+                    memcpy(mappedMem, bufferUpdateInfo.data, bufferUpdateInfo.size);
+                    auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
+                    auto commandBuffer = commandExecutor->BeginCommandBuffer();
+                    buffer->Unmap(commandBuffer);
+                    commandExecutor->EndCommandBuffer();
+                    
+                    bufferUpdateInfo.state = VALID;
+                }               
+                
             }
             Notify();
             invalidateBuffers = false;
