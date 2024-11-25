@@ -27,5 +27,5 @@ void main() {
     vec4 textureArr = texture(textures[0], textCoord);
     vec4 storageArr = imageLoad(storagesImgs[0], coord);
     
-    outColor = textureArr;
+    outColor = computeImage;
 }

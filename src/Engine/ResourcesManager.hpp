@@ -164,8 +164,7 @@ namespace ENGINE
             return stagedBuffers.back().get();
         }
         
-        Buffer* SetBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags,
-                          vk::MemoryPropertyFlags memPropertyFlags, vk::DeviceSize deviceSize
+        Buffer* SetBuffer(std::string name, vk::DeviceSize deviceSize
                           , void* data = nullptr)
         {
             assert(core!= nullptr &&"core must be set");
@@ -184,7 +183,7 @@ namespace ENGINE
                 {
                     bufferRef->Map();
                 }
-                memcpy(bufferRef->mappedMem, data, deviceSize);
+                memcpy(bufferRef->mappedMem, &data, deviceSize);
                 if (bufferRef->usageFlags == vk::BufferUsageFlagBits::eStorageBuffer)
                 {
                     bufferRef->Unmap();
@@ -266,7 +265,7 @@ namespace ENGINE
         }
         void UpdateBuffers()
         {
-            if (!invalidateBuffers) {return;}
+            if (!invalidateBuffers){return;}
             for (auto& name : bufferNames)
             {
                 BufferUpdateInfo& bufferUpdateInfo = buffersState.at(name.second);

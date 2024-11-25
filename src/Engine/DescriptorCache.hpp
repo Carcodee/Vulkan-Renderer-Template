@@ -10,6 +10,7 @@
 
 
 
+
 #ifndef DESCRIPTORCACHE_HPP
 #define DESCRIPTORCACHE_HPP
 namespace ENGINE
@@ -234,25 +235,10 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-                vk::BufferUsageFlags usageFlags;
-            if (binding.type == vk::DescriptorType::eUniformBuffer)
-            {
-                usageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
-            }
-            else if (binding.type == vk::DescriptorType::eStorageBuffer)
-            {
-                usageFlags = vk::BufferUsageFlagBits::eStorageBuffer;
-            }else
-            {
-                assert(false && "unusported buffer type");
-            }
-            
             buffersResources.at(binding.binding) = resourcesManagerRef->SetBuffer(
                 name,
-                usageFlags,
-                vk::MemoryPropertyFlagBits::eHostVisible |
-                vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(T) * bufferData.size(), bufferData.data());
+                sizeof(T) * bufferData.size(),
+                bufferData.data());
             
         }
 
@@ -262,25 +248,10 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-
-            vk::BufferUsageFlags usageFlags;
-            if (binding.type == vk::DescriptorType::eUniformBuffer)
-            {
-                usageFlags = vk::BufferUsageFlagBits::eUniformBuffer;
-            }
-            else if (binding.type == vk::DescriptorType::eStorageBuffer)
-            {
-                usageFlags = vk::BufferUsageFlagBits::eStorageBuffer;
-            }else
-            {
-                assert(false && "unsupported buffer type");
-            }
             buffersResources.at(binding.binding) = resourcesManagerRef->SetBuffer(
                 name,
-                usageFlags,
-                vk::MemoryPropertyFlagBits::eHostVisible |
-                vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(T), &bufferData);
+                sizeof(T),
+                &bufferData);
         }
         void SetSampler(std::string name, ImageView* imageView, Sampler* sampler = nullptr)
         {
