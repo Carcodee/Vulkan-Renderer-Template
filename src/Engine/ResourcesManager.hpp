@@ -159,16 +159,17 @@ namespace ENGINE
 
             if (data != nullptr)
             {
-                buffer->Map();
-                memcpy(buffer->stagingBuffer->mappedMem, data, deviceSize);
+                void* mappedMem= buffer->Map();
+                memcpy(mappedMem, data, deviceSize);
                 auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
                 auto commandBuffer = commandExecutor->BeginCommandBuffer();
                 buffer->Unmap(commandBuffer);
+                commandExecutor->EndCommandBuffer();
             }
         
-            stagedBufferNames.try_emplace(name, (int32_t)buffers.size());
+            stagedBufferNames.try_emplace(name, (int32_t)stagedBuffers.size());
             stagedBuffers.emplace_back(std::move(buffer));
-            buffersState.push_back({VALID, deviceSize});
+            stagedBuffersState.push_back({VALID, deviceSize});
             return stagedBuffers.back().get();
         }
         
@@ -191,7 +192,7 @@ namespace ENGINE
                 {
                     bufferRef->Map();
                 }
-                memcpy(bufferRef->mappedMem, &data, deviceSize);
+                memcpy(bufferRef->mappedMem, data, deviceSize);
                 if (bufferRef->usageFlags == vk::BufferUsageFlagBits::eStorageBuffer)
                 {
                     bufferRef->Unmap();
@@ -206,6 +207,7 @@ namespace ENGINE
                                      vk::DeviceSize deviceSize
         )
         {
+            //todo
             assert(core!= nullptr &&"core must be set");
             assert(!stagedBufferNames.contains(name) && "staged buffer dont exist");
         
@@ -338,8 +340,9 @@ namespace ENGINE
         
         
         std::vector<std::unique_ptr<Buffer>> buffers;
-        std::vector<BufferUpdateInfo> buffersState;
         std::vector<std::unique_ptr<StagedBuffer>> stagedBuffers;
+        std::vector<BufferUpdateInfo> buffersState;
+        std::vector<BufferUpdateInfo> stagedBuffersState;
         std::vector<std::unique_ptr<ImageView>> imageViews;
         std::vector<std::unique_ptr<ImageView>> storageImagesViews;
         std::vector<std::unique_ptr<ImageShipper>> imageShippers;

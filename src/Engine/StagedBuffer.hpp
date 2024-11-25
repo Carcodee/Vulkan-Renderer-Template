@@ -15,13 +15,14 @@ namespace ENGINE
                      vk::DeviceSize size)
         {
             stagingBuffer = std::make_unique<ENGINE::Buffer>(physicalDevice, logicalDevice,
-                                                             vk::BufferUsageFlagBits::eTransferDst,
+                                                             vk::BufferUsageFlagBits::eTransferSrc,
                                                              vk::MemoryPropertyFlagBits::eHostVisible |
                                                              vk::MemoryPropertyFlagBits::eHostCoherent,
                                                              size);
             deviceBuffer = std::make_unique<ENGINE::Buffer>(physicalDevice, logicalDevice,
                                                             usage | vk::BufferUsageFlagBits::eTransferDst,
                                                             vk::MemoryPropertyFlagBits::eDeviceLocal, size);
+            this->size = size;
         }
 
         void* Map()
@@ -34,11 +35,11 @@ namespace ENGINE
             stagingBuffer->Unmap();
 
             auto copyRegion = vk::BufferCopy()
-                              .setDstOffset(0)
+                              .setSrcOffset(0)
                               .setDstOffset(0)
                               .setSize(size);
 
-            commandBuffer.copyBuffer(stagingBuffer->bufferHandle.get(), deviceBuffer->bufferHandle.get(), {copyRegion});
+            commandBuffer.copyBuffer(stagingBuffer->bufferHandle.get(), deviceBuffer->bufferHandle.get(), 1 ,&copyRegion);
         }
         
 
@@ -49,7 +50,7 @@ namespace ENGINE
 
         std::unique_ptr<ENGINE::Buffer> stagingBuffer;
         std::unique_ptr<ENGINE::Buffer> deviceBuffer;
-        vk::DeviceSize size;
+        vk::DeviceSize size = 0;
     };
     
     

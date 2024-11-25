@@ -235,7 +235,7 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-            buffersResources.at(binding.binding) = resourcesManagerRef->SetBuffer(
+            resourcesManagerRef->SetBuffer(
                 name,
                 sizeof(T) * bufferData.size(),
                 bufferData.data());
