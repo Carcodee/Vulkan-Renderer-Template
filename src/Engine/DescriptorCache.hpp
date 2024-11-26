@@ -11,6 +11,7 @@
 
 
 
+
 #ifndef DESCRIPTORCACHE_HPP
 #define DESCRIPTORCACHE_HPP
 namespace ENGINE
@@ -44,21 +45,27 @@ namespace ENGINE
             this->core = core;
             resourcesManagerRef = ResourcesManager::GetInstance();
             resourcesManagerRef->Attach(this);
+            ImageShipper* defaultShipper = resourcesManagerRef->GetShipperFromName("default_tex");
+            this->defaultImageView = defaultShipper->imageView.get();
+            this->defaultSampler = defaultShipper->sampler;
+            this->defaultStorageImageView = resourcesManagerRef->GetStorageFromName("default_storage");
+            this->defaultStorageSampler = defaultShipper->sampler;
+            
         }
         void UpdateWatcher() override
         {
             FlushBuffers();
         }
-        void SetDefaultSamplerInfo(ImageView* defaultImageView, Sampler* defaultSampler)
-        {
-            this->defaultImageView = defaultImageView;
-            this->defaultSampler = defaultSampler;
-        }
-        void SetDefaultStorageInfo(ImageView* defaultStorageImageView, Sampler* defaultStorageImage)
-        {
-            this->defaultStorageImageView = defaultStorageImageView;
-            this->defaultStorageImage = defaultStorageImage;
-        }
+        // void SetDefaultStorageInfo(ImageView* defaultStorageImageView, Sampler* defaultStorageImage)
+        // {
+            // this->defaultStorageImageView = defaultStorageImageView;
+            // this->defaultStorageImage = defaultStorageImage;
+        // }
+        // void SetDefaultSampler(ImageView* def, Sampler* sampler)
+        // {
+            // this->defaultImageView = def;
+            // this->defaultSampler = sampler;
+        // }
         void AddShaderInfo(ShaderParser* parser)
         {
             std::vector<ShaderResource> uniqueResources;
@@ -88,28 +95,28 @@ namespace ENGINE
                     }
                     break;
                 case vk::DescriptorType::eStorageImage:
-                    assert(defaultStorageImage != nullptr && "Default sampler is needed");
+                    assert(defaultStorageSampler != nullptr && "Default sampler is needed");
                     assert(defaultStorageImageView != nullptr && "Default Image view is needed");
                     imageBindingsKeys.try_emplace(resource.name, resource);
                     if (resource.array)
                     {
-                        storageArrayResources.try_emplace(resource.binding,StorageArray({defaultStorageImageView}, {defaultStorageImage}));
+                        storageArrayResources.try_emplace(resource.binding,StorageArray({defaultStorageImageView}, {defaultStorageSampler}));
                     }
                     else
                     {
-                        storageImages.try_emplace(resource.binding, StorageBinding(defaultStorageImageView, defaultStorageImage));
+                        storageImages.try_emplace(resource.binding, StorageBinding(defaultStorageImageView, defaultStorageSampler));
                     }
                     
                     break;
                 case vk::DescriptorType::eUniformBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
                     ubo = resourcesManagerRef->GetStageBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer, 1)->deviceBuffer.get();
-                    buffersResources.try_emplace(resource.binding, std::move(ubo));
+                    buffersResources.try_emplace(resource.binding, ubo);
                     break;
                 case vk::DescriptorType::eStorageBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
                     ssbo = resourcesManagerRef->GetStageBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer, 1)->deviceBuffer.get();
-                    buffersResources.try_emplace(resource.binding,std::move(ssbo));
+                    buffersResources.try_emplace(resource.binding,ssbo);
                     break;
                 }
                 if (resource.array)
@@ -214,7 +221,7 @@ namespace ENGINE
                     writerBuilder.AddWriteImage(imageBinding.second.binding, samplerBinding.imageView,
                                                 samplerBinding.sampler->samplerHandle.get(),
                                                 vk::ImageLayout::eShaderReadOnlyOptimal, imageBinding.second.type);
-                }else if (imageBinding.second.type == vk::DescriptorType::eStorageBuffer)
+                }else if (imageBinding.second.type == vk::DescriptorType::eStorageImage)
                 {
                     StorageBinding& binding = storageImages.at(imageBinding.second.binding);
                     writerBuilder.AddWriteImage(imageBinding.second.binding, binding.imageView,
@@ -523,7 +530,7 @@ namespace ENGINE
         Sampler* defaultSampler;
         
         ImageView* defaultStorageImageView;
-        Sampler* defaultStorageImage;
+        Sampler* defaultStorageSampler;
         bool useSharedPool;
          
     };

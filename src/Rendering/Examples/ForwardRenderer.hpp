@@ -6,6 +6,8 @@
 
 
 
+
+
 // Created by carlo on 2024-10-07.
 //
 
@@ -75,8 +77,8 @@ namespace Rendering
             fragShader->sParser->GetLayout(builder);
 
             //automatic descriptor handler
-            descriptorCache->SetDefaultSamplerInfo(imageShipper.imageView.get(), imageShipper.sampler);
-            descriptorCache->SetDefaultStorageInfo(computeStorage, imageShipper.sampler);
+            // descriptorCache->SetDefaultSampler(imageShipper.imageView.get(), imageShipper.sampler);
+            // descriptorCache->SetDefaultStorageInfo(computeStorage, imageShipper.sampler);
             descriptorCache->AddShaderInfo(vertShader->sParser.get());
             descriptorCache->AddShaderInfo(fragShader->sParser.get());
             descriptorCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment );
@@ -150,6 +152,9 @@ namespace Rendering
                     descriptorCache->SetStorageImageArray("storagesImgs", imagesArray);
                     descriptorCache->SetBuffer("Camera", pc);
                     descriptorCache->SetBuffer("CameraBuffer", ssbo);
+                    ENGINE::ImageView* computeStorage = renderGraphRef->GetResource("storageImage");
+                    descriptorCache->SetStorageImage("storageImg", computeStorage);
+                    
                     vk::DeviceSize offset = 0;
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(forwardPassName)->pipelineType,
                                                      renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(), 0, 1,

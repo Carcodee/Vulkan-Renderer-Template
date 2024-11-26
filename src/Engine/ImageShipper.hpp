@@ -4,6 +4,7 @@
 
 
 
+
 #ifndef IMAGESHIPPER_HPP
 #define IMAGESHIPPER_HPP
 
@@ -49,7 +50,7 @@ namespace ENGINE
                                                     vk::MemoryPropertyFlagBits::eHostCoherent, size);
             
             void* bufferMemBlock = stagedBuffer->Map();
-            memcpy(bufferMemBlock, this->data,static_cast<size_t>(size));
+            memcpy(bufferMemBlock, this->data, size);
             stagedBuffer->Unmap();
             
             TransitionImage(image->imageData.get(), TRANSFER_DST, imageView->GetSubresourceRange(), commandBuffer);

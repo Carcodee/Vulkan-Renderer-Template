@@ -1,6 +1,7 @@
 //
 
 
+
 // Created by carlo on 2024-11-22.
 //
 
@@ -94,10 +95,15 @@ namespace ENGINE
                             int mipLevelCount, int baseArrayLayer, int arrayLayerCount)
         {
             assert(core!= nullptr &&"core must be set");
-
-            if (imagesNames.contains(name))
+            ImageView* imageViewRef = nullptr;
+            if (imagesNames.contains(name) && imageInfo.usage == vk::ImageUsageFlagBits::eStorage)
             {
-                ImageView* imageViewRef = GetImageViewFromName(name);
+                imageViewRef = GetStorageFromName(name);
+                return imageViewRef;
+                
+            }else if(imagesNames.contains(name))
+            {
+                imageViewRef = GetImageViewFromName(name);
                 return imageViewRef;
             }
             
@@ -244,13 +250,13 @@ namespace ENGINE
             return imageShippers.at(imagesShippersNames.at(name)).get();
         }
         
-        ImageShipper* GetStorageFromName(std::string name)
+        ImageView* GetStorageFromName(std::string name)
         {
             if (!storageImagesNames.contains(name))
             {
                 return nullptr;
             }
-            return imageShippers.at(storageImagesNames.at(name)).get();
+            return storageImagesViews.at(storageImagesNames.at(name)).get();
         }
         
         Buffer* GetBuffFromName(std::string name)
@@ -329,6 +335,21 @@ namespace ENGINE
             storageImagesViews.reserve(BASE_SIZE);
             imageViews.reserve(BASE_SIZE);
             images.reserve(BASE_SIZE);
+            std::string defaultTexturePath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath() + "\\Images\\default_texture.jpg";
+            
+            ImageShipper* shipper = SetShipperPath("default_tex", defaultTexturePath);
+            shipper->BuildImage(core,  1,1, g_ShipperFormta, LayoutPatterns::GRAPHICS_READ);
+
+
+            auto imageInfo = ENGINE::Image::CreateInfo2d(
+                glm::uvec2(core->swapchainRef->extent.width, core->swapchainRef->extent.height), 1, 1,
+                                                         ENGINE::g_32bFormat,
+                                                         vk::ImageUsageFlagBits::eStorage);
+
+            ImageView* defaultStorage = GetImage("default_storage", imageInfo, 0, 1, 0, 1);
+            
+            
+            
         }
         static ResourcesManager* GetInstance(Core* coreRef = nullptr)
         {
