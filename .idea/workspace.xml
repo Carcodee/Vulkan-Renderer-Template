@@ -31,11 +31,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="changed buffers to staged resources">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/DescriptorCache.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/DescriptorCache.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" afterDir="false" />
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Merge with main">
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -823,7 +821,15 @@
       <option name="project" value="LOCAL" />
       <updated>1732551929638</updated>
     </task>
-    <option name="localTasksCounter" value="18" />
+    <task id="LOCAL-00018" summary="Merge with main">
+      <option name="closed" value="true" />
+      <created>1732590490019</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1732590490019</updated>
+    </task>
+    <option name="localTasksCounter" value="19" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -856,7 +862,8 @@
     <MESSAGE value="Fixed some weird stuff in the ResourcesManager.hpp" />
     <MESSAGE value="dynamic buffers updates" />
     <MESSAGE value="changed buffers to staged resources" />
-    <option name="LAST_COMMIT_MESSAGE" value="changed buffers to staged resources" />
+    <MESSAGE value="Merge with main" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge with main" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
