@@ -7,11 +7,6 @@
 // Created by carlo on 2024-11-19.
 //
 
-
-
-
-
-
 #ifndef DESCRIPTORCACHE_HPP
 #define DESCRIPTORCACHE_HPP
 namespace ENGINE
@@ -110,11 +105,18 @@ namespace ENGINE
                     break;
                 case vk::DescriptorType::eUniformBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
-                    ubo = resourcesManagerRef->GetStageBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer, 1)->deviceBuffer.get();
+                    // ubo = resourcesManagerRef->GetStageBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer, 1)->deviceBuffer.get();
+                    ubo = resourcesManagerRef->GetBuffer(resource.name, vk::BufferUsageFlagBits::eUniformBuffer,
+                                                         vk::MemoryPropertyFlagBits::eHostVisible |
+                                                         vk::MemoryPropertyFlagBits::eHostCoherent, 1);
                     buffersResources.try_emplace(resource.binding, ubo);
                     break;
                 case vk::DescriptorType::eStorageBuffer:
                     bufferBindingsKeys.try_emplace(resource.name, resource);
+                    // ssbo = resourcesManagerRef->GetStageBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer, 1)->deviceBuffer.get();
+                    ssbo = resourcesManagerRef->GetBuffer(resource.name, vk::BufferUsageFlagBits::eStorageBuffer,
+                                                         vk::MemoryPropertyFlagBits::eHostVisible |
+                                                         vk::MemoryPropertyFlagBits::eHostCoherent, 1);
                     ssbo = resourcesManagerRef->GetStageBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer, 1)->deviceBuffer.get();
                     buffersResources.try_emplace(resource.binding,ssbo);
                     break;
@@ -238,7 +240,11 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-            resourcesManagerRef->SetStageBuffer(
+            // resourcesManagerRef->SetStageBuffer(
+            //     name,
+            //     sizeof(T) * bufferData.size(),
+            //     bufferData.data());
+            resourcesManagerRef->SetBuffer(
                 name,
                 sizeof(T) * bufferData.size(),
                 bufferData.data());
@@ -250,7 +256,11 @@ namespace ENGINE
             ShaderResource& binding = bufferBindingsKeys.at(name);
             Buffer* bufferRef = GetBufferByName(name);
             if (bufferRef==nullptr){return;}
-            resourcesManagerRef->SetStageBuffer(
+            // resourcesManagerRef->SetStageBuffer(
+            //     name,
+            //     sizeof(T),
+            //     &bufferData);
+            resourcesManagerRef->SetBuffer(
                 name,
                 sizeof(T),
                 &bufferData);
@@ -502,8 +512,9 @@ namespace ENGINE
         {
             for (auto key : bufferBindingsKeys)
             {
-                buffersResources.at(key.second.binding) = resourcesManagerRef->GetStagedBuffFromName(key.first)->
-                                                                               deviceBuffer.get();
+                // buffersResources.at(key.second.binding) = resourcesManagerRef->GetStagedBuffFromName(key.first)->
+                                                                               // deviceBuffer.get();
+                buffersResources.at(key.second.binding) = resourcesManagerRef->GetBuffFromName(key.first);
             }
             UpdateDescriptor();
         }

@@ -25,7 +25,6 @@ namespace Rendering
             this->windowProvider = windowProvider;
             this->descriptorAllocatorRef = descriptorAllocator;
             computeDescCache = std::make_unique<DescriptorCache>(this->core);
-            gBufferDescCache = std::make_unique<DescriptorCache>(this->core);
             lightDecCache = std::make_unique<DescriptorCache>(this->core);
 
             CreateResources();
@@ -305,13 +304,11 @@ namespace Rendering
             gFragShader = std::make_unique<Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
-            DescriptorLayoutBuilder builder;
 
             //Cull pass//
 
             cullCompShader = std::make_unique<Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
 
-            cullCompShader.get()->sParser->GetLayout(builder);
             computeDescCache->AddShaderInfo(cullCompShader.get()->sParser.get());
             computeDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
 
@@ -325,13 +322,12 @@ namespace Rendering
                                         .setPushConstantRanges(cullPushConstantRange)
                                         .setPSetLayouts(&computeDescCache->dstLayout.get());
 
-            
-
             auto* cullRenderNode = renderGraphRef->AddPass(computePassName);
             cullRenderNode->SetCompShader(cullCompShader.get());
             cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
             cullRenderNode->BuildRenderGraphNode();
 
+            DescriptorLayoutBuilder builder;
             
             gVertShader.get()->sParser->GetLayout(builder);
             gFragShader.get()->sParser->GetLayout(builder);
@@ -397,13 +393,6 @@ namespace Rendering
             lVertShader.get()->sParser->GetLayout(builder);
             lFragShader.get()->sParser->GetLayout(builder);
             
-            Sampler* sampler = renderGraphRef->samplerPool.AddSampler(
-                logicalDevice, vk::SamplerAddressMode::eRepeat, vk::Filter::eNearest, vk::SamplerMipmapMode::eNearest);
-            Sampler* depthSampler = renderGraphRef->samplerPool.AddSampler(
-                logicalDevice, vk::SamplerAddressMode::eClampToEdge, vk::Filter::eNearest,
-                vk::SamplerMipmapMode::eNearest);
-            
-            lightDecCache->SetDefaultSamplerInfo(colAttachmentView, sampler);
             lightDecCache->AddShaderInfo(lVertShader->sParser.get());
             lightDecCache->AddShaderInfo(lFragShader->sParser.get());
             lightDecCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
