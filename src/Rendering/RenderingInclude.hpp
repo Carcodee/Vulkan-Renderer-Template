@@ -8,11 +8,7 @@
 #pragma once
 
 
-#define TINYGLTF_IMPLEMENTATION
-#define TINYGLTF_NO_STB_IMAGE
-#define TINYGLTF_NO_STB_IMAGE_WRITE
 
-#include <tiny_gltf.h>
 
 #include <imgui.h>
 
@@ -23,11 +19,11 @@
 #include "RendererStructs.hpp"
 
 #include "RThings/Material.hpp"
-#include "RThings/Lights.hpp"
 #include "RThings/Model.hpp"
-#include "RThings/ModelLoader.hpp"
-#include "RThings/Camera.hpp"
 #include "RThings/RenderingResManager.hpp"
+#include "RThings/ModelLoader.hpp"
+#include "RThings/Lights.hpp"
+#include "RThings/Camera.hpp"
 
 #include "BaseRenderer.hpp"
 #include "Examples/ForwardRenderer.hpp"

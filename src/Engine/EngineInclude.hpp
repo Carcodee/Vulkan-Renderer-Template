@@ -7,13 +7,9 @@
 #define NOMINMAX
 
 #include <cstdint>
-#include <memory>
-#include <iostream>
 #include <algorithm>
 #include <list>
-#include <fstream>
-#include <map>
-#include<functional>
+#include <functional>
 #include <set>
 #include<deque>
 #include <random>
@@ -28,14 +24,18 @@
 #include <glm/gtx/hash.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image.h>
+
+#define TINYGLTF_IMPLEMENTATION
+#include <tiny_gltf.h>
 
 #include <spirv_glsl.hpp>
 
 #include <ProfilerTask.h>
 #include <vulkan/vulkan.hpp>
+
 #include "Structs.hpp"
 #include "UtilVk.hpp"
 #include "Buffer.hpp"
@@ -62,5 +62,3 @@
 #include "ImageShipper.hpp"
 #include "ResourcesManager.hpp"
 #include "DescriptorCache.hpp"
-
-

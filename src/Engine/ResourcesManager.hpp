@@ -9,6 +9,7 @@
 
 
 
+
 #ifndef RESOURCESMANAGER_HPP
 #define RESOURCESMANAGER_HPP
 
@@ -30,44 +31,17 @@ namespace ENGINE
             size_t size;
             void* data;
         };
-        ImageShipper* SetShipperPath(std::string name, std::string path)
+
+        struct ImagesUpdateInfo 
         {
-            assert(core!= nullptr &&"core must be set");
-            ImageShipper* imageShipper;
-            if (imagesShippersNames.contains(name))
-            {
-                imageShipper = imageShippers.at(imagesShippersNames.at(name)).get();
-            }
-            else
-            {
-                imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
-                imageShippers.emplace_back(std::make_unique<ImageShipper>());
-                imageShipper = GetShipperFromName(name);
-            }
-            imageShipper->SetDataFromPath(path);
-            return imageShipper;
-        }
-        
-        
-        ImageShipper* SetShipperDataRaw(std::string name, void* data, int width, int height, vk::DeviceSize size)
-        {
-            assert(core!= nullptr &&"core must be set");
-            ImageShipper* imageShipper;
-            if (imagesShippersNames.contains(name))
-            {
-                imageShipper = imageShippers.at(imagesShippersNames.at(name)).get();
-            }
-            else
-            {
-                imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
-                imageShippers.emplace_back(std::make_unique<ImageShipper>());
-                imageShipper = GetShipperFromName(name);
-            }
-            imageShipper->SetDataRaw(data, width, width, size);
-            return imageShipper;
-        }
-        
-        ImageShipper* GetShipper(std::string name, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
+            std::string path;
+            uint32_t arrayLayersCount;
+            uint32_t mipsCount;
+            vk::Format format;
+            LayoutPatterns dstPattern;
+            BufferState bufferState;
+        };
+        ImageShipper* GetShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
                                  LayoutPatterns dstPattern)
         {
             assert(core!= nullptr &&"core must be set");
@@ -80,14 +54,50 @@ namespace ENGINE
             {
                 imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
                 imageShippers.emplace_back(std::make_unique<ImageShipper>());
+                imagesUpdateInfos.emplace_back(ImagesUpdateInfo{path, arrayLayersCount, mipsCount, format, dstPattern, VALID});
                 imageShipper = GetShipperFromName(name);
-                return imageShipper;
             }
             if (imageShipper->image == nullptr)
             {
+                imageShipper->SetDataFromPath(path);
                 imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern);
             }
             return imageShipper;
+        }
+         ImageShipper* GetShipper(std::string name, void* data, int width, int height, vk::DeviceSize size, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
+                                 LayoutPatterns dstPattern)
+        {
+            assert(core!= nullptr &&"core must be set");
+            ImageShipper* imageShipper;
+            if (imagesShippersNames.contains(name))
+            {
+                imageShipper = imageShippers.at(imagesShippersNames.at(name)).get();
+            }
+            else
+            {
+                imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
+                imageShippers.emplace_back(std::make_unique<ImageShipper>());
+                imagesUpdateInfos.emplace_back(ImagesUpdateInfo{"", arrayLayersCount, mipsCount, format, dstPattern, VALID});
+                imageShipper = GetShipperFromName(name);
+            }
+            if (imageShipper->image == nullptr)
+            {
+                imageShipper->SetDataRaw(data, width, height, size);
+                imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern);
+            }
+            return imageShipper;
+        }
+        
+        ImageShipper* BatchShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
+                                 LayoutPatterns dstPattern)
+        {
+            assert(!imagesShippersNames.contains(name) && "Do not batch a shipper that already exist");
+            imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
+            imageShippers.emplace_back(std::make_unique<ImageShipper>());
+            imagesUpdateInfos.emplace_back(ImagesUpdateInfo{path, arrayLayersCount, mipsCount, format, dstPattern, INVALID});
+            updateImagesShippers = true;
+            return GetShipperFromName(name);
+            
         }
         
         
@@ -230,7 +240,7 @@ namespace ENGINE
             }
             return stagedBuffers.at(stagedBufferNames.at(name)).get();
         }
-        
+
         
         ImageView* GetImageViewFromName(std::string name)
         {
@@ -277,6 +287,10 @@ namespace ENGINE
             return stagedBuffers.at(stagedBufferNames.at(name)).get();
         }
 
+        int GetShipperID(std::string name)
+        {
+            return imagesShippersNames.at(name);
+        }
 
         void DestroyResources()
         {
@@ -286,6 +300,22 @@ namespace ENGINE
             imageViews.clear();
             imageShippers.clear();
             images.clear();
+        }
+        void UpdateImages()
+        {
+            if (!updateImagesShippers){return;}
+            for (int i = 0; i < imageShippers.size(); i++)
+            {
+                ImagesUpdateInfo& updateInfo = imagesUpdateInfos[i];
+                if (updateInfo.bufferState == INVALID)
+                {
+                    imageShippers[i]->SetDataFromPath(updateInfo.path);
+                    imageShippers[i]->BuildImage(core, updateInfo.arrayLayersCount, updateInfo.mipsCount,
+                                                 updateInfo.format, updateInfo.dstPattern);
+                    updateInfo.bufferState = VALID;
+                }
+            }
+            
         }
         void UpdateBuffers()
         {
@@ -301,6 +331,9 @@ namespace ENGINE
                     bufferUpdateInfo.state = VALID;
                 }
             }
+
+            auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
+            auto commandBuffer = commandExecutor->BeginCommandBuffer();
             for (auto& name : stagedBufferNames)
             {
                 BufferUpdateInfo& bufferUpdateInfo = stagedBuffersState.at(name.second);
@@ -313,15 +346,13 @@ namespace ENGINE
                     StagedBuffer* buffer = GetStagedBuffFromName(name.first);
                     void* mappedMem = buffer->Map();
                     memcpy(mappedMem, bufferUpdateInfo.data, bufferUpdateInfo.size);
-                    auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
-                    auto commandBuffer = commandExecutor->BeginCommandBuffer();
                     buffer->Unmap(commandBuffer);
-                    commandExecutor->EndCommandBuffer();
                     
                     bufferUpdateInfo.state = VALID;
                 }               
                 
             }
+            commandExecutor->EndCommandBuffer();
             Notify();
             invalidateBuffers = false;
             
@@ -337,8 +368,7 @@ namespace ENGINE
             images.reserve(BASE_SIZE);
             std::string defaultTexturePath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath() + "\\Images\\default_texture.jpg";
             
-            ImageShipper* shipper = SetShipperPath("default_tex", defaultTexturePath);
-            shipper->BuildImage(core,  1,1, g_ShipperFormta, LayoutPatterns::GRAPHICS_READ);
+            ImageShipper* shipper = GetShipper("default_tex", defaultTexturePath, 1,1, g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
 
 
             auto imageInfo = ENGINE::Image::CreateInfo2d(
@@ -396,15 +426,15 @@ namespace ENGINE
         std::vector<std::unique_ptr<ImageView>> imageViews;
         std::vector<std::unique_ptr<ImageView>> storageImagesViews;
         std::vector<std::unique_ptr<ImageShipper>> imageShippers;
+        std::vector<ImagesUpdateInfo> imagesUpdateInfos;
         std::vector<std::unique_ptr<Image>> images;
+        
         bool invalidateBuffers = false;
+        bool updateImagesShippers = false;
         
         Core* core;
         static ResourcesManager* instance;
 
-
-        
-        
     };
 
     ResourcesManager* ResourcesManager::instance = nullptr;

@@ -60,10 +60,10 @@ void run(WindowProvider* windowProvider)
     std::unique_ptr<ENGINE::DescriptorAllocator> descriptorAllocator = std::make_unique<ENGINE::DescriptorAllocator>();
 
 
-    ENGINE::ResourcesManager::GetInstance(core.get());
+    ENGINE::ResourcesManager* resourcesManager = ENGINE::ResourcesManager::GetInstance(core.get());
     
     Rendering::ModelLoader::GetInstance(core.get());
-
+    
 
     std::vector<ENGINE::DescriptorAllocator::PoolSizeRatio> poolSizeRatios ={
         {vk::DescriptorType::eSampler, 1.5f},
@@ -122,7 +122,8 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->ReloadShaders(); 
                 }
 
-                ENGINE::ResourcesManager::GetInstance()->UpdateBuffers();
+                resourcesManager->UpdateBuffers();
+                resourcesManager->UpdateImages();
                 
                 inFlightQueue->BeginFrame();
 

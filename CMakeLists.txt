@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+
 set(SOLUTION_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 message("Solution Dir is: ${SOLUTION_DIR}")
 
@@ -23,6 +24,7 @@ set(SPIRVCROSS_INCLUDE_DIR "${SOLUTION_DIR}/dependencies/spirv-cross")
 set(TINYGLTF_INCLUDE_DIR "${SOLUTION_DIR}/dependencies/tinygltf-release")
 set(IMGUI_INCLUDE_DIR "${SOLUTION_DIR}/dependencies/imgui-docking")
 set(PROFILER_EXT_INCLUDE_DIR "${SOLUTION_DIR}/dependencies/LegitProfiler")
+
 
 include_directories("${Vulkan_INCLUDE_DIRS}")
 include_directories("${GLFW3_INCLUDE_DIR}")
@@ -42,6 +44,10 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_BUILD_TYPE Debug)
 
 add_executable(Engine "${SOLUTION_DIR}/src/main.cpp")
+
+if(MSVC)
+    target_compile_options(Engine PRIVATE /bigobj)
+endif()
 
 target_sources(Engine PRIVATE
         ${dep_sources}

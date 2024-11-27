@@ -2,6 +2,7 @@
 // Created by carlo on 2024-10-08.
 //
 
+
 #ifndef RENDERINGSTRUCTS_HPP
 #define RENDERINGSTRUCTS_HPP
 
@@ -52,9 +53,10 @@ namespace Rendering
         glm::vec3 normal;
         glm::vec3 tangent;
         glm::vec2 uv;
+    	int id;
         
 		bool operator==(const M_Vertex3D& other) const {
-			return pos == other.pos && uv == other.uv && normal == other.normal && tangent == other.tangent;
+			return pos == other.pos && uv == other.uv && normal == other.normal && tangent == other.tangent && id == other.id;
 		}
 
     	static ENGINE::VertexInput GetVertexInput()
@@ -72,11 +74,15 @@ namespace Rendering
 			
             vertexInput.AddVertexAttrib(ENGINE::VertexInput::VEC2, 0, offsetof(M_Vertex3D, uv), 3);
             vertexInput.AddVertexInputBinding(0, sizeof(M_Vertex3D));
+            			
+            vertexInput.AddVertexAttrib(ENGINE::VertexInput::INT, 0, offsetof(M_Vertex3D, id), 4);
+            vertexInput.AddVertexInputBinding(0, sizeof(M_Vertex3D));
 
 			return vertexInput;
  		}
 
     };
+	
 
 	struct ForwardPc
 	{
@@ -115,6 +121,7 @@ namespace Rendering
 		uint32_t zSlices;
 		
 	};
+
 
 
     

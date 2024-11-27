@@ -12,6 +12,7 @@ namespace ENGINE
     public:
         enum Attribs
         {
+            INT,
             FLOAT,
             VEC2,
             VEC3,
@@ -26,6 +27,8 @@ namespace ENGINE
         {
             switch (attribs)
             {
+            case Attribs::INT: return vk::Format::eR32Sint;
+                break;
             case Attribs::FLOAT: return vk::Format::eR32Sfloat;
                 break;
             case Attribs::VEC2: return vk::Format::eR32G32Sfloat;

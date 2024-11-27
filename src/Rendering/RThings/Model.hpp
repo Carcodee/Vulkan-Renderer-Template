@@ -22,6 +22,7 @@ namespace Rendering
             }
             return mat;
         }
+        ~NodeMat() = default;
     };
     struct Model
     {
@@ -36,6 +37,7 @@ namespace Rendering
         std::vector<uint32_t> indicesCount;
         std::vector<NodeMat*> nodeMats;
         std::vector<glm::mat4> modelsMat;
+        std::vector<int> materials;
         void SetWorldMatrices(){
             modelsMat.reserve(meshCount);
             for (auto& node : nodeMats)
@@ -49,6 +51,10 @@ namespace Rendering
             {
                 delete node;
             }
+        }
+        void PackModel()
+        {
+            
         }
         
     };

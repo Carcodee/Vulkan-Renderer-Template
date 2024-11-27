@@ -204,14 +204,12 @@ namespace Rendering
             camera.SetLookAt(glm::vec3(0.0f, 0.0f, 1.0f));
             camera.position = glm::vec3(0.0f);
 
-            imageShipperCol = ResourcesManager::GetInstance()->SetShipperPath( "Color", "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
-            imageShipperCol = ResourcesManager::GetInstance()->GetShipper("Color", 1, 1, core->swapchainRef->GetFormat(),
+            imageShipperCol = ResourcesManager::GetInstance()->GetShipper("Color", "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png",1, 1, core->swapchainRef->GetFormat(),
                                        GRAPHICS_READ);
-            imageShipperNorm=ResourcesManager::GetInstance()->SetShipperPath("Norm","C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png");
-            imageShipperNorm=ResourcesManager::GetInstance()->GetShipper("Norm", 1, 1, core->swapchainRef->GetFormat(),
+            imageShipperNorm = ResourcesManager::GetInstance()->GetShipper("Norm", "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png",1, 1, core->swapchainRef->GetFormat(),
                                         GRAPHICS_READ);
             ModelLoader::GetInstance()->LoadGLTF(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\sponza\\scene.gltf",
+                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\3d_pbr_curved_sofa\\scene.gltf",
                 model);
 
             //compute

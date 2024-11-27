@@ -96,8 +96,7 @@ namespace Rendering
         void RenderGraphProfiler()
         {
             std::vector<legit::ProfilerTask> cpuTasks=
-                {{0.0f, cpuTask.endTime, "Cpu", legit::Colors::amethyst},
-                {0.0f, cpuTask.endTime, "Cpu22", legit::Colors::carrot}};
+                {{0.0f, cpuTask.endTime, "Cpu", legit::Colors::amethyst}};
             std::vector<legit::ProfilerTask> gpuTasks= 
                 {{0.0f, gpuTask.endTime, "Gpu", legit::Colors::carrot}};
 
@@ -205,10 +204,10 @@ namespace Rendering
         {
             ImGui_ImplVulkan_Shutdown();
         }
-        ENGINE::DynamicRenderPass dynamicRenderPass;
+        DynamicRenderPass dynamicRenderPass;
         WindowProvider* windowProvider;
-        ENGINE::DescriptorAllocator descriptorAllocator;
-        ENGINE::Core* core;
+        DescriptorAllocator descriptorAllocator;
+        Core* core;
         ClusterRenderer* clusterRenderer;
         ImGuiUtils::ProfilersWindow profilersWindow{};
     };

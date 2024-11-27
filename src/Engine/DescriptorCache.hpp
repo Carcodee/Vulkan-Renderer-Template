@@ -117,7 +117,6 @@ namespace ENGINE
                     ssbo = resourcesManagerRef->GetBuffer(resource.name, vk::BufferUsageFlagBits::eStorageBuffer,
                                                          vk::MemoryPropertyFlagBits::eHostVisible |
                                                          vk::MemoryPropertyFlagBits::eHostCoherent, 1);
-                    ssbo = resourcesManagerRef->GetStageBuffer(resource.name ,vk::BufferUsageFlagBits::eStorageBuffer, 1)->deviceBuffer.get();
                     buffersResources.try_emplace(resource.binding,ssbo);
                     break;
                 }
