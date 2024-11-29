@@ -228,8 +228,8 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(400);
-            for (int i = 0; i < 400; ++i)
+            pointLights.reserve(100);
+            for (int i = 0; i < 100; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);

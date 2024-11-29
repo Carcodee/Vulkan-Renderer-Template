@@ -18,8 +18,6 @@ double previousTime;
 #include "Systems/SystemsInclude.hpp"
 #include "Engine/EngineInclude.hpp"
 
-legit::ProfilerTask cpuTask;
-legit::ProfilerTask gpuTask;
 
 #include "Rendering/RenderingInclude.hpp"
 
@@ -82,24 +80,17 @@ void run(WindowProvider* windowProvider)
         core.get(), windowProvider, clusterRenderer.get());
 
 
-
-    cpuTask.name = "Cpu";
-    cpuTask.color = legit::Colors::amethyst;
-    
-    gpuTask.name = "Gpu";
-    gpuTask.color = legit::Colors::carrot;
     while (!windowProvider->WindowShouldClose())
     {
         //handle time and frames better
         float time = windowProvider->GetTime();
         deltaTime = time - previousTime;
         previousTime = time;
-        double now = windowProvider->GetTime();
-        double startGpu;
+        auto profiler =ENGINE::Profiler::GetInstance();
+        profiler->StartProfiler();
         
         windowProvider->PollEvents();
         {
-            auto cpuStart = std::chrono::high_resolution_clock::now();
             glm::uvec2 windowSize = windowProvider->GetWindowSize();
             if (core->resizeRequested || windowProvider->framebufferResized)
             {
@@ -116,6 +107,7 @@ void run(WindowProvider* windowProvider)
             }
             try
             {
+                profiler->AddProfilerCpuSpot(legit::Colors::sunFlower,"Cpu");
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_R))
                 {
                     renderGraph->RecompileShaders();
@@ -131,9 +123,7 @@ void run(WindowProvider* windowProvider)
 
                 core->renderGraphRef->ExecuteAll(&currFrame);
               
-                imguiRenderer->RenderFrame(currFrame.commandBuffer.get(),
-                                           inFlightQueue->currentSwapchainImageView->imageView.get());
-                
+                profiler->EndProfilerCpuSpot("Cpu");
                 glm::vec2 input = glm::vec2(0.0f);
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input += glm::vec2(0.0f, 1.0f); }
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input += glm::vec2(0.0f, -1.0f); }
@@ -150,19 +140,27 @@ void run(WindowProvider* windowProvider)
                 {
                     clusterRenderer->camera.firstMouse = true;
                 }
-                cpuTask.endTime = windowProvider->GetTime() - now;
 
-                startGpu = windowProvider->GetTime();
+                profiler->AddProfilerCpuSpot(legit::Colors::alizarin,"Imgui");
+                imguiRenderer->RenderFrame(currFrame.commandBuffer.get(),
+                                           inFlightQueue->currentSwapchainImageView->imageView.get());
 
+                profiler->EndProfilerCpuSpot("Imgui");
+                profiler->AddProfilerGpuSpot(legit::Colors::carrot,"Gpu");
                 inFlightQueue->EndFrame();
+                profiler->EndProfilerGpuSpot("Gpu");
+
             }
             catch (vk::OutOfDateKHRError err)
             {
                 core->resizeRequested = true;
             }
         }
+
+        profiler->AddProfilerGpuSpot(legit::Colors::amethyst, "WaitIdle");
         core->WaitIdle();
-        gpuTask.endTime = windowProvider->GetTime() - startGpu; 
+        profiler->EndProfilerGpuSpot("WaitIdle");
+        profiler->UpdateProfiler();
         
     }
     ENGINE::ResourcesManager::GetInstance()->DestroyResources();

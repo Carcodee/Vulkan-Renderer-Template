@@ -95,13 +95,10 @@ namespace Rendering
         }
         void RenderGraphProfiler()
         {
-            std::vector<legit::ProfilerTask> cpuTasks=
-                {{0.0f, cpuTask.endTime, "Cpu", legit::Colors::amethyst}};
-            std::vector<legit::ProfilerTask> gpuTasks= 
-                {{0.0f, gpuTask.endTime, "Gpu", legit::Colors::carrot}};
 
-            profilersWindow.cpuGraph.LoadFrameData(cpuTasks.data(), cpuTasks.size());
-            profilersWindow.gpuGraph.LoadFrameData(gpuTasks.data(), gpuTasks.size());
+
+            profilersWindow.cpuGraph.LoadFrameData(Profiler::GetInstance()->cpuTasks.data(), Profiler::GetInstance()->cpuTasks.size());
+            profilersWindow.gpuGraph.LoadFrameData(Profiler::GetInstance()->gpuTasks.data(), Profiler::GetInstance()->gpuTasks.size());
             profilersWindow.Render();
             
         }

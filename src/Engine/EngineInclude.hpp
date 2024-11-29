@@ -62,3 +62,4 @@
 #include "ImageShipper.hpp"
 #include "ResourcesManager.hpp"
 #include "DescriptorCache.hpp"
+#include "Profiler.hpp"

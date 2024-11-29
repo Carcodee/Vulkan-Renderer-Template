@@ -90,18 +90,18 @@ void main() {
         int lightIndex = lightIndices[lightOffset + i];
         finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
     };
-    if(true){
-        float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
-
-        float hue = intensityId;
-        float saturation = 0.8;
-        float lightness = 0.4;
-        vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
-
-        float intensity= u_InvLerp(0.0, 400.0 , float(lightsInTile));
-        vec3 debugCol = u_Lerp(vec3(0.0, 0.5, 0.4), vec3(1.0, 0.0, 0.0), intensity);
-         finalCol += debugCol*2 + tileCol * 0.3;
-    }
+//    if(true){
+//        float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
+//
+//        float hue = intensityId;
+//        float saturation = 0.8;
+//        float lightness = 0.4;
+//        vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
+//
+//        float intensity= u_InvLerp(0.0, 400.0 , float(lightsInTile));
+//        vec3 debugCol = u_Lerp(vec3(0.0, 0.5, 0.4), vec3(1.0, 0.0, 0.0), intensity);
+//         finalCol += debugCol*2 + tileCol * 0.3;
+//    }
 
     
     outColor = vec4(finalCol, 1.0);
