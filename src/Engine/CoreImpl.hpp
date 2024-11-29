@@ -261,6 +261,7 @@ namespace ENGINE
         auto deviceFeatures12 = vk::PhysicalDeviceVulkan12Features()
             .setScalarBlockLayout(true)
             .setDescriptorIndexing(true)
+            .setRuntimeDescriptorArray(true)
             .setDescriptorBindingPartiallyBound(true);
             // .setDescriptorBindingSampledImageUpdateAfterBind(true)
             // .setDescriptorBindingStorageImageUpdateAfterBind(true)

@@ -86,7 +86,7 @@ namespace Rendering
 
 	struct ForwardPc
 	{
-		glm::mat4 model;
+		glm::mat4 model = glm::mat4(1.0);
 		glm::mat4 projView;
 	};
 	struct CPropsUbo
@@ -121,7 +121,24 @@ namespace Rendering
 		uint32_t zSlices;
 		
 	};
-
+    struct MaterialPackedData
+    {
+	    glm::vec4 diff = glm::vec4(1.0);
+	    float albedoFactor = 1.0;
+	    float normalFactor = 0.0;
+	    float roughnessFactor = 0.0;
+	    float metallicFactor = 0.0;
+	    float alphaCutoff = 0.0;
+    	
+    	int albedoOffset = -1;
+    	int normalOffset = -1;
+    	int emissionOffset = -1;
+    	int transOffset = -1;
+    	int roughnessOffset = -1;
+    	int metallicOffset = -1;
+    	int metRoughnessOffset = -1;
+    	
+    };
 
 
     

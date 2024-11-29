@@ -56,6 +56,7 @@ vec3 EvalPointLight(u_PointLight light, vec3 col, vec3 pos, vec3 normal){
 void main() {
     
     vec4 norm = texture(gNormals, textCoord);
+    
     vec2 fragCoord = vec2(textCoord.x , textCoord.y);
     vec4 col = texture(gCol, textCoord);
     float depth = texture(gDepth, textCoord).r;
@@ -63,7 +64,7 @@ void main() {
 
         discard;
     }
-    col =vec4(0.01);
+//    col =vec4(0.01);
     vec3 pos = u_ScreenToWorld(cProps.invProj, cProps.invView, depth, fragCoord);
 
     ivec2 tileId = ivec2(gl_FragCoord.xy/uvec2(pc.xTileSizePx, pc.yTileSizePx));
@@ -79,33 +80,27 @@ void main() {
     int lightOffset = lightMap[mapIndex].offset;
     int lightsInTile = lightMap[mapIndex].size;
     
-    vec3 lightPos = vec3(0.0, 4.0, 0.0);
+    vec3 lightPos = vec3(2.0, 1.0, 0.0);
     vec3 lightDir = normalize(lightPos - pos);
     vec3 lightCol = vec3(1.0, 1.0, 1.0);
     vec3 ambientCol = vec3(0.0, 0.0, 0.0);
-    vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 3.0f + ambientCol;
-    
-    if(true){
-        for (int i = 0; i < lightsInTile; i++) {
-            int lightIndex = lightIndices[lightOffset + i];
-            finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
-            if(lightIndex != -1){
-            }else{
-//                finalCol = vec3(0.0);
-            }
-        };
+    vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 0.4f + ambientCol;
+
+    for (int i = 0; i < lightsInTile; i++) {
+        int lightIndex = lightIndices[lightOffset + i];
+        finalCol += EvalPointLight(pointLights[lightIndex], finalCol, pos, norm.xyz);
     };
-    if(false){
+    if(true){
         float intensityId= u_InvLerp(0.0, pc.tileCountX * pc.tileCountY * float(pc.zSlicesSize), float(mapIndex));
-        
+
         float hue = intensityId;
         float saturation = 0.8;
         float lightness = 0.4;
         vec3 tileCol = u_HSLToRGB(hue, saturation, lightness);
-        
+
         float intensity= u_InvLerp(0.0, 400.0 , float(lightsInTile));
         vec3 debugCol = u_Lerp(vec3(0.0, 0.5, 0.4), vec3(1.0, 0.0, 0.0), intensity);
-         finalCol += debugCol + tileCol*0.1;
+         finalCol += debugCol*2 + tileCol * 0.3;
     }
 
     

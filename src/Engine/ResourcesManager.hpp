@@ -91,7 +91,13 @@ namespace ENGINE
         ImageShipper* BatchShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
                                  LayoutPatterns dstPattern)
         {
-            assert(!imagesShippersNames.contains(name) && "Do not batch a shipper that already exist");
+            if (imagesShippersNames.contains(name))
+            {
+                SYSTEMS::Logger::GetInstance()->SetLogPreferences(SYSTEMS::LogLevel::L_INFO);
+                SYSTEMS::Logger::GetInstance()->Log("",-1 ,"Using texture that already exist: " + name, SYSTEMS::LogLevel::L_INFO);
+                ImageShipper* shipper = GetShipperFromName(name);
+                return shipper;
+            }
             imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
             imageShippers.emplace_back(std::make_unique<ImageShipper>());
             imagesUpdateInfos.emplace_back(ImagesUpdateInfo{path, arrayLayersCount, mipsCount, format, dstPattern, INVALID});
@@ -428,7 +434,7 @@ namespace ENGINE
         std::vector<std::unique_ptr<ImageShipper>> imageShippers;
         std::vector<ImagesUpdateInfo> imagesUpdateInfos;
         std::vector<std::unique_ptr<Image>> images;
-        
+      
         bool invalidateBuffers = false;
         bool updateImagesShippers = false;
         

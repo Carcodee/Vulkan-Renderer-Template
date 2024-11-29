@@ -89,8 +89,14 @@ namespace SYSTEMS
                     logType = "NONE: ";
                     break;
                 }
-                codeFile += " : " + std::to_string(codeLine) + " : ";
-                message = logType + codeFile + message;
+                if (codeLine == -1)
+                {
+                    message = logType + message;
+                }else
+                {
+                    codeFile += " : " + std::to_string(codeLine) + " : ";
+                    message = logType + codeFile + message;
+                }
 
                 LogMessage(message);
             }

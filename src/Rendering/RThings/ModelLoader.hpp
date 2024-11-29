@@ -88,6 +88,7 @@ namespace Rendering
     			}
 			    for (auto& primitive : currMesh.primitives)
 			    {
+			    	int verticesSize = model.vertices.size();
 				    int vertexCount = 0;
 				    int indexCount = 0;
 			    	{
@@ -130,10 +131,13 @@ namespace Rendering
 					    }
 
 					    model.vertices.reserve(vertexCount);
+				    	glm::mat4 worldSpaceMat = nodeMat->GetWorlMat(); 
 					    for (int i = 0; i < vertexCount; ++i)
 					    {
 							M_Vertex3D vertex{};
-					    	vertex.pos = glm::make_vec3(&posBuff[i * 3]);
+					    	glm::vec3 pos =glm::make_vec3(&posBuff[i * 3]);
+					    	glm::vec4 wsPos = worldSpaceMat * glm::vec4(pos, 1.0);
+					    	vertex.pos = glm::vec3(wsPos.x, wsPos.y, wsPos.z);
 							vertex.normal = normalsBuff ? glm::make_vec3(&normalsBuff[i * 3]) : glm::vec3(0.0f);
 							//not passing vec4 tangents at the moment
 							glm::vec4 tangent = tangentsBuff ? glm::make_vec4(&tangentsBuff[i * 4]) : glm::vec4(0.0f);
@@ -155,21 +159,21 @@ namespace Rendering
 							case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
 								const uint32_t* buff = reinterpret_cast<const uint32_t*>(&(gltfModel.buffers[bufferView.buffer].data[bufferView.byteOffset + accessor.byteOffset]));
 								for (size_t j = 0; j <accessor.count; ++j) {
-									model.indices.push_back(buff[j]);
+									model.indices.push_back(verticesSize + buff[j]);
 								}
 								break;
 							}
 							case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
 								const uint16_t* buff = reinterpret_cast<const uint16_t*>(&(gltfModel.buffers[bufferView.buffer].data[bufferView.byteOffset + accessor.byteOffset]));
 								for (size_t j = 0; j <accessor.count; ++j) {
-									model.indices.push_back(buff[j]);
+									model.indices.push_back(verticesSize +buff[j]);
 								}
 								break;
 							}
 							case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
 								const uint8_t* buff = reinterpret_cast<const uint8_t*>(&(gltfModel.buffers[bufferView.buffer].data[bufferView.byteOffset + accessor.byteOffset]));
 								for (size_t j = 0; j <accessor.count; ++j) {
-									model.indices.push_back(buff[j]);
+									model.indices.push_back(verticesSize +buff[j]);
 								}
 								break;
 							}
@@ -209,17 +213,17 @@ namespace Rendering
 		    	tinygltf::Material& gltfMat= model.materials[i];
 		    	std::string materialName = "Material_"+ RenderingResManager::GetInstance()->materials.size();
 		    	Material* material = RenderingResManager::GetInstance()->PushMaterial(materialName);
-			    material->diff = glm::vec4(gltfMat.pbrMetallicRoughness.baseColorFactor[0],
+			    material->materialPackedData.diff = glm::vec4(gltfMat.pbrMetallicRoughness.baseColorFactor[0],
 			                              gltfMat.pbrMetallicRoughness.baseColorFactor[1],
 			                              gltfMat.pbrMetallicRoughness.baseColorFactor[2],
 			                              gltfMat.pbrMetallicRoughness.baseColorFactor[3]);
-		    	material->roughnessFactor = static_cast<float>(gltfMat.pbrMetallicRoughness.roughnessFactor);
-		    	material->metallicFactor = static_cast<float>(gltfMat.pbrMetallicRoughness.metallicFactor);
+		    	material->materialPackedData.roughnessFactor = static_cast<float>(gltfMat.pbrMetallicRoughness.roughnessFactor);
+		    	material->materialPackedData.metallicFactor = static_cast<float>(gltfMat.pbrMetallicRoughness.metallicFactor);
 		    	if (gltfMat.alphaMode =="OPAQUE"){
-		    		material->alphaCutoff = 1.0f;
+		    		material->materialPackedData.alphaCutoff = 1.0f;
 		    	}
 		    	if (gltfMat.alphaMode =="BLEND"){
-		    		material->alphaCutoff = gltfMat.alphaCutoff;
+		    		material->materialPackedData.alphaCutoff = gltfMat.alphaCutoff;
 		    	}
 			    if (gltfMat.pbrMetallicRoughness.baseColorTexture.index > -1)
 			    {
@@ -230,8 +234,8 @@ namespace Rendering
 				    {
 					    ENGINE::ImageShipper* texture = ENGINE::ResourcesManager::GetInstance()->BatchShipper(
 						   texturePath, texturePath, 1, 1, ENGINE::g_ShipperFormat, ENGINE::GRAPHICS_READ);
-					    material->diff = glm::vec4(1.0f);
-					    material->albedoFactor = 1.0f;
+					    material->materialPackedData.diff = glm::vec4(1.0f);
+					    material->materialPackedData.albedoFactor = 1.0f;
 				    	int id = ENGINE::ResourcesManager::GetInstance()->GetShipperID(texturePath);
 				    	material->SetTexture(ALBEDO, id);
 				    }
@@ -246,8 +250,8 @@ namespace Rendering
 				    {
 					    ENGINE::ImageShipper* texture = ENGINE::ResourcesManager::GetInstance()->BatchShipper(
 						    texturePath, texturePath, 1, 1, ENGINE::g_ShipperFormat, ENGINE::GRAPHICS_READ);
-					    material->diff = glm::vec4(1.0f);
-					    material->albedoFactor = 1.0f;
+					    material->materialPackedData.diff = glm::vec4(1.0f);
+					    material->materialPackedData.albedoFactor = 1.0f;
 					    int id = ENGINE::ResourcesManager::GetInstance()->GetShipperID(texturePath);
 					    material->SetTexture(METALLIC_ROUGHNESS, id);
 				    }
@@ -263,8 +267,8 @@ namespace Rendering
 			    	{
 			    		ENGINE::ImageShipper* texture = ENGINE::ResourcesManager::GetInstance()->BatchShipper(
 							texturePath, texturePath, 1, 1, ENGINE::g_ShipperFormat, ENGINE::GRAPHICS_READ);
-			    		material->diff = glm::vec4(1.0f);
-			    		material->albedoFactor = 1.0f;
+			    		material->materialPackedData.diff = glm::vec4(1.0f);
+			    		material->materialPackedData.albedoFactor = 1.0f;
 			    		int id = ENGINE::ResourcesManager::GetInstance()->GetShipperID(texturePath);
 			    		material->SetTexture(EMISSION, id);
 			    	}
@@ -279,8 +283,8 @@ namespace Rendering
 			    	{
 			    		ENGINE::ImageShipper* texture = ENGINE::ResourcesManager::GetInstance()->BatchShipper(
 							texturePath, texturePath, 1, 1, ENGINE::g_ShipperFormat, ENGINE::GRAPHICS_READ);
-			    		material->diff = glm::vec4(1.0f);
-			    		material->albedoFactor = 1.0f;
+			    		material->materialPackedData.diff = glm::vec4(1.0f);
+			    		material->materialPackedData.albedoFactor = 1.0f;
 			    		int id = ENGINE::ResourcesManager::GetInstance()->GetShipperID(texturePath);
 			    		material->SetTexture(NORMAL, id);
 			    	}

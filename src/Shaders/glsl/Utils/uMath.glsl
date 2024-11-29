@@ -171,6 +171,9 @@ bool u_AABB_Sphere(vec3 min, vec3 max, vec3 spherePos, float r){
 }
 
 
+float u_SDF_Sphere(vec3 spherePos, vec3 pos){
+    return distance(spherePos, pos);
+}
 
 
 #endif 

@@ -59,8 +59,5 @@ float u_GetZSlice(float Z, float near, float far, float numSlices) {
     return max(log2(Z) * numSlices / log2(far / near) - numSlices * log2(near) / log2(far / near), 0.0);
 }
 
-float u_SDF_Sphere(vec3 spherePos, vec3 pos){
-    
-    return distance(spherePos, pos);
-}
+
 #endif 

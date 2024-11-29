@@ -8,6 +8,7 @@
 //
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -26,6 +27,7 @@ namespace Rendering
             this->descriptorAllocatorRef = descriptorAllocator;
             computeDescCache = std::make_unique<DescriptorCache>(this->core);
             lightDecCache = std::make_unique<DescriptorCache>(this->core);
+            gBuffDescCache = std::make_unique<DescriptorCache>(this->core);
 
             CreateResources();
             CreateBuffers();
@@ -71,26 +73,40 @@ namespace Rendering
                 [this](vk::CommandBuffer& commandBuffer)
                 {
                     vk::DeviceSize offset = 0;
+
+
+                    std::vector<ImageView*> textures;
+                    for (auto& image : ResourcesManager::GetInstance()->imageShippers)
+                    {
+                        textures.emplace_back(image->imageView.get());
+                    }
+                    std::vector<MaterialPackedData> materials;
+                    for (auto& mat : RenderingResManager::GetInstance()->materialPackedData)
+                    {
+                        materials.emplace_back(*mat);
+                        
+                    }
+                    
+                    gBuffDescCache->SetSamplerArray("textures", textures);
+                    gBuffDescCache->SetBuffer("MaterialsPacked", materials);
+                    gBuffDescCache->SetBuffer("MeshMaterialsIds", model.materials);
+                    
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
                                                      renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0,
                                                      1,
-                                                     &gDstSet.get(), 0, nullptr);
+                                                     &gBuffDescCache->dstSet.get(), 0, nullptr);
 
                     commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->deviceBuffer.get()->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(indexBuffer->deviceBuffer.get()->bufferHandle.get(), 0, vk::IndexType::eUint32);
 
-                    for (int i = 0; i < model.meshCount; ++i)
-                    {
-                        pc.projView = camera.matrices.perspective * camera.matrices.view;
-                        pc.model = model.modelsMat[i];
-                        commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
-                                                    vk::ShaderStageFlagBits::eVertex |
-                                                    vk::ShaderStageFlagBits::eFragment,
-                                                    0, sizeof(ForwardPc), &pc);
+                    pc.projView = camera.matrices.perspective * camera.matrices.view;
+                    commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
+                                                vk::ShaderStageFlagBits::eVertex |
+                                                vk::ShaderStageFlagBits::eFragment,
+                                                0, sizeof(ForwardPc), &pc);
 
-                        commandBuffer.drawIndexed(model.indicesCount[i], 1, model.firstIndices[i],
-                                                  static_cast<int32_t>(model.firstVertices[i]), 0);
-                    }
+                    commandBuffer.drawIndexed(model.indices.size(), 1, 0,
+                                              0, 0);
                 });
 
             renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
@@ -204,12 +220,8 @@ namespace Rendering
             camera.SetLookAt(glm::vec3(0.0f, 0.0f, 1.0f));
             camera.position = glm::vec3(0.0f);
 
-            imageShipperCol = ResourcesManager::GetInstance()->GetShipper("Color", "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png",1, 1, core->swapchainRef->GetFormat(),
-                                       GRAPHICS_READ);
-            imageShipperNorm = ResourcesManager::GetInstance()->GetShipper("Norm", "C:\\Users\\carlo\\OneDrive\\Pictures\\Screenshots\\Screenshot 2024-09-19 172847.png",1, 1, core->swapchainRef->GetFormat(),
-                                        GRAPHICS_READ);
             ModelLoader::GetInstance()->LoadGLTF(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\3d_pbr_curved_sofa\\scene.gltf",
+                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\sponza\\scene.gltf",
                 model);
 
             //compute
@@ -325,14 +337,12 @@ namespace Rendering
             cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
             cullRenderNode->BuildRenderGraphNode();
 
-            DescriptorLayoutBuilder builder;
+            //gbuffer
             
-            gVertShader.get()->sParser->GetLayout(builder);
-            gFragShader.get()->sParser->GetLayout(builder);
+            gBuffDescCache->AddShaderInfo(gVertShader->sParser.get());
+            gBuffDescCache->AddShaderInfo(gFragShader->sParser.get());
+            gBuffDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
-            gDstLayout = builder.BuildBindings(
-                core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-            
             auto pushConstantRange = vk::PushConstantRange()
                                      .setOffset(0)
                                      .setStageFlags(
@@ -342,20 +352,7 @@ namespace Rendering
             auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                     .setSetLayoutCount(1)
                                     .setPushConstantRanges(pushConstantRange)
-                                    .setPSetLayouts(&gDstLayout.get());
-
-            gDstSet = descriptorAllocatorRef->Allocate(core->logicalDevice.get(), gDstLayout.get());
-
-            writerBuilder.AddWriteImage(0, imageShipperCol->imageView.get(),
-                                        imageShipperCol->sampler->samplerHandle.get(),
-                                        vk::ImageLayout::eShaderReadOnlyOptimal,
-                                        vk::DescriptorType::eCombinedImageSampler);
-            writerBuilder.AddWriteImage(1, imageShipperNorm->imageView.get(),
-                                        imageShipperNorm->sampler->samplerHandle.get(),
-                                        vk::ImageLayout::eShaderReadOnlyOptimal,
-                                        vk::DescriptorType::eCombinedImageSampler);
-
-            writerBuilder.UpdateSet(core->logicalDevice.get(), gDstSet.get());
+                                    .setPSetLayouts(&gBuffDescCache->dstLayout.get());
 
             VertexInput vertexInput = M_Vertex3D::GetVertexInput();
             AttachmentInfo colInfo = GetColorAttachmentInfo(
@@ -374,8 +371,6 @@ namespace Rendering
             renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
             renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(DepthConfigs::D_ENABLE);
-            renderNode->AddSamplerResource("colGSampler", imageShipperCol->imageView.get());
-            renderNode->AddSamplerResource("normGSampler", imageShipperNorm->imageView.get());
             renderNode->AddColorImageResource("gColor", colAttachmentView);
             renderNode->AddColorImageResource("gNorm", normAttachmentView);
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView);
@@ -388,15 +383,9 @@ namespace Rendering
             lFragShader = std::make_unique<Shader>(logicalDevice,
                                                            "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
 
-            lVertShader.get()->sParser->GetLayout(builder);
-            lFragShader.get()->sParser->GetLayout(builder);
-            
             lightDecCache->AddShaderInfo(lVertShader->sParser.get());
             lightDecCache->AddShaderInfo(lFragShader->sParser.get());
             lightDecCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
-            
-            // lDstLayout = builder.BuildBindings(
-                // core->logicalDevice.get(), vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
 
             auto lPushConstantRange = vk::PushConstantRange()
                                       .setOffset(0)
@@ -447,9 +436,6 @@ namespace Rendering
 
         std::unique_ptr<Shader> cullCompShader;
 
-        ImageShipper* imageShipperCol;
-        ImageShipper* imageShipperNorm;
-
         ImageView* colAttachmentView;
         ImageView* normAttachmentView;
         ImageView* depthAttachmentView;
@@ -462,6 +448,7 @@ namespace Rendering
 
         std::unique_ptr<DescriptorCache> computeDescCache;
         std::unique_ptr<DescriptorCache> lightDecCache;
+        std::unique_ptr<DescriptorCache> gBuffDescCache;
         
         std::string gBufferPassName = "gBuffer";
         std::string computePassName = "cullLight";

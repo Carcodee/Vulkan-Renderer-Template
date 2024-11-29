@@ -3,11 +3,13 @@
 // Created by carlo on 2024-11-25.
 //
 
+
 #ifndef ENGINERESMANAGER_HPP
 #define ENGINERESMANAGER_HPP
 
 namespace Rendering
 {
+
     class RenderingResManager
     {
     public:
@@ -20,6 +22,8 @@ namespace Rendering
             {
                 materials.emplace_back(std::make_unique<Material>());
                 material = materials.back().get();
+                materialPackedData.emplace_back(&material->materialPackedData);
+                
             }else
             {
                 SYSTEMS::Logger::GetInstance()->SetLogPreferences(SYSTEMS::LogLevel::L_WARN);
@@ -59,13 +63,29 @@ namespace Rendering
             }
             return materialsNames.at(name);    
         }
+        void UpdateResources()
+        {
+            
+        }
+        std::vector<MaterialPackedData> GetMaterialData(){
+            std::vector<MaterialPackedData> materialPackedDatas;
+            materialPackedDatas.reserve(materialPackedData.size());
+            for (auto& materialPackedData : materialPackedData)
+            {
+                materialPackedDatas.emplace_back(*materialPackedData);
+            }
+            return materialPackedDatas;
+        }
+        
+        
         std::map<std::string, int> materialsNames;
         std::map<std::string, int> modelsNames;
         std::map<std::string, int> texturesNames;
         
         std::vector<std::unique_ptr<Material>> materials;
+        std::vector<MaterialPackedData*> materialPackedData;
         std::vector<std::unique_ptr<Model>> models;
-
+        
         RenderingResManager() = default;
         ~RenderingResManager() = default;
     private:

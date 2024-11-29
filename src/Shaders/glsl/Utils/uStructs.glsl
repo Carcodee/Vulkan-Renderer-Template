@@ -32,6 +32,23 @@ struct u_Frustum{
     vec3 points[8];
 };
 
+struct u_MaterialPacked{
+    vec4 diff;
+    float albedoFactor;
+    float normalFactor;
+    float roughnessFactor;
+    float metallicFactor;
+    float alphaCutoff;
+
+    int albedoOffset;
+    int normalOffset;
+    int emissionOffset;
+    int transOffset;
+    int roughnessOffset;
+    int metallicOffset;
+    int metRoughnessOffset;
+};
+
 //End Util
 
 #endif 
