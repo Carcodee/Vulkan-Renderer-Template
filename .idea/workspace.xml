@@ -31,14 +31,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="bindless drawing">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/EngineInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/EngineInclude.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/light.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/light.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/spirv/ClusterRendering/light.frag.spv" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/spirv/ClusterRendering/light.frag.spv" afterDir="false" />
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Added a profiler">
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -226,7 +219,7 @@
       <workItem from="1732748282145" duration="5236000" />
       <workItem from="1732830278354" duration="10094000" />
       <workItem from="1732853428996" duration="1147000" />
-      <workItem from="1732855944224" duration="4185000" />
+      <workItem from="1732855944224" duration="4562000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -396,7 +389,15 @@
       <option name="project" value="LOCAL" />
       <updated>1732840788332</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="Added a profiler">
+      <option name="closed" value="true" />
+      <created>1732860465986</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1732860465986</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -432,7 +433,8 @@
     <MESSAGE value="Merge with main" />
     <MESSAGE value="Preparing Materials, Gpu driven rendering" />
     <MESSAGE value="bindless drawing" />
-    <option name="LAST_COMMIT_MESSAGE" value="bindless drawing" />
+    <MESSAGE value="Added a profiler" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added a profiler" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

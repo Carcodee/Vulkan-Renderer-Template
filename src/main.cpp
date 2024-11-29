@@ -121,7 +121,9 @@ void run(WindowProvider* windowProvider)
 
                 auto& currFrame = inFlightQueue->frameResources[inFlightQueue->frameIndex];
 
+                profiler->AddProfilerGpuSpot(legit::Colors::emerald,"RenderGraph");
                 core->renderGraphRef->ExecuteAll(&currFrame);
+                profiler->EndProfilerGpuSpot("RenderGraph");
               
                 profiler->EndProfilerCpuSpot("Cpu");
                 glm::vec2 input = glm::vec2(0.0f);
