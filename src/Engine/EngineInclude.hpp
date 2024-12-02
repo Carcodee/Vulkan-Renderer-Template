@@ -9,7 +9,6 @@
 #include <cstdint>
 #include <algorithm>
 #include <list>
-#include <functional>
 #include <set>
 #include<deque>
 #include <random>

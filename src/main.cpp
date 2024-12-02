@@ -59,8 +59,9 @@ void run(WindowProvider* windowProvider)
 
 
     ENGINE::ResourcesManager* resourcesManager = ENGINE::ResourcesManager::GetInstance(core.get());
-    
-    Rendering::ModelLoader::GetInstance(core.get());
+
+    Rendering::RenderingResManager* renderingResManager = Rendering::RenderingResManager::GetInstance();
+    // Rendering::ModelLoader::GetInstance(core.get());
     
 
     std::vector<ENGINE::DescriptorAllocator::PoolSizeRatio> poolSizeRatios ={
@@ -114,6 +115,7 @@ void run(WindowProvider* windowProvider)
                     clusterRenderer->ReloadShaders(); 
                 }
 
+                renderingResManager->UpdateResources();
                 resourcesManager->UpdateBuffers();
                 resourcesManager->UpdateImages();
                 

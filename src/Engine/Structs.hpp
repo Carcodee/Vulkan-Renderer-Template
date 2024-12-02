@@ -79,6 +79,7 @@ namespace ENGINE
         B_COMPUTE_WRITE,
         B_TRANSFER_DST,
         B_TRANSFER_SRC,
+        B_DRAW_INDIRECT,
         B_EMPTY
     };
 
@@ -114,6 +115,24 @@ namespace ENGINE
         bool array = false;
         vk::DescriptorType type;
     };
+
+    struct DrawIndirectIndexedCmd
+    {
+        uint32_t indexCount;
+        uint32_t instanceCount;
+        uint32_t firstIndex;
+        uint32_t vertexOffset;
+        uint32_t firstInstance;
+    };
+
+    struct DrawIndirectCmd
+    {
+        uint32_t vertexCount;
+        uint32_t instanceCount;
+        uint32_t firstIndex;
+        uint32_t firstInstance;
+    };
+
 }
 #define STRUCTS_HPP
 

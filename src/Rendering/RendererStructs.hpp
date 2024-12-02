@@ -137,7 +137,6 @@ namespace Rendering
     	int roughnessOffset = -1;
     	int metallicOffset = -1;
     	int metRoughnessOffset = -1;
-    	
     };
 
 

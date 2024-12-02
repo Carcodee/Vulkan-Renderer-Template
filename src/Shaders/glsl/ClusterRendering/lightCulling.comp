@@ -136,6 +136,9 @@ void main() {
             }
         };
     }
+
+    int idx = idxLightIndicesStart + lightCount;
+    lightIndices[idx] = 9;
     atomicAdd(lightMap[idxIndexer].offset, idxLightIndicesStart);
     atomicAdd(lightMap[idxIndexer].size, lightCount);
 }

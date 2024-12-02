@@ -1,0 +1,21 @@
+#version 450
+
+#extension GL_GOOGLE_include_directive : require
+#extension GL_EXT_nonuniform_qualifier : enable
+#extension GL_EXT_scalar_block_layout :enable
+
+#include "../Utils/uStructs.glsl"
+#include "../Utils/uMath.glsl"
+#include "../Utils/uRendering.glsl"
+
+layout (set = 0, binding = 0, scalar) writeonly buffer IndirectCmds{
+    u_DrawIndirectIndexedCmd[] indirectCmds;
+};
+
+layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+void main(){
+    
+    uint idx = gl_GlobalInvocationID.x;
+    atomicAdd(indirectCmds[idx].instanceCount, 1);
+}

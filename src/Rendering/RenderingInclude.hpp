@@ -21,7 +21,6 @@
 #include "RThings/Material.hpp"
 #include "RThings/Model.hpp"
 #include "RThings/RenderingResManager.hpp"
-#include "RThings/ModelLoader.hpp"
 #include "RThings/Lights.hpp"
 #include "RThings/Camera.hpp"
 

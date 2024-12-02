@@ -23,7 +23,6 @@ layout (set = 0, binding = 2) readonly buffer MeshMaterialsIds{
     int[] meshMatIds;
 };
 
-
 void GetTexture(int offset, out vec4 value){
     value = vec4(0);
     if(offset > -1){

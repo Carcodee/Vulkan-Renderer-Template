@@ -9,6 +9,8 @@
 
 
 
+
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -28,6 +30,7 @@ namespace Rendering
             computeDescCache = std::make_unique<DescriptorCache>(this->core);
             lightDecCache = std::make_unique<DescriptorCache>(this->core);
             gBuffDescCache = std::make_unique<DescriptorCache>(this->core);
+            cullMeshesCache = std::make_unique<DescriptorCache>(this->core);
 
             CreateResources();
             CreateBuffers();
@@ -40,6 +43,29 @@ namespace Rendering
 
         void SetRenderOperation(InFlightQueue* inflightQueue) override
         {
+            auto meshCullRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
+                [this](vk::CommandBuffer& commandBuffer)
+                {
+                    
+                    cullMeshesCache->SetBuffer("IndirectCmds",
+                                               RenderingResManager::GetInstance()->indirectDrawBuffer);
+                    
+                    auto& renderNode = renderGraphRef->renderNodes.at(meshCullPassName);
+                    commandBuffer.bindDescriptorSets(renderNode->pipelineType,
+                                                     renderNode->pipelineLayout.get(), 0,
+                                                     1,
+                                                     &cullMeshesCache->dstSet.get(), 0, nullptr);
+                    commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
+                    commandBuffer.dispatch(RenderingResManager::GetInstance()->indirectDrawsCmdInfos.size(), 1, 1);
+
+                    BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(B_DRAW_INDIRECT);
+                    BufferAccessPattern dstPattern = GetDstBufferAccessPattern(B_DRAW_INDIRECT);
+                    CreateBufferBarrier(srcPattern, dstPattern, commandBuffer,
+                                        RenderingResManager::GetInstance()->indirectDrawBuffer);
+                });
+            
+            renderGraphRef->GetNode(meshCullPassName)->SetRenderOperation(meshCullRenderOp);
+
             auto cullTask = new std::function<void()>([this, inflightQueue]()
             {
                 Debug();
@@ -52,6 +78,7 @@ namespace Rendering
                     computeDescCache->SetBuffer("LightMap", lightsMap);
                     computeDescCache->SetBuffer("LightIndices", lightsIndices);
                     computeDescCache->SetBuffer("CameraProperties", cPropsUbo);
+                    
                     auto& renderNode = renderGraphRef->renderNodes.at(computePassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
                                                      renderNode->pipelineLayout.get(), 0,
@@ -72,9 +99,10 @@ namespace Rendering
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+
+
+                    
                     vk::DeviceSize offset = 0;
-
-
                     std::vector<ImageView*> textures;
                     for (auto& image : ResourcesManager::GetInstance()->imageShippers)
                     {
@@ -84,12 +112,12 @@ namespace Rendering
                     for (auto& mat : RenderingResManager::GetInstance()->materialPackedData)
                     {
                         materials.emplace_back(*mat);
-                        
                     }
-                    
+                   
                     gBuffDescCache->SetSamplerArray("textures", textures);
                     gBuffDescCache->SetBuffer("MaterialsPacked", materials);
-                    gBuffDescCache->SetBuffer("MeshMaterialsIds", model.materials);
+                    gBuffDescCache->SetBuffer("MeshMaterialsIds", model->materials);
+                    gBuffDescCache->SetBuffer("MeshesModelMatrices", model->modelsMat);
                     
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
                                                      renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0,
@@ -100,13 +128,32 @@ namespace Rendering
                     commandBuffer.bindIndexBuffer(indexBuffer->deviceBuffer.get()->bufferHandle.get(), 0, vk::IndexType::eUint32);
 
                     pc.projView = camera.matrices.perspective * camera.matrices.view;
+                    int meshOffset = 0;
                     commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
                                                 vk::ShaderStageFlagBits::eVertex |
                                                 vk::ShaderStageFlagBits::eFragment,
                                                 0, sizeof(ForwardPc), &pc);
+ 
+                    for (int i = 0; i < RenderingResManager::GetInstance()->models.size(); ++i)
+                    {
+                        Model* modelRef = RenderingResManager::GetInstance()->models[i].get();
+                        for (int j = 0; j < modelRef->meshCount; ++j)
+                        {
+                            vk::DeviceSize sizeOffset = (meshOffset + j) * sizeof(DrawIndirectIndexedCmd);
+                            uint32_t stride = sizeof(DrawIndirectIndexedCmd);
+                            commandBuffer.drawIndexedIndirect(
+                            RenderingResManager::GetInstance()->indirectDrawBuffer->bufferHandle.get(),
+                            sizeOffset,
+                            1,
+                            stride);
+                            // commandBuffer.drawIndexed(modelRef->indicesCount[j], 1, modelRef->firstIndices[j],
+                                                      // modelRef->firstVertices[j], 0);
+                        }
+                       
 
-                    commandBuffer.drawIndexed(model.indices.size(), 1, 0,
-                                              0, 0);
+                        meshOffset += modelRef->meshCount;
+                    }
+             
                 });
 
             renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
@@ -127,6 +174,7 @@ namespace Rendering
             auto lRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
+
                     
                     lightDecCache->SetSampler("gCol", colAttachmentView);
                     lightDecCache->SetSampler("gNormals", normAttachmentView);
@@ -220,16 +268,15 @@ namespace Rendering
             camera.SetLookAt(glm::vec3(0.0f, 0.0f, 1.0f));
             camera.position = glm::vec3(0.0f);
 
-            ModelLoader::GetInstance()->LoadGLTF(
-                "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\Resources\\Assets\\Models\\sponza\\scene.gltf",
-                model);
+            std::string path = SYSTEMS::OS::GetInstance()->GetAssetsPath();
+            model = RenderingResManager::GetInstance()->GetModel(path + "\\Models\\tomb\\scene.gltf");
 
             //compute
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(100);
-            for (int i = 0; i < 100; ++i)
+            pointLights.reserve(1);
+            for (int i = 0; i < 1; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
@@ -260,6 +307,7 @@ namespace Rendering
             cullDataPc.pointLightsCount = (int)pointLights.size();
 
             lightsMap.reserve(cullDataPc.xTileCount * cullDataPc.yTileCount * zSlicesSize);
+            
             for (int i = 0; i < lightsMap.capacity(); ++i)
             {
                 lightsMap.emplace_back(ArrayIndexer{});
@@ -289,12 +337,14 @@ namespace Rendering
 
         void CreateBuffers()
         {
-           
+
+            RenderingResManager::GetInstance()->BuildIndirectBuffers();
+            
             vertexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("vertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
-                sizeof(M_Vertex3D) * model.vertices.size(), model.vertices.data());
+                sizeof(M_Vertex3D) * model->vertices.size(), model->vertices.data());
             
             indexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("indexBuffer", vk::BufferUsageFlagBits::eIndexBuffer,
-                sizeof(uint32_t) * model.indices.size(), model.indices.data());
+                sizeof(uint32_t) * model->indices.size(), model->indices.data());
             
             lVertexBuffer =  ResourcesManager::GetInstance()->GetBuffer("lVertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
@@ -309,15 +359,27 @@ namespace Rendering
         void CreatePipelines()
         {
             auto& logicalDevice = core->logicalDevice.get();
-            gVertShader = std::make_unique<Shader>(logicalDevice,
-                                                           "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
-            gFragShader = std::make_unique<Shader>(logicalDevice,
-                                                           "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
 
+            //Cull meshes
+            std::string shaderPath = SYSTEMS::OS::GetInstance()->GetShadersPath();
 
+            cullMeshesCompShader = std::make_unique<Shader>(logicalDevice, shaderPath + "\\spirv\\Common\\meshCull.comp.spv");
+
+            cullMeshesCache->AddShaderInfo(cullMeshesCompShader.get()->sParser.get());
+            cullMeshesCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
+
+            auto meshCullLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
+                                        .setSetLayoutCount(1)
+                                        .setPSetLayouts(&cullMeshesCache->dstLayout.get());
+
+            auto* meshCullRenderNode = renderGraphRef->AddPass(meshCullPassName);
+            meshCullRenderNode->SetCompShader(cullMeshesCompShader.get());
+            meshCullRenderNode->SetPipelineLayoutCI(meshCullLayoutCreateInfo);
+            meshCullRenderNode->BuildRenderGraphNode();
+            
             //Cull pass//
 
-            cullCompShader = std::make_unique<Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\lightCulling.comp.spv");
+            cullCompShader = std::make_unique<Shader>(logicalDevice, shaderPath+ "\\spirv\\ClusterRendering\\lightCulling.comp.spv");
 
             computeDescCache->AddShaderInfo(cullCompShader.get()->sParser.get());
             computeDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
@@ -337,8 +399,13 @@ namespace Rendering
             cullRenderNode->SetPipelineLayoutCI(cullLayoutCreateInfo);
             cullRenderNode->BuildRenderGraphNode();
 
+
             //gbuffer
-            
+
+            gVertShader = std::make_unique<Shader>(logicalDevice,
+                                                           "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.vert.spv");
+            gFragShader = std::make_unique<Shader>(logicalDevice,
+                                                           "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\gBuffer.frag.spv");
             gBuffDescCache->AddShaderInfo(gVertShader->sParser.get());
             gBuffDescCache->AddShaderInfo(gFragShader->sParser.get());
             gBuffDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
@@ -374,14 +441,13 @@ namespace Rendering
             renderNode->AddColorImageResource("gColor", colAttachmentView);
             renderNode->AddColorImageResource("gNorm", normAttachmentView);
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView);
+            renderNode->DependsOn(meshCullPassName);
             renderNode->BuildRenderGraphNode();
 
             //light pass//
 
-            lVertShader = std::make_unique<Shader>(logicalDevice,
-                                                           "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
-            lFragShader = std::make_unique<Shader>(logicalDevice,
-                                                           "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
+            lVertShader = std::make_unique<Shader>(logicalDevice, "C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\Common\\Quad.vert.spv");
+            lFragShader = std::make_unique<Shader>(logicalDevice,"C:\\Users\\carlo\\CLionProjects\\Vulkan_Engine_Template\\src\\Shaders\\spirv\\ClusterRendering\\light.frag.spv");
 
             lightDecCache->AddShaderInfo(lVertShader->sParser.get());
             lightDecCache->AddShaderInfo(lFragShader->sParser.get());
@@ -423,11 +489,6 @@ namespace Rendering
         Core* core;
         RenderGraph* renderGraphRef;
 
-        DescriptorWriterBuilder writerBuilder;
-
-        vk::UniqueDescriptorSetLayout gDstLayout;
-        vk::UniqueDescriptorSet gDstSet;
-       
         std::unique_ptr<Shader> gVertShader;
         std::unique_ptr<Shader> gFragShader;
 
@@ -435,7 +496,8 @@ namespace Rendering
         std::unique_ptr<Shader> lFragShader;
 
         std::unique_ptr<Shader> cullCompShader;
-
+        std::unique_ptr<Shader> cullMeshesCompShader;
+        
         ImageView* colAttachmentView;
         ImageView* normAttachmentView;
         ImageView* depthAttachmentView;
@@ -449,14 +511,16 @@ namespace Rendering
         std::unique_ptr<DescriptorCache> computeDescCache;
         std::unique_ptr<DescriptorCache> lightDecCache;
         std::unique_ptr<DescriptorCache> gBuffDescCache;
+        std::unique_ptr<DescriptorCache> cullMeshesCache;
         
         std::string gBufferPassName = "gBuffer";
         std::string computePassName = "cullLight";
         std::string lightPassName = "light";
+        std::string meshCullPassName = "cullMesh";
 
         //gbuff
         Camera camera = {glm::vec3(5.0f), Camera::CameraMode::E_FREE};
-        Model model{};
+        Model* model{};
         ForwardPc pc{};
 
         //culling

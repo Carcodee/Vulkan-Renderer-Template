@@ -49,6 +49,14 @@ struct u_MaterialPacked{
     int metRoughnessOffset;
 };
 
+struct u_DrawIndirectIndexedCmd
+{
+    uint indexCount;
+    uint instanceCount;
+    uint firstIndex;
+    uint vertexOffset;
+    uint firstInstance;
+};
 //End Util
 
 #endif 

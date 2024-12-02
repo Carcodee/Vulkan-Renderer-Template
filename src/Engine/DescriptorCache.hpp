@@ -51,16 +51,7 @@ namespace ENGINE
         {
             FlushBuffers();
         }
-        // void SetDefaultStorageInfo(ImageView* defaultStorageImageView, Sampler* defaultStorageImage)
-        // {
-            // this->defaultStorageImageView = defaultStorageImageView;
-            // this->defaultStorageImage = defaultStorageImage;
-        // }
-        // void SetDefaultSampler(ImageView* def, Sampler* sampler)
-        // {
-            // this->defaultImageView = def;
-            // this->defaultSampler = sampler;
-        // }
+
         void AddShaderInfo(ShaderParser* parser)
         {
             std::vector<ShaderResource> uniqueResources;
@@ -69,6 +60,7 @@ namespace ENGINE
             {
                 if (dstSetBuilder.uniqueBindings.contains(resource.binding))
                 {
+                    SYSTEMS::Logger::GetInstance()->Log("", 0, "Binding: " + std::to_string(resource.binding) + " already exist with name: " + resource.name, SYSTEMS::LogLevel::L_ERROR);
                     continue;
                 }
                 Buffer* ubo;
@@ -263,6 +255,20 @@ namespace ENGINE
                 name,
                 sizeof(T),
                 &bufferData);
+        }
+
+        void SetBuffer(std::string name, Buffer* bufferData)
+        {
+            ShaderResource& binding = bufferBindingsKeys.at(name);
+            Buffer* bufferRef = GetBufferByName(name);
+            
+            assert(bufferRef != nullptr && "Buffer does not exist in shaders");
+            //buffer updates is handled outside the descriptor cache
+            if (bufferRef != bufferData)
+            {
+                buffersResources.at(binding.binding) = bufferData;
+                UpdateDescriptor();
+            }
         }
         void SetSampler(std::string name, ImageView* imageView, Sampler* sampler = nullptr)
         {

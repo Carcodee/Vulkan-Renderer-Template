@@ -6,6 +6,7 @@
 // Created by carlo on 2024-09-25.
 //
 
+
 #ifndef SYNCRONIZATIONPATTERNS_HPP
 #define SYNCRONIZATIONPATTERNS_HPP
 
@@ -146,6 +147,11 @@ namespace ENGINE
             bufferAccessPattern.accessMask = vk::AccessFlags();
             bufferAccessPattern.queueFamilyType = QueueFamilyTypes::TRANSFER;
             break;
+        case B_DRAW_INDIRECT:
+            bufferAccessPattern.stage = vk::PipelineStageFlagBits::eDrawIndirect;
+            bufferAccessPattern.accessMask = vk::AccessFlagBits::eIndirectCommandRead;
+            bufferAccessPattern.queueFamilyType = QueueFamilyTypes::UNDEFINED;
+            break;
         case B_EMPTY:
             bufferAccessPattern.stage = vk::PipelineStageFlagBits::eTopOfPipe;
             bufferAccessPattern.accessMask = vk::AccessFlags();
@@ -190,6 +196,11 @@ namespace ENGINE
             bufferAccessPattern.accessMask = vk::AccessFlagBits::eTransferRead;
             bufferAccessPattern.queueFamilyType = QueueFamilyTypes::TRANSFER;
             break;
+        case B_DRAW_INDIRECT:
+            bufferAccessPattern.stage = vk::PipelineStageFlagBits::eDrawIndirect;
+            bufferAccessPattern.accessMask = vk::AccessFlagBits::eIndirectCommandRead;
+            bufferAccessPattern.queueFamilyType = QueueFamilyTypes::UNDEFINED;
+            break;
         case B_EMPTY:
             bufferAccessPattern.stage = vk::PipelineStageFlagBits::eTopOfPipe;
             bufferAccessPattern.accessMask = vk::AccessFlags();
@@ -214,6 +225,21 @@ namespace ENGINE
 
         commandBuffer.pipelineBarrier(srcBarrier.stage, dstBarrier.stage, {}, memBarrier,
                                       nullptr, nullptr);
+    }
+    
+    static void CreateBufferBarrier(BufferAccessPattern srcBarrier, BufferAccessPattern dstBarrier,
+                                vk::CommandBuffer& commandBuffer, Buffer* buffer)
+    {
+        vk::BufferMemoryBarrier bufferMemoryBarrier{};
+        bufferMemoryBarrier.srcAccessMask = srcBarrier.accessMask; // Compute shader writes
+        bufferMemoryBarrier.dstAccessMask = dstBarrier.accessMask; // Subsequent shader reads
+        bufferMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        bufferMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        bufferMemoryBarrier.buffer = buffer->bufferHandle.get();
+        bufferMemoryBarrier.offset = 0; 
+        bufferMemoryBarrier.size = VK_WHOLE_SIZE;
+        commandBuffer.pipelineBarrier(srcBarrier.stage, dstBarrier.stage, {},{},
+                                      bufferMemoryBarrier, nullptr);
     }
    
 }

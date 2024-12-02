@@ -45,6 +45,7 @@ namespace ENGINE
         }
         std::vector<const char*> deviceExtensions;
         deviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+        deviceExtensions.push_back(VK_EXT_MULTI_DRAW_EXTENSION_NAME);
         this->logicalDevice = CreateLogicalDevice(this->physicalDevice, this->queueFamilyIndices, deviceExtensions,
                                                   validationLayers);
         this->graphicsQueue = GetDeviceQueue(this->logicalDevice.get(), queueFamilyIndices.graphicsFamilyIndex);
@@ -263,15 +264,15 @@ namespace ENGINE
             .setDescriptorIndexing(true)
             .setRuntimeDescriptorArray(true)
             .setDescriptorBindingPartiallyBound(true);
-            // .setDescriptorBindingSampledImageUpdateAfterBind(true)
-            // .setDescriptorBindingStorageImageUpdateAfterBind(true)
-            // .setDescriptorBindingStorageBufferUpdateAfterBind(true)
-            // .setDescriptorBindingUniformBufferUpdateAfterBind(true);
 
         auto deviceFeatures13 = vk::PhysicalDeviceVulkan13Features()
         .setDynamicRendering(true);
-        vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features> chain = {
-            deviceCreateInfo, deviceFeatures12, deviceFeatures13 
+
+        auto multiDrawExt = vk::PhysicalDeviceMultiDrawFeaturesEXT()
+        .setMultiDraw(true);
+
+        vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceMultiDrawFeaturesEXT> chain = {
+            deviceCreateInfo, deviceFeatures12, deviceFeatures13, multiDrawExt
         };
         return physicalDevice.createDeviceUnique(chain.get<vk::DeviceCreateInfo>());
     }

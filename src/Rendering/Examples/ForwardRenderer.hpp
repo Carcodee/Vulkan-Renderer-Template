@@ -39,16 +39,16 @@ namespace Rendering
 
             std::string modelPath = SYSTEMS::OS::GetInstance()->GetAssetsPath() + "\\Models\\3d_pbr_curved_sofa\\scene.gltf";
 
-            ModelLoader::GetInstance()->LoadGLTF(modelPath, model);
+             model = RenderingResManager::GetInstance()->GetModel(modelPath);
 
             vertexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(M_Vertex3D) * model.vertices.size(), model.vertices.data());
+                sizeof(M_Vertex3D) * model->vertices.size(), model->vertices.data());
             indexBuffer = std::make_unique<ENGINE::Buffer>(
                 physicalDevice, logicalDevice, vk::BufferUsageFlagBits::eIndexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                sizeof(uint32_t) * model.indices.size(), model.indices.data());
+                sizeof(uint32_t) * model->indices.size(), model->indices.data());
             
             std::string resourcesPath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath();
             
@@ -162,21 +162,21 @@ namespace Rendering
 
                     commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->bufferHandle.get(), &offset);
                     commandBuffer.bindIndexBuffer(indexBuffer->bufferHandle.get(), 0, vk::IndexType::eUint32);
-                    for (int i = 0; i < model.meshCount; ++i)
+                    for (int i = 0; i < model->meshCount; ++i)
                     {
                         camera.SetPerspective(
                             45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
                             0.1f, 512.0f);
                         pc.projView = camera.matrices.perspective * camera.matrices.view;
-                        pc.model = model.modelsMat[i];
+                        pc.model = model->modelsMat[i];
                         // pc.model = glm::scale(pc.model, glm::vec3(0.01f));
                     
                         commandBuffer.pushConstants(renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(),
                                                     vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
                                                     0, sizeof(ForwardPc), &pc);
                     
-                        commandBuffer.drawIndexed(model.indicesCount[i], 1, model.firstIndices[i],
-                                                  static_cast<int32_t>(model.firstVertices[i]), 0);
+                        commandBuffer.drawIndexed(model->indicesCount[i], 1, model->firstIndices[i],
+                                                  static_cast<int32_t>(model->firstVertices[i]), 0);
                     }
            
                 });
@@ -216,7 +216,7 @@ namespace Rendering
         
        
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
-        Model model{};
+        Model* model;
         ForwardPc pc{};
         std::vector<ForwardPc> ssbo{};
 

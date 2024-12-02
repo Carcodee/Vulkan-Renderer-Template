@@ -201,7 +201,8 @@ namespace ENGINE
             assert(core!= nullptr &&"core must be set");
             assert(bufferNames.contains(name) && "Buffer dont exist");
 
-            if (deviceSize > buffers.at(bufferNames.at(name))->deviceSize)
+            Buffer* bufferRef = buffers.at(bufferNames.at(name)).get();
+            if (deviceSize > bufferRef->deviceSize)
             {
                 buffersState.at(bufferNames.at(name)) = {INVALID, deviceSize, data};
                 invalidateBuffers = true;
