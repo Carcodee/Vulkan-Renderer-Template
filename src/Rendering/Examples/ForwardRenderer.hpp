@@ -59,7 +59,7 @@ namespace Rendering
             defaultImageShipper.SetDataFromPath(resourcesPath + "\\Images\\default_texture.jpg");
             defaultImageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
  
-            ENGINE::ImageView* computeStorage = renderGraphRef->GetResource("storageImage");
+            ENGINE::ImageView* computeStorage = renderGraphRef->GetImageResource("storageImage");
 
             //sample for storage bindless
             imagesArray.push_back(computeStorage);
@@ -152,7 +152,7 @@ namespace Rendering
                     descriptorCache->SetStorageImageArray("storagesImgs", imagesArray);
                     descriptorCache->SetBuffer("Camera", pc);
                     descriptorCache->SetBuffer("CameraBuffer", ssbo);
-                    ENGINE::ImageView* computeStorage = renderGraphRef->GetResource("storageImage");
+                    ENGINE::ImageView* computeStorage = renderGraphRef->GetImageResource("storageImage");
                     descriptorCache->SetStorageImage("storageImg", computeStorage);
                     
                     vk::DeviceSize offset = 0;

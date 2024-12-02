@@ -101,6 +101,7 @@ namespace ENGINE
         vk::PhysicalDevice physicalDevice;
         vk::UniqueBuffer bufferHandle;
         vk::DescriptorBufferInfo descriptor;
+        BufferUsageTypes bufferUsage = B_EMPTY;
         void* mappedMem;
     };
 }

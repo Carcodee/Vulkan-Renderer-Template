@@ -10,17 +10,24 @@
 
 
 
+
+
+
 #ifndef RENDERGRAPH_HPP
 #define RENDERGRAPH_HPP
 
 
 namespace ENGINE
 {
+    struct BufferKey
+    {
+        BufferUsageTypes usage;
+        Buffer* buffer;
+    };
 
     class RenderGraph;
     struct RenderGraphNode
     {
-
 
         RenderGraphNode(){
         }
@@ -162,6 +169,17 @@ namespace ENGINE
                                 commandBuffer);
             }           
         }
+        void SyncBuffers(vk::CommandBuffer commandBuffer)
+        {
+            for (auto& pair : buffers)
+            {
+                BufferKey buffer = pair.second;
+                BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(buffer.buffer->bufferUsage);
+                BufferAccessPattern dstPattern = GetSrcBufferAccessPattern(buffer.usage);
+                CreateBufferBarrier(srcPattern, dstPattern, buffer.buffer, commandBuffer);
+                buffer.buffer->bufferUsage = buffer.usage;
+            }
+        }
         void ReloadShaders()
         {
             if (vertShader && fragShader)
@@ -204,7 +222,7 @@ namespace ENGINE
             }
 
             TransitionImages(commandBuffer);
-                       
+            SyncBuffers(commandBuffer);
             if (depthImage != nullptr)
             {
                 depthAttachment.attachmentInfo.imageView = depthImage->imageView.get();
@@ -218,6 +236,7 @@ namespace ENGINE
         void ExecuteCompute(vk::CommandBuffer commandBuffer)
         {
             TransitionImages(commandBuffer);
+            SyncBuffers(commandBuffer);
             commandBuffer.bindPipeline(pipelineType, pipeline.get());
             (*renderOperations)(commandBuffer);
         }
@@ -394,6 +413,20 @@ namespace ENGINE
             }
             AddImageToProxy(name, imageView);
         }
+
+        void AddBufferResource(std::string name, BufferKey buffer)
+        {
+            assert(buffer.buffer && "Name does not exist or image view is null");
+            if (!buffers.contains(name))
+            {
+                buffers.try_emplace(name, buffer);
+            }
+            else
+            {
+                buffers.at(name) = buffer;
+            }
+            AddBufferToProxy(name, buffer);
+        }
         void DependsOn(std::string dependency)
         {
             if (!dependencies.contains(dependency))
@@ -425,6 +458,16 @@ namespace ENGINE
                 imagesProxyRef->at(name)= imageView;
             }
         }
+        void AddBufferToProxy(std::string name, BufferKey buffer)
+        {
+            if (!bufferProxyRef->contains(name))
+            {
+                bufferProxyRef->try_emplace(name, buffer);
+            }else
+            {
+                bufferProxyRef->at(name)= buffer;
+            }
+        }
         
         vk::UniquePipeline pipeline;
         vk::UniquePipelineLayout pipelineLayout;
@@ -451,9 +494,10 @@ namespace ENGINE
         AttachmentInfo depthAttachment;
         
         ImageView* depthImage = nullptr;
-        std::unordered_map<std::string,ImageView*> imagesAttachment;
-        std::unordered_map<std::string,ImageView*> storageImages;
-        std::unordered_map<std::string,ImageView*> sampledImages;
+        std::unordered_map<std::string, ImageView*> imagesAttachment;
+        std::unordered_map<std::string, ImageView*> storageImages;
+        std::unordered_map<std::string, ImageView*> sampledImages;
+        std::unordered_map<std::string, BufferKey> buffers;
         
         std::function<void(vk::CommandBuffer& commandBuffer)>* renderOperations = nullptr;
         std::vector<std::function<void()>*> tasks;
@@ -463,6 +507,7 @@ namespace ENGINE
         
         Core* core;
         std::unordered_map<std::string, ImageView*>* imagesProxyRef;
+        std::unordered_map<std::string, BufferKey>* bufferProxyRef;
         std::unordered_map<std::string, AttachmentInfo>* outColAttachmentsProxyRef;
         std::unordered_map<std::string, AttachmentInfo>* outDepthAttachmentProxyRef;
         
@@ -475,6 +520,7 @@ namespace ENGINE
         std::unordered_map<std::string, std::unique_ptr<RenderGraphNode>> renderNodes;
         std::vector<RenderGraphNode*> renderNodesSorted;
         std::unordered_map<std::string, ImageView*> imagesProxy;
+        std::unordered_map<std::string, BufferKey> buffersProxy;
         std::unordered_map<std::string, AttachmentInfo> outColAttachmentsProxy;
         std::unordered_map<std::string, AttachmentInfo> outDepthAttachmentProxy;
         
@@ -485,10 +531,9 @@ namespace ENGINE
         {
             this->core = core;
         }
-        ~RenderGraph()
-        {
-            
-        }
+        ~RenderGraph() =default;
+
+        
         RenderGraphNode* GetNode(std::string name)
         {
             if (renderNodes.contains(name))
@@ -510,6 +555,7 @@ namespace ENGINE
                 renderGraphNode->imagesProxyRef = &imagesProxy;
                 renderGraphNode->outColAttachmentsProxyRef = &outColAttachmentsProxy;
                 renderGraphNode->outDepthAttachmentProxyRef = &outColAttachmentsProxy;
+                renderGraphNode->bufferProxyRef = &buffersProxy;
                 renderGraphNode->core = core;
                 
                 renderNodes.try_emplace(name,std::move(renderGraphNode));
@@ -634,8 +680,36 @@ namespace ENGINE
             }
             return imageView;
         }
+        BufferKey AddBufferResource(std::string passName, std::string name, BufferKey buffer)
+        {
+            assert(buffer.buffer && "ImageView is null");
+            if (!buffersProxy.contains(name))
+            {
+                buffersProxy.try_emplace(name, buffer);
+                if (renderNodes.contains(passName))
+                {
+                    renderNodes.at(passName)->AddBufferResource(name, buffer);
+                }
+                else
+                {
+                    std::cout << "Renderpass: " << passName << " does not exist, saving the image anyways. \n";
+                }
+            }else
+            {
+                buffersProxy.at(name) = buffer;
+                if (renderNodes.contains(passName))
+                {
+                    renderNodes.at(passName)->AddBufferResource(name, buffer);
+                }else
+                {
+                    std::cout << "Renderpass: " << passName << " does not exist, saving the image anyways. \n";
+                }
+                // std::cout << "Image with name: \"" << name << "\" has changed \n";
+            }
+            return buffer;
+        }
 
-        ImageView* GetResource(std::string name)
+        ImageView* GetImageResource(std::string name)
         {
             if (imagesProxy.contains(name))
             {
@@ -643,7 +717,15 @@ namespace ENGINE
             }
             PrintInvalidResource("Resource", name);
             return nullptr;
-            
+        }
+        BufferKey GetBufferResource(std::string name)
+        {
+            if (buffersProxy.contains(name))
+            {
+                return buffersProxy.at(name);
+            }
+            PrintInvalidResource("Resource", name);
+            assert(false && "Invalid name requested");
         }
         void RecreateFrameResources()
         {

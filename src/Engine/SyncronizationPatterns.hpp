@@ -226,13 +226,13 @@ namespace ENGINE
         commandBuffer.pipelineBarrier(srcBarrier.stage, dstBarrier.stage, {}, memBarrier,
                                       nullptr, nullptr);
     }
-    
+        
     static void CreateBufferBarrier(BufferAccessPattern srcBarrier, BufferAccessPattern dstBarrier,
-                                vk::CommandBuffer& commandBuffer, Buffer* buffer)
+                                Buffer* buffer, vk::CommandBuffer& commandBuffer)
     {
         vk::BufferMemoryBarrier bufferMemoryBarrier{};
-        bufferMemoryBarrier.srcAccessMask = srcBarrier.accessMask; // Compute shader writes
-        bufferMemoryBarrier.dstAccessMask = dstBarrier.accessMask; // Subsequent shader reads
+        bufferMemoryBarrier.srcAccessMask = srcBarrier.accessMask;
+        bufferMemoryBarrier.dstAccessMask = dstBarrier.accessMask; 
         bufferMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         bufferMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         bufferMemoryBarrier.buffer = buffer->bufferHandle.get();
@@ -241,6 +241,7 @@ namespace ENGINE
         commandBuffer.pipelineBarrier(srcBarrier.stage, dstBarrier.stage, {},{},
                                       bufferMemoryBarrier, nullptr);
     }
+   
    
 }
 
