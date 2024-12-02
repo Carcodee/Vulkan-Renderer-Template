@@ -128,30 +128,24 @@ namespace Rendering
                     commandBuffer.bindIndexBuffer(indexBuffer->deviceBuffer.get()->bufferHandle.get(), 0, vk::IndexType::eUint32);
 
                     pc.projView = camera.matrices.perspective * camera.matrices.view;
-                    int meshOffset = 0;
                     commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
                                                 vk::ShaderStageFlagBits::eVertex |
                                                 vk::ShaderStageFlagBits::eFragment,
                                                 0, sizeof(ForwardPc), &pc);
  
+                    int meshOffset = 0;
                     for (int i = 0; i < RenderingResManager::GetInstance()->models.size(); ++i)
                     {
                         Model* modelRef = RenderingResManager::GetInstance()->models[i].get();
-                        for (int j = 0; j < modelRef->meshCount; ++j)
-                        {
-                            vk::DeviceSize sizeOffset = (meshOffset + j) * sizeof(DrawIndirectIndexedCmd);
-                            uint32_t stride = sizeof(DrawIndirectIndexedCmd);
-                            commandBuffer.drawIndexedIndirect(
+                        vk::DeviceSize sizeOffset = (meshOffset) * sizeof(DrawIndirectIndexedCmd);
+                        uint32_t stride = sizeof(DrawIndirectIndexedCmd);
+                        commandBuffer.drawIndexedIndirect(
                             RenderingResManager::GetInstance()->indirectDrawBuffer->bufferHandle.get(),
                             sizeOffset,
-                            1,
+                            modelRef->meshCount,
                             stride);
-                            // commandBuffer.drawIndexed(modelRef->indicesCount[j], 1, modelRef->firstIndices[j],
-                                                      // modelRef->firstVertices[j], 0);
-                        }
-                       
-
                         meshOffset += modelRef->meshCount;
+                       
                     }
              
                 });

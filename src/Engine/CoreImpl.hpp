@@ -248,7 +248,8 @@ namespace ENGINE
         }
         auto deviceFeatures = vk::PhysicalDeviceFeatures()
                               .setFragmentStoresAndAtomics(true)
-                              .setVertexPipelineStoresAndAtomics(true);
+                              .setVertexPipelineStoresAndAtomics(true)
+                              .setMultiDrawIndirect(true);
 
         auto deviceCreateInfo = vk::DeviceCreateInfo()
                                 .setQueueCreateInfoCount(uint32_t(queueCreateInfos.size()))
@@ -268,11 +269,8 @@ namespace ENGINE
         auto deviceFeatures13 = vk::PhysicalDeviceVulkan13Features()
         .setDynamicRendering(true);
 
-        auto multiDrawExt = vk::PhysicalDeviceMultiDrawFeaturesEXT()
-        .setMultiDraw(true);
-
-        vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceMultiDrawFeaturesEXT> chain = {
-            deviceCreateInfo, deviceFeatures12, deviceFeatures13, multiDrawExt
+        vk::StructureChain<vk::DeviceCreateInfo, vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features> chain = {
+            deviceCreateInfo, deviceFeatures12, deviceFeatures13
         };
         return physicalDevice.createDeviceUnique(chain.get<vk::DeviceCreateInfo>());
     }
