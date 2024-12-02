@@ -58,10 +58,10 @@ namespace Rendering
                     commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
                     commandBuffer.dispatch(RenderingResManager::GetInstance()->indirectDrawsCmdInfos.size(), 1, 1);
 
-                    BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(B_DRAW_INDIRECT);
-                    BufferAccessPattern dstPattern = GetDstBufferAccessPattern(B_DRAW_INDIRECT);
-                    CreateBufferBarrier(srcPattern, dstPattern, commandBuffer,
-                                        RenderingResManager::GetInstance()->indirectDrawBuffer);
+                    // BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(B_DRAW_INDIRECT);
+                    // BufferAccessPattern dstPattern = GetDstBufferAccessPattern(B_DRAW_INDIRECT);
+                    // CreateBufferBarrier(srcPattern, dstPattern, commandBuffer,
+                                        // RenderingResManager::GetInstance()->indirectDrawBuffer);
                 });
             
             renderGraphRef->GetNode(meshCullPassName)->SetRenderOperation(meshCullRenderOp);
@@ -434,6 +434,7 @@ namespace Rendering
             renderNode->AddColorImageResource("gColor", colAttachmentView);
             renderNode->AddColorImageResource("gNorm", normAttachmentView);
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView);
+            renderNode->AddBufferResource("indirectBuffer", {BufferUsageTypes::B_DRAW_INDIRECT, RenderingResManager::GetInstance()->indirectDrawBuffer});
             renderNode->DependsOn(meshCullPassName);
             renderNode->BuildRenderGraphNode();
 

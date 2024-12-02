@@ -467,6 +467,7 @@ namespace ENGINE
             {
                 bufferProxyRef->at(name)= buffer;
             }
+            
         }
         
         vk::UniquePipeline pipeline;
