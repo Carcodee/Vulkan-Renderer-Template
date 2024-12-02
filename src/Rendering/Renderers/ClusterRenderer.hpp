@@ -145,7 +145,6 @@ namespace Rendering
                             modelRef->meshCount,
                             stride);
                         meshOffset += modelRef->meshCount;
-                       
                     }
              
                 });
