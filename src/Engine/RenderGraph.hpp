@@ -21,7 +21,8 @@ namespace ENGINE
 {
     struct BufferKey
     {
-        BufferUsageTypes usage;
+        BufferUsageTypes srcUsage;
+        BufferUsageTypes dstUsage;
         Buffer* buffer;
     };
 
@@ -174,10 +175,9 @@ namespace ENGINE
             for (auto& pair : buffers)
             {
                 BufferKey buffer = pair.second;
-                BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(buffer.buffer->bufferUsage);
-                BufferAccessPattern dstPattern = GetSrcBufferAccessPattern(buffer.usage);
-                CreateMemBarrier(srcPattern, dstPattern, commandBuffer);
-                buffer.buffer->bufferUsage = buffer.usage;
+                BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(buffer.srcUsage);
+                BufferAccessPattern dstPattern = GetSrcBufferAccessPattern(buffer.dstUsage);
+                CreateBufferBarrier(srcPattern, dstPattern, buffer.buffer, commandBuffer);
             }
         }
         void ReloadShaders()
@@ -414,7 +414,7 @@ namespace ENGINE
             AddImageToProxy(name, imageView);
         }
 
-        void AddBufferResource(std::string name, BufferKey buffer)
+        void AddBufferSync(std::string name, BufferKey buffer)
         {
             assert(buffer.buffer && "Name does not exist or image view is null");
             if (!buffers.contains(name))
@@ -467,7 +467,6 @@ namespace ENGINE
             {
                 bufferProxyRef->at(name)= buffer;
             }
-            
         }
         
         vk::UniquePipeline pipeline;
@@ -681,7 +680,7 @@ namespace ENGINE
             }
             return imageView;
         }
-        BufferKey AddBufferResource(std::string passName, std::string name, BufferKey buffer)
+        BufferKey& AddBufferSync(std::string passName, std::string name, BufferKey buffer)
         {
             assert(buffer.buffer && "ImageView is null");
             if (!buffersProxy.contains(name))
@@ -689,7 +688,7 @@ namespace ENGINE
                 buffersProxy.try_emplace(name, buffer);
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->AddBufferResource(name, buffer);
+                    renderNodes.at(passName)->AddBufferSync(name, buffer);
                 }
                 else
                 {
@@ -700,7 +699,7 @@ namespace ENGINE
                 buffersProxy.at(name) = buffer;
                 if (renderNodes.contains(passName))
                 {
-                    renderNodes.at(passName)->AddBufferResource(name, buffer);
+                    renderNodes.at(passName)->AddBufferSync(name, buffer);
                 }else
                 {
                     std::cout << "Renderpass: " << passName << " does not exist, saving the image anyways. \n";
@@ -719,7 +718,7 @@ namespace ENGINE
             PrintInvalidResource("Resource", name);
             return nullptr;
         }
-        BufferKey GetBufferResource(std::string name)
+        BufferKey& GetBufferResource(std::string name)
         {
             if (buffersProxy.contains(name))
             {
@@ -754,14 +753,11 @@ namespace ENGINE
         {
             assert(currentFrame && "Current frame reference is null");
             std::vector<std::string> allPassesNames;
-            int idx = 0;
             for (auto& renderNode : renderNodesSorted)
             {
-                auto profiler = ENGINE::Profiler::GetInstance();
-                profiler->AddProfilerGpuSpot(legit::Colors::getColor(idx % 16), "Pass: " + renderNode->passName);
                 RenderGraphNode* node = renderNode;
                 bool dependancyNeed = false;
-                std::string dependancyName;
+                std::string dependancyName = "";
                 for (auto& passName : allPassesNames)
                 {
                     if (node->dependencies.contains(passName))
@@ -786,8 +782,6 @@ namespace ENGINE
                 node->Execute(currentFrame->commandBuffer.get());
                 allPassesNames.push_back(node->passName);
                 
-                profiler->EndProfilerGpuSpot("Pass: " + renderNode->passName);
-                idx++;
             }
         }
     };
