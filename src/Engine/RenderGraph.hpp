@@ -176,7 +176,7 @@ namespace ENGINE
                 BufferKey buffer = pair.second;
                 BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(buffer.buffer->bufferUsage);
                 BufferAccessPattern dstPattern = GetSrcBufferAccessPattern(buffer.usage);
-                CreateBufferBarrier(srcPattern, dstPattern, buffer.buffer, commandBuffer);
+                CreateMemBarrier(srcPattern, dstPattern, commandBuffer);
                 buffer.buffer->bufferUsage = buffer.usage;
             }
         }
