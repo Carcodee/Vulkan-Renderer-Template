@@ -11,6 +11,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -434,7 +435,7 @@ namespace Rendering
             renderNode->AddColorImageResource("gColor", colAttachmentView);
             renderNode->AddColorImageResource("gNorm", normAttachmentView);
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView);
-            renderNode->AddBufferResource("indirectBuffer", {B_DRAW_INDIRECT});
+            renderNode->AddBufferSync("indirectBuffer", {B_COMPUTE_WRITE, B_DRAW_INDIRECT});
             renderNode->DependsOn(meshCullPassName);
             renderNode->BuildRenderGraphNode();
 

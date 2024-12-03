@@ -177,7 +177,7 @@ namespace ENGINE
                 BufferKey buffer = pair.second;
                 BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(buffer.srcUsage);
                 BufferAccessPattern dstPattern = GetSrcBufferAccessPattern(buffer.dstUsage);
-                CreateBufferBarrier(srcPattern, dstPattern, buffer.buffer, commandBuffer);
+                CreateMemBarrier(srcPattern, dstPattern, commandBuffer);
             }
         }
         void ReloadShaders()
@@ -416,7 +416,6 @@ namespace ENGINE
 
         void AddBufferSync(std::string name, BufferKey buffer)
         {
-            assert(buffer.buffer && "Name does not exist or image view is null");
             if (!buffers.contains(name))
             {
                 buffers.try_emplace(name, buffer);
