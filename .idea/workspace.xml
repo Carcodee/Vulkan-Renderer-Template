@@ -31,10 +31,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Fonts and style for ImguiRenderer.hpp">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" afterDir="false" />
-    </list>
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Added extra sync structures" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -394,7 +391,15 @@
       <option name="project" value="LOCAL" />
       <updated>1733185216553</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Added extra sync structures">
+      <option name="closed" value="true" />
+      <created>1733201238780</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1733201238780</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -433,7 +438,8 @@
     <MESSAGE value="Added a profiler" />
     <MESSAGE value="add indirect drawing and preparing frustum culling" />
     <MESSAGE value="Fonts and style for ImguiRenderer.hpp" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fonts and style for ImguiRenderer.hpp" />
+    <MESSAGE value="Added extra sync structures" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added extra sync structures" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
