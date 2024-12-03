@@ -30,6 +30,30 @@ namespace legit
     const static uint32_t clouds = RGBA_LE(0xecf0f1ffu);
     const static uint32_t silver = RGBA_LE(0xbdc3c7ffu);
     const static uint32_t imguiText = RGBA_LE(0xF2F5FAFFu);
+    static uint32_t getColor(uint32_t index) {
+      switch (index) {
+      case 0: return turqoise;
+      case 1: return greenSea;
+      case 2: return emerald;
+      case 3: return nephritis;
+      case 4: return peterRiver;
+      case 5: return belizeHole;
+      case 6: return amethyst;
+      case 7: return wisteria;
+      case 8: return sunFlower;
+      case 9: return orange;
+      case 10: return carrot;
+      case 11: return pumpkin;
+      case 12: return alizarin;
+      case 13: return pomegranate;
+      case 14: return clouds;
+      case 15: return silver;
+      case 16: return imguiText;
+      default:
+        std::cerr << "Invalid index!" << std::endl;
+        return 0; // Return a default or invalid value
+      }
+    }
   }
   struct ProfilerTask
   {

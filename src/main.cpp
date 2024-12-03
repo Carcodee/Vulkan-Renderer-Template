@@ -123,11 +123,10 @@ void run(WindowProvider* windowProvider)
 
                 auto& currFrame = inFlightQueue->frameResources[inFlightQueue->frameIndex];
 
-                profiler->AddProfilerGpuSpot(legit::Colors::emerald,"RenderGraph");
-                core->renderGraphRef->ExecuteAll(&currFrame);
-                profiler->EndProfilerGpuSpot("RenderGraph");
-              
                 profiler->EndProfilerCpuSpot("Cpu");
+                
+                core->renderGraphRef->ExecuteAll(&currFrame);
+              
                 glm::vec2 input = glm::vec2(0.0f);
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input += glm::vec2(0.0f, 1.0f); }
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input += glm::vec2(0.0f, -1.0f); }

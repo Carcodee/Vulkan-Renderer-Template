@@ -754,8 +754,11 @@ namespace ENGINE
         {
             assert(currentFrame && "Current frame reference is null");
             std::vector<std::string> allPassesNames;
+            int idx = 0;
             for (auto& renderNode : renderNodesSorted)
             {
+                auto profiler = ENGINE::Profiler::GetInstance();
+                profiler->AddProfilerGpuSpot(legit::Colors::getColor(idx % 16), "Pass: " + renderNode->passName);
                 RenderGraphNode* node = renderNode;
                 bool dependancyNeed = false;
                 std::string dependancyName;
@@ -782,6 +785,9 @@ namespace ENGINE
                 }
                 node->Execute(currentFrame->commandBuffer.get());
                 allPassesNames.push_back(node->passName);
+                
+                profiler->EndProfilerGpuSpot("Pass: " + renderNode->passName);
+                idx++;
             }
         }
     };

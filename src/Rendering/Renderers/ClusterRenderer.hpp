@@ -210,9 +210,9 @@ namespace Rendering
             {
                 lightsMap.emplace_back(ArrayIndexer{});
             }
-
             lightsIndices.clear();
-            for (int i = 0; i < lightsIndices.capacity(); ++i)
+            lightsIndices.reserve(lightsMap.size() * pointLights.size());
+            for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
             {
                 lightsIndices.emplace_back(-1);
             }
@@ -268,8 +268,8 @@ namespace Rendering
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(1);
-            for (int i = 0; i < 1; ++i)
+            pointLights.reserve(400);
+            for (int i = 0; i < 400; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
@@ -522,9 +522,9 @@ namespace Rendering
         std::vector<ArrayIndexer> lightsMap;
         std::vector<int32_t> lightsIndices;
         ScreenDataPc cullDataPc{};
-        uint32_t xTileSizePx = 256;
-        uint32_t yTileSizePx = 256;
-        uint32_t zSlicesSize = 12;
+        uint32_t xTileSizePx = 512;
+        uint32_t yTileSizePx = 512;
+        uint32_t zSlicesSize = 1;
         uint32_t localSize = 1;
 
 

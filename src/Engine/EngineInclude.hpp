@@ -53,6 +53,7 @@
 #include "DynamicRenderPass.hpp"
 #include "Pipeline.hpp"
 
+#include "Profiler.hpp"
 #include "Core.hpp"
 #include "RenderGraph.hpp"
 #include "CoreImpl.hpp"
@@ -61,4 +62,3 @@
 #include "ImageShipper.hpp"
 #include "ResourcesManager.hpp"
 #include "DescriptorCache.hpp"
-#include "Profiler.hpp"
