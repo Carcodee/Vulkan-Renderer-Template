@@ -434,7 +434,7 @@ namespace Rendering
             renderNode->AddColorImageResource("gColor", colAttachmentView);
             renderNode->AddColorImageResource("gNorm", normAttachmentView);
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView);
-            // renderNode->AddBufferResource("indirectBuffer", {B_DRAW_INDIRECT});
+            renderNode->AddBufferResource("indirectBuffer", {B_DRAW_INDIRECT});
             renderNode->DependsOn(meshCullPassName);
             renderNode->BuildRenderGraphNode();
 
