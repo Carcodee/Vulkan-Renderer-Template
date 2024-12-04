@@ -87,15 +87,15 @@ namespace Rendering
 	struct ForwardPc
 	{
 		glm::mat4 model = glm::mat4(1.0);
-		glm::mat4 projView;
+		glm::mat4 projView = glm::mat4(1.0);
 	};
 	struct CPropsUbo
 	{
-		glm::mat4 invProj;
-		glm::mat4 invView;
+		glm::mat4 invProj= glm::mat4(1.0);
+		glm::mat4 invView= glm::mat4(1.0);
 		glm::vec3 pos = glm::vec3(0.0);
-		float zNear;
-		float zFar;
+		float zNear = 0.0f;
+		float zFar = 0.0f;
 	};
 	struct ArrayIndexer 
 	{
@@ -104,21 +104,21 @@ namespace Rendering
 	};
 	struct ScreenDataPc
 	{
-		int sWidth; 
-		int sHeight; 
-		int pointLightsCount; 
-		uint32_t xTileCount; 
-		uint32_t yTileCount; 
-		uint32_t xTileSizePx; 
-		uint32_t yTileSizePx; 
+		int sWidth = 0; 
+		int sHeight= 0; 
+		int pointLightsCount= 0; 
+		uint32_t xTileCount = 0; 
+		uint32_t yTileCount = 0; 
+		uint32_t xTileSizePx = 0; 
+		uint32_t yTileSizePx = 0; 
 	};
 	struct LightPc 
 	{
-		uint32_t xTileCount;
-		uint32_t yTileCount;
-		uint32_t xTileSizePx;
-		uint32_t yTileSizePx;
-		uint32_t zSlices;
+		uint32_t xTileCount = 0;
+		uint32_t yTileCount = 0;
+		uint32_t xTileSizePx = 0;
+		uint32_t yTileSizePx = 0;
+		uint32_t zSlices = 0;
 		
 	};
     struct MaterialPackedData
@@ -138,6 +138,18 @@ namespace Rendering
     	int metallicOffset = -1;
     	int metRoughnessOffset = -1;
     };
+	struct Sphere
+	{
+		glm::vec3 center = glm::vec3(0);
+		float radius = 0;
+	};
+
+	struct ModelLoadConfigs
+	{
+		bool loadMeshesSpheres;
+		bool compactMesh;
+		
+	};
 
 
     

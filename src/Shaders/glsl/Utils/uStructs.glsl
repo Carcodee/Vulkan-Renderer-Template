@@ -57,6 +57,11 @@ struct u_DrawIndirectIndexedCmd
     uint vertexOffset;
     uint firstInstance;
 };
+
+struct u_Sphere{
+    vec3 center;
+    float radius;
+};
 //End Util
 
 #endif 

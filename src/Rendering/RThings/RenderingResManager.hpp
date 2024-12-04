@@ -4,6 +4,7 @@
 // Created by carlo on 2024-11-25.
 //
 
+
 #ifndef ENGINERESMANAGER_HPP
 #define ENGINERESMANAGER_HPP
 
@@ -44,6 +45,7 @@ namespace Rendering
 			    
 		    }
     		model.SetWorldMatrices();
+    		model.SetMeshesSpheres();
     		LoadGLTFMaterials(gltfModel, path);
     	}
     	void LoadGLTFNode(tinygltf::Model& gltfModel, tinygltf::Node& node, NodeMat* parentNodeMat, Model& model)
@@ -132,6 +134,9 @@ namespace Rendering
 					    }
 
 					    model.vertices.reserve(vertexCount);
+				    	float maxDistance =0.0;
+				    	glm::vec3 min = glm::vec3();
+				    	glm::vec3 max = glm::vec3();
 					    for (int i = 0; i < vertexCount; ++i)
 					    {
 							M_Vertex3D vertex{};
@@ -142,11 +147,19 @@ namespace Rendering
 							glm::vec4 tangent = tangentsBuff ? glm::make_vec4(&tangentsBuff[i * 4]) : glm::vec4(0.0f);
 							vertex.tangent = tangentsBuff ? glm::vec3(tangent.x, tangent.y, tangent.z) * tangent.w: glm::vec3(0.0f);
 							vertex.uv = textCoordsBuff? glm::make_vec2(&textCoordsBuff[i * 2]): glm::vec2(0.0f);
-					    	vertex.id =node.mesh; 
-					    	
+					    	vertex.id =node.mesh;
+					    	float distance = glm::distance(glm::vec3(0.0),vertex.pos);
+					    	if (distance > maxDistance)
+					    	{
+					    		maxDistance = distance;
+					    	}
+					    	min = glm::min(min, pos);
+					    	max = glm::max(max, pos);
 							model.vertices.push_back(vertex);
-
 					    }
+				    	glm::vec3 center = glm::vec3((min + max) * 0.5f);
+				    	float radius = glm::distance(center, max);
+					    model.meshesSpheres.emplace_back(Sphere{center, radius});
 			    	}
 				    //indices
 					{

@@ -44,12 +44,26 @@ namespace Rendering
 
         void SetRenderOperation(InFlightQueue* inflightQueue) override
         {
+            auto meshCullTak = new std::function<void()>([this, inflightQueue]()
+            {
+                meshesSpheresCompact.clear();
+                for (auto& model : RenderingResManager::GetInstance()->models)
+                {
+                    for (auto& sphere : model->meshesSpheres)
+                    {
+                        meshesSpheresCompact.emplace_back(sphere);
+                    }
+                }
+            });
+
             auto meshCullRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
-                    
+
                     cullMeshesCache->SetBuffer("IndirectCmds",
                                                RenderingResManager::GetInstance()->indirectDrawBuffer);
+                    cullMeshesCache->SetBuffer("MeshesSpheres", meshesSpheresCompact);
+                    cullMeshesCache->SetBuffer("CamProps", cPropsUbo);
                     
                     auto& renderNode = renderGraphRef->renderNodes.at(meshCullPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
@@ -59,13 +73,10 @@ namespace Rendering
                     commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
                     commandBuffer.dispatch(RenderingResManager::GetInstance()->indirectDrawsCmdInfos.size(), 1, 1);
 
-                    // BufferAccessPattern srcPattern = GetSrcBufferAccessPattern(B_DRAW_INDIRECT);
-                    // BufferAccessPattern dstPattern = GetDstBufferAccessPattern(B_DRAW_INDIRECT);
-                    // CreateBufferBarrier(srcPattern, dstPattern, commandBuffer,
-                                        // RenderingResManager::GetInstance()->indirectDrawBuffer);
                 });
             
             renderGraphRef->GetNode(meshCullPassName)->SetRenderOperation(meshCullRenderOp);
+            renderGraphRef->GetNode(meshCullPassName)->AddTask(meshCullTak);
 
             auto cullTask = new std::function<void()>([this, inflightQueue]()
             {
@@ -101,8 +112,6 @@ namespace Rendering
                 [this](vk::CommandBuffer& commandBuffer)
                 {
 
-
-                    
                     vk::DeviceSize offset = 0;
                     std::vector<ImageView*> textures;
                     for (auto& image : ResourcesManager::GetInstance()->imageShippers)
@@ -223,6 +232,12 @@ namespace Rendering
             cPropsUbo.pos = camera.position;
             cPropsUbo.zNear = camera.cameraProperties.zNear;
             cPropsUbo.zFar = camera.cameraProperties.zFar;
+            
+            cPropsUboDebug.invProj = glm::inverse(debugCam.matrices.perspective);
+            cPropsUboDebug.invView = glm::inverse(debugCam.matrices.view);
+            cPropsUboDebug.pos = debugCam.position;
+            cPropsUboDebug.zNear = debugCam.cameraProperties.zNear;
+            cPropsUboDebug.zFar = debugCam.cameraProperties.zFar;
 
         }
 
@@ -231,10 +246,13 @@ namespace Rendering
             auto* gRenderNode = renderGraphRef->GetNode(gBufferPassName);
             auto* renderNode = renderGraphRef->GetNode(lightPassName);
             auto* cRenderNode = renderGraphRef->GetNode(computePassName);
+            auto* meshCRenderNode = renderGraphRef->GetNode(meshCullPassName);
 
             gRenderNode->RecreateResources();
             renderNode->RecreateResources();
             cRenderNode->RecreateResources();
+            meshCRenderNode->RecreateResources();
+            
         }
 
         void CreateResources()
@@ -255,15 +273,19 @@ namespace Rendering
 
             //gbuff
             camera.SetPerspective(
+                85.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
+                0.1f, 512.0f);
+            debugCam.SetPerspective(
                 45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
                 0.1f, 512.0f);
+
 
 
             camera.SetLookAt(glm::vec3(0.0f, 0.0f, 1.0f));
             camera.position = glm::vec3(0.0f);
 
             std::string path = SYSTEMS::OS::GetInstance()->GetAssetsPath();
-            model = RenderingResManager::GetInstance()->GetModel(path + "\\Models\\tomb\\scene.gltf");
+            model = RenderingResManager::GetInstance()->GetModel(path + "\\Models\\sponza\\scene.gltf");
 
             //compute
             std::random_device rd;
@@ -515,6 +537,7 @@ namespace Rendering
 
         //gbuff
         Camera camera = {glm::vec3(5.0f), Camera::CameraMode::E_FREE};
+        Camera debugCam = {glm::vec3(10.0f), Camera::CameraMode::E_FREE};
         Model* model{};
         ForwardPc pc{};
 
@@ -522,6 +545,7 @@ namespace Rendering
         std::vector<PointLight> pointLights;
         std::vector<ArrayIndexer> lightsMap;
         std::vector<int32_t> lightsIndices;
+        std::vector<Sphere> meshesSpheresCompact;
         ScreenDataPc cullDataPc{};
         uint32_t xTileSizePx = 512;
         uint32_t yTileSizePx = 512;
@@ -533,6 +557,7 @@ namespace Rendering
         std::vector<Vertex2D> quadVert;
         std::vector<uint32_t> quadIndices;
         CPropsUbo cPropsUbo;
+        CPropsUbo cPropsUboDebug;
         LightPc lightPc{};
     };
 }

@@ -2,6 +2,7 @@
 // Created by carlo on 2024-10-09.
 //
 
+
 #ifndef MODEL_HPP
 #define MODEL_HPP
 
@@ -38,11 +39,22 @@ namespace Rendering
         std::vector<NodeMat*> nodeMats;
         std::vector<glm::mat4> modelsMat;
         std::vector<int> materials;
+        std::vector<Sphere> meshesSpheres;
         void SetWorldMatrices(){
             modelsMat.reserve(meshCount);
             for (auto& node : nodeMats)
             {
                 modelsMat.emplace_back(node->GetWorlMat());
+            }
+        }
+        void SetMeshesSpheres()
+        {
+            for (int i = 0; i < meshesSpheres.size(); ++i)
+            {
+                meshesSpheres[i].center =glm::vec3(modelsMat.at(i) * glm::vec4(meshesSpheres[i].center.x, meshesSpheres[i].center.y, meshesSpheres[i].center.z, 1.0)) ;
+                glm::vec4 radiusWs =  modelsMat.at(i) * (glm::vec4(0.0, meshesSpheres[i].radius, 0.0, 1.0));
+                glm::vec3 radiusPosWs = meshesSpheres[i].center + glm::vec3(radiusWs);
+                meshesSpheres[i].radius = glm::distance(meshesSpheres[i].center, radiusPosWs);
             }
         }
         ~Model()

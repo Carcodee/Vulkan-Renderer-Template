@@ -11,11 +11,66 @@
 layout (set = 0, binding = 0, scalar) writeonly buffer IndirectCmds{
     u_DrawIndirectIndexedCmd[] indirectCmds;
 };
+layout (set = 0, binding = 1, scalar) writeonly buffer MeshesSpheres{
+    u_Sphere[] meshesSpheres;
+};
+layout(set = 0, binding = 2, scalar) uniform CamProps{
+    mat4 invProj;
+    mat4 invView;
+    vec3 camPos;
+    float zNear;
+    float zFar;
+}cProps;
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 void main(){
+    vec3 nearTopL =  u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,vec2(-1, 1));
+    vec3 nearTopR= u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0, vec2(1, 1));
+    vec3 nearBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,vec2(-1, -1));
+    vec3 nearBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,vec2(1, -1));
+
+    vec3 farTopL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(-1, 1));
+    vec3 farTopR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(1, 1));
+    vec3 farBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(-1, -1));
+    vec3 farBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(1, -1));
+
+    u_Frustum camFrustrum;
     
+    vec3 eye = cProps.camPos;
+    
+    //left
+    camFrustrum.planes[0] = -u_GetPlane(nearTopL, eye, nearBottomL);
+
+    // Right Plane
+    camFrustrum.planes[1] = u_GetPlane(eye, nearTopR, nearBottomR);
+
+    // Top Plane
+    camFrustrum.planes[2] = u_GetPlane(eye, nearTopL, nearTopR);
+
+    // Bottom Plane
+    camFrustrum.planes[3] = u_GetPlane(eye, nearBottomR, nearBottomL);
+
+    // Near Plane
+    camFrustrum.planes[4] = u_GetPlane(nearTopL, nearBottomR, nearBottomL);
+
+    // Far Plane
+    camFrustrum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
+
+
     uint idx = gl_GlobalInvocationID.x;
-    atomicAdd(indirectCmds[idx].instanceCount, 1);
+    bool insideFrustum = true;
+    int instanceCountToAdd = 1;
+    for(int i = 0; i < 6; i++){
+        if(!u_SphereInsidePlane(vec3(0.0f, 0.0f, 0.0f), 10.0f, camFrustrum.planes[i].xyz, camFrustrum.planes[i].w)){
+            insideFrustum = false;
+            instanceCountToAdd = 1;
+            break;
+        }
+    }
+    //they point to the same dir
+//    if(dot(camFrustrum.planes[0].xyz, camFrustrum.planes[1].xyz) > 0){
+//        instanceCountToAdd = 0;
+//    }
+    atomicAdd(indirectCmds[idx].instanceCount, instanceCountToAdd);
 }
