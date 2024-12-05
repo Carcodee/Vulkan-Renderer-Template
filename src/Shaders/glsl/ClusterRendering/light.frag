@@ -103,7 +103,7 @@ void main() {
 //         finalCol += debugCol*2 + tileCol * 0.3;
 //    }
 
-    if(distance(pos, vec3(0.0)) < 0.1){
+    if(distance(pos, vec3(0.0)) < 1.0){
         finalCol = vec3(1.0, 0.0, 0.0);
     } 
     

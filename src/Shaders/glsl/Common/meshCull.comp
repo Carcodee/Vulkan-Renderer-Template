@@ -25,22 +25,23 @@ layout(set = 0, binding = 2, scalar) uniform CamProps{
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 void main(){
-    vec3 nearTopL =  u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,vec2(-1, 1));
-    vec3 nearTopR= u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0, vec2(1, 1));
-    vec3 nearBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,vec2(-1, -1));
-    vec3 nearBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 0.0,vec2(1, -1));
+    vec3 nearTopL =  u_ScreenToViewNDC(cProps.invProj, 0.0,vec2(-1.0, 1.0)).xyz;
+    vec3 nearTopR= u_ScreenToViewNDC(cProps.invProj, 0.0, vec2(1.0, 1.0)).xyz;
+    vec3 nearBottomL = u_ScreenToViewNDC(cProps.invProj, 0.0,vec2(-1.0, -1.0)).xyz;
+    vec3 nearBottomR = u_ScreenToViewNDC(cProps.invProj, 0.0,vec2(1.0, -1.0)).xyz;
 
-    vec3 farTopL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(-1, 1));
-    vec3 farTopR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(1, 1));
-    vec3 farBottomL = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(-1, -1));
-    vec3 farBottomR = u_ScreenToWorldNDC(cProps.invProj, cProps.invView, 1.0, vec2(1, -1));
+    vec3 farTopL = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(-1.0, 1.0)).xyz;
+    vec3 farTopR = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(1.0, 1.0)).xyz;
+    vec3 farBottomL = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(-1.0, -1.0)).xyz;
+    vec3 farBottomR = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(1.0, -1.0)).xyz;
 
     u_Frustum camFrustrum;
     
-    vec3 eye = cProps.camPos;
-    
+    vec3 eye = vec3(0.0);
+
     //left
-    camFrustrum.planes[0] = -u_GetPlane(nearTopL, eye, nearBottomL);
+    //see here later
+    camFrustrum.planes[0] = u_GetPlane(eye, nearBottomL, nearTopR);
 
     // Right Plane
     camFrustrum.planes[1] = u_GetPlane(eye, nearTopR, nearBottomR);
@@ -59,17 +60,23 @@ void main(){
 
 
     uint idx = gl_GlobalInvocationID.x;
-    bool insideFrustum = true;
     int instanceCountToAdd = 1;
     for(int i = 0; i < 6; i++){
-        if(!u_SphereInsidePlane(vec3(0.0f, 0.0f, 0.0f), 10.0f, camFrustrum.planes[i].xyz, camFrustrum.planes[i].w)){
-            insideFrustum = false;
-            instanceCountToAdd = 1;
+        int idx = 0;
+//        vec4 viewSpacePos = inverse(cProps.invView) * vec4(0.0, 0.0, 0.0, 1.0);
+//        if(!u_SphereInsidePlane(viewSpacePos.xyz , 2.0f, camFrustrum.planes[idx].xyz, camFrustrum.planes[idx].w)){
+//            instanceCountToAdd = 0;
+//            break;
+//        }
+
+        vec4 viewSpacePos = inverse(cProps.invView) * vec4(meshesSpheres[idx].center, 1.0);
+        if(!u_SphereInsidePlane(viewSpacePos.xyz , meshesSpheres[idx].radius, camFrustrum.planes[idx].xyz, camFrustrum.planes[idx].w)){
+            instanceCountToAdd = 0;
             break;
         }
     }
     //they point to the same dir
-//    if(dot(camFrustrum.planes[0].xyz, camFrustrum.planes[1].xyz) > 0){
+//    if(dot(camFrustrum.planes[2].xyz, camFrustrum.planes[3].xyz) > 0){
 //        instanceCountToAdd = 0;
 //    }
     atomicAdd(indirectCmds[idx].instanceCount, instanceCountToAdd);

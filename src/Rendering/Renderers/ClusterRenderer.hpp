@@ -12,6 +12,7 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
@@ -141,7 +142,7 @@ namespace Rendering
                     commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
                                                 vk::ShaderStageFlagBits::eVertex |
                                                 vk::ShaderStageFlagBits::eFragment,
-                                                0, sizeof(ForwardPc), &pc);
+                                                0, sizeof(MvpPc), &pc);
  
                     int meshOffset = 0;
                     for (int i = 0; i < RenderingResManager::GetInstance()->models.size(); ++i)
@@ -273,7 +274,7 @@ namespace Rendering
 
             //gbuff
             camera.SetPerspective(
-                85.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
+                45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
                 0.1f, 512.0f);
             debugCam.SetPerspective(
                 45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
@@ -430,7 +431,7 @@ namespace Rendering
                                      .setOffset(0)
                                      .setStageFlags(
                                          vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
-                                     .setSize(sizeof(ForwardPc));
+                                     .setSize(sizeof(MvpPc));
 
             auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                     .setSetLayoutCount(1)
@@ -454,6 +455,7 @@ namespace Rendering
             renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
             renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(DepthConfigs::D_ENABLE);
+            renderNode->SetRasterizationConfigs(RasterizationConfigs::R_FILL);
             renderNode->AddColorImageResource("gColor", colAttachmentView);
             renderNode->AddColorImageResource("gNorm", normAttachmentView);
             renderNode->SetDepthImageResource("gDepth", depthAttachmentView);
@@ -539,7 +541,7 @@ namespace Rendering
         Camera camera = {glm::vec3(5.0f), Camera::CameraMode::E_FREE};
         Camera debugCam = {glm::vec3(10.0f), Camera::CameraMode::E_FREE};
         Model* model{};
-        ForwardPc pc{};
+        MvpPc pc{};
 
         //culling
         std::vector<PointLight> pointLights;
@@ -549,7 +551,7 @@ namespace Rendering
         ScreenDataPc cullDataPc{};
         uint32_t xTileSizePx = 512;
         uint32_t yTileSizePx = 512;
-        uint32_t zSlicesSize = 1;
+        uint32_t zSlicesSize = 4;
         uint32_t localSize = 1;
 
 

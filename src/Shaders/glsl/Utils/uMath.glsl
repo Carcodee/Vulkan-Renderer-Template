@@ -112,7 +112,7 @@ vec4 u_GetPlane(vec3 p0, vec3 p1, vec3 p2){
     vec4 plane;
     plane.xyz = normalize(cross(v1, v2));
     
-    plane.w = -abs(dot(plane.xyz, p0));
+    plane.w = -dot(plane.xyz, p0);
     return plane;
 }
 

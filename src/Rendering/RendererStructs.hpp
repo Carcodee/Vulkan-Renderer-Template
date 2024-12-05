@@ -84,7 +84,7 @@ namespace Rendering
     };
 	
 
-	struct ForwardPc
+	struct MvpPc 
 	{
 		glm::mat4 model = glm::mat4(1.0);
 		glm::mat4 projView = glm::mat4(1.0);

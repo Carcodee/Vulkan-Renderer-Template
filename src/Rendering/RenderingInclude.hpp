@@ -29,6 +29,7 @@
 #include "Examples/ComputeRenderer.hpp"
 #include "Renderers/FlatRenderer.hpp"
 #include "Renderers/ClusterRenderer.hpp"
+#include "Renderers/DebugRenderer.hpp"
 #include "ImguiRenderer.hpp"
 
 

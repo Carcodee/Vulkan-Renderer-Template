@@ -31,17 +31,20 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Added extra sync structures">
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Adding frustum culling">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/Model.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/Model.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/CoreImpl.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/CoreImpl.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/Pipeline.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/Pipeline.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/RenderGraph.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/RenderGraph.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/Examples/ForwardRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Examples/ForwardRenderer.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/light.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/light.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/lightCulling.comp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/lightCulling.comp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Common/meshCull.comp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Common/meshCull.comp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uMath.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uMath.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uStructs.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uStructs.glsl" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/spirv/ClusterRendering/light.frag.spv" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/spirv/ClusterRendering/light.frag.spv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -70,10 +73,6 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -140,6 +139,11 @@
     </key>
   </component>
   <component name="RunManager">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Engine" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="true" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/cmake-build-debug/bin/Engine.exe" EXPLICIT_BUILD_TARGET_NAME="all">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -198,7 +202,10 @@
       <workItem from="1733178668820" duration="1000" />
       <workItem from="1733199131702" duration="350000" />
       <workItem from="1733255536565" duration="5542000" />
-      <workItem from="1733264279833" duration="6264000" />
+      <workItem from="1733264279833" duration="8054000" />
+      <workItem from="1733288147286" duration="1359000" />
+      <workItem from="1733289931289" duration="656000" />
+      <workItem from="1733345540692" duration="9831000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -416,7 +423,15 @@
       <option name="project" value="LOCAL" />
       <updated>1733201238780</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="Adding frustum culling">
+      <option name="closed" value="true" />
+      <created>1733270742076</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1733270742076</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -456,7 +471,8 @@
     <MESSAGE value="add indirect drawing and preparing frustum culling" />
     <MESSAGE value="Fonts and style for ImguiRenderer.hpp" />
     <MESSAGE value="Added extra sync structures" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added extra sync structures" />
+    <MESSAGE value="Adding frustum culling" />
+    <option name="LAST_COMMIT_MESSAGE" value="Adding frustum culling" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -465,6 +481,16 @@
           <url>file://$PROJECT_DIR$/src/Systems/InputSystem.hpp</url>
           <line>13</line>
           <option name="timeStamp" value="22" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/Engine/Pipeline.hpp</url>
+          <line>182</line>
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/Engine/Pipeline.hpp</url>
+          <line>180</line>
+          <option name="timeStamp" value="24" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -25,6 +25,49 @@ namespace ENGINE
         D_DISABLE
     };
 
+    enum RasterizationConfigs
+    {
+        R_FILL,
+        R_LINE,
+        R_POINT
+    };
+
+    static vk::PipelineRasterizationStateCreateInfo GetRasterizationInfo(RasterizationConfigs configs)
+    {
+        auto rasterizationInfo = vk::PipelineRasterizationStateCreateInfo();
+
+        switch (configs) {
+        case R_FILL:
+            rasterizationInfo.setDepthClampEnable(VK_FALSE)
+                             .setRasterizerDiscardEnable(VK_FALSE)
+                             .setPolygonMode(vk::PolygonMode::eFill)
+                             .setCullMode(vk::CullModeFlagBits::eNone)
+                             .setFrontFace(vk::FrontFace::eClockwise)
+                             .setLineWidth(1.0f);
+            break;
+        case R_LINE:
+            rasterizationInfo.setDepthClampEnable(VK_FALSE)
+                             .setRasterizerDiscardEnable(VK_FALSE)
+                             .setPolygonMode(vk::PolygonMode::eLine)
+                             .setCullMode(vk::CullModeFlagBits::eNone)
+                             .setFrontFace(vk::FrontFace::eClockwise)
+                             .setLineWidth(1.0f);
+            break;
+        case R_POINT:
+            rasterizationInfo.setDepthClampEnable(VK_FALSE)
+                             .setRasterizerDiscardEnable(VK_FALSE)
+                             .setPolygonMode(vk::PolygonMode::ePoint)
+                             .setCullMode(vk::CullModeFlagBits::eNone)
+                             .setFrontFace(vk::FrontFace::eClockwise)
+                             .setLineWidth(1.0f);
+            break;
+        default:
+            assert(false && "Invalid rasterization config");
+            break;
+        }
+        return rasterizationInfo;
+    }
+
 
     static vk::PipelineColorBlendAttachmentState GetBlendAttachmentState(BlendConfigs configs)
     {
@@ -109,8 +152,9 @@ namespace ENGINE
     public:
         GraphicsPipeline(vk::Device& logicalDevice, vk::ShaderModule vertexShader, vk::ShaderModule fragmentShader,
                          vk::PipelineLayout pipelineLayout,
-                         vk::PipelineRenderingCreateInfo dynamicRenderPass,
-                         std::vector<BlendConfigs>& blendConfigs, DepthConfigs depthConfigs, VertexInput& vertexInput, vk::PipelineCache pipelineCache = nullptr)
+                         vk::PipelineRenderingCreateInfo dynamicRenderPass, RasterizationConfigs rasterizationConfigs,
+                         std::vector<BlendConfigs>& blendConfigs, DepthConfigs depthConfigs, VertexInput& vertexInput,
+                         vk::PipelineCache pipelineCache = nullptr)
         {
             assert(!vertexInput.inputDescription.empty()&&"vertexInput is empty");
             assert((vertexShader != nullptr) &&"vertex shader module is empty");
@@ -135,13 +179,7 @@ namespace ENGINE
                                  .setTopology(vk::PrimitiveTopology::eTriangleList)
                                  .setPrimitiveRestartEnable(VK_FALSE);
 
-            auto rasterization = vk::PipelineRasterizationStateCreateInfo()
-                                 .setDepthClampEnable(VK_FALSE)
-                                 .setRasterizerDiscardEnable(VK_FALSE)
-                                 .setPolygonMode(vk::PolygonMode::eFill)
-                                 .setCullMode(vk::CullModeFlagBits::eNone)
-                                 .setFrontFace(vk::FrontFace::eClockwise)
-                                 .setLineWidth(1.0f);
+            auto rasterization = GetRasterizationInfo(rasterizationConfigs);
 
             vk::DynamicState dynamicStates[] = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
 

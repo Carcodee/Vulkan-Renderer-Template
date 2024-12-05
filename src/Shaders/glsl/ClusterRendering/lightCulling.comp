@@ -36,10 +36,9 @@ layout(push_constant)uniform pushConstants{
 }pc;
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
-
+shared mat4 view;
 void main() {
 
-    
     uvec3 clusterId = gl_GlobalInvocationID;
     uint threatSize = gl_NumWorkGroups.x * gl_NumWorkGroups.y * gl_NumWorkGroups.z;
     
@@ -48,8 +47,7 @@ void main() {
 
     vec2 ndcSizePerTile = 2.0 * (tileSizePX/screenSize);
     vec2 upperLeft = vec2(-1.0);
-    
-    
+
     //ndc space
     vec2 topL = (upperLeft + clusterId.xy * ndcSizePerTile);
     vec2 topR = vec2(topL.x + ndcSizePerTile.x, topL.y);

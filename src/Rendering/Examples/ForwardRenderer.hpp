@@ -86,7 +86,7 @@ namespace Rendering
             auto pushConstantRange = vk::PushConstantRange()
             .setOffset(0)
             .setStageFlags(vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
-            .setSize(sizeof(ForwardPc));
+            .setSize(sizeof(MvpPc));
 
             auto layoutCreateInfo = vk::PipelineLayoutCreateInfo()
                                     .setSetLayoutCount(1).
@@ -173,7 +173,7 @@ namespace Rendering
                     
                         commandBuffer.pushConstants(renderGraphRef->GetNode(forwardPassName)->pipelineLayout.get(),
                                                     vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                                                    0, sizeof(ForwardPc), &pc);
+                                                    0, sizeof(MvpPc), &pc);
                     
                         commandBuffer.drawIndexed(model->indicesCount[i], 1, model->firstIndices[i],
                                                   static_cast<int32_t>(model->firstVertices[i]), 0);
@@ -217,8 +217,8 @@ namespace Rendering
        
         Camera camera = {glm::vec3(3.0f), Camera::CameraMode::E_FIXED};
         Model* model;
-        ForwardPc pc{};
-        std::vector<ForwardPc> ssbo{};
+        MvpPc pc{};
+        std::vector<MvpPc> ssbo{};
 
     };
 }

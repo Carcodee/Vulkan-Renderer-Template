@@ -13,6 +13,7 @@
 
 
 
+
 #ifndef RENDERGRAPH_HPP
 #define RENDERGRAPH_HPP
 
@@ -56,7 +57,7 @@ namespace ENGINE
                 std::unique_ptr<GraphicsPipeline> graphicsPipeline = std::make_unique<ENGINE::GraphicsPipeline>(
                     core->logicalDevice.get(), vertShader->sModule->shaderModuleHandle.get(),
                     fragShader->sModule->shaderModuleHandle.get(), pipelineLayout.get(),
-                    dynamicRenderPass.pipelineRenderingCreateInfo,
+                    dynamicRenderPass.pipelineRenderingCreateInfo, rasterizationConfigs,
                     colorBlendConfigs, depthConfig,
                     vertexInput, pipelineCache.get()
                 );
@@ -102,7 +103,7 @@ namespace ENGINE
                 std::unique_ptr<GraphicsPipeline> graphicsPipeline = std::make_unique<ENGINE::GraphicsPipeline>(
                     core->logicalDevice.get(), vertShader->sModule->shaderModuleHandle.get(),
                     fragShader->sModule->shaderModuleHandle.get(), pipelineLayout.get(),
-                    dynamicRenderPass.pipelineRenderingCreateInfo,
+                    dynamicRenderPass.pipelineRenderingCreateInfo,rasterizationConfigs,
                     colorBlendConfigs, depthConfig,
                     vertexInput, pipelineCache.get()
                 );
@@ -294,13 +295,18 @@ namespace ENGINE
             }
             
         }
+
+        void SetRasterizationConfigs(RasterizationConfigs rasterizationConfigs)
+        {
+            this->rasterizationConfigs = rasterizationConfigs;
+        }
         void SetDepthConfig(DepthConfigs dephtConfig)
         {
-            depthConfig = dephtConfig;
+            this->depthConfig = dephtConfig;
         }
         void AddColorBlendConfig(BlendConfigs blendConfig)
         {
-            colorBlendConfigs.push_back(blendConfig);
+            this->colorBlendConfigs.push_back(blendConfig);
         }
 
         void SetVertShader(Shader* shader)
@@ -484,6 +490,7 @@ namespace ENGINE
         Shader* fragShader = nullptr;
         Shader* compShader = nullptr;
         
+        RasterizationConfigs rasterizationConfigs = R_FILL;
         std::vector<BlendConfigs> colorBlendConfigs;
         DepthConfigs depthConfig = D_NONE;
         VertexInput vertexInput;

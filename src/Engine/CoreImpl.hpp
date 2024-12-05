@@ -249,7 +249,9 @@ namespace ENGINE
         auto deviceFeatures = vk::PhysicalDeviceFeatures()
                               .setFragmentStoresAndAtomics(true)
                               .setVertexPipelineStoresAndAtomics(true)
-                              .setMultiDrawIndirect(true);
+                              .setMultiDrawIndirect(true)
+                              .setWideLines(true)
+                              .setFillModeNonSolid(true);
 
         auto deviceCreateInfo = vk::DeviceCreateInfo()
                                 .setQueueCreateInfoCount(uint32_t(queueCreateInfos.size()))
