@@ -5,6 +5,7 @@
 //
 
 
+
 #ifndef ENGINERESMANAGER_HPP
 #define ENGINERESMANAGER_HPP
 
@@ -518,33 +519,49 @@ namespace Rendering
             }
             modelsNames.try_emplace(path, models.size());
             Model* model = models.emplace_back(std::make_unique<Model>()).get();
+    		model->id = models.size()-1;
             LoadGLTF(path, *model, false);
+    		
+    		std::string vertBuffName = "VertBuff_" + std::to_string(model->id);
+    		std::string indexBuffName = "IndexBuff_" + std::to_string(model->id);
+            model->vertBuffer = ENGINE::ResourcesManager::GetInstance()->GetStageBuffer(
+	            vertBuffName, vk::BufferUsageFlagBits::eVertexBuffer,
+	            sizeof(M_Vertex3D) * model->vertices.size(),
+	            model->vertices.data());
+            model->indexBuffer = ENGINE::ResourcesManager::GetInstance()->GetStageBuffer(
+	            indexBuffName, vk::BufferUsageFlagBits::eIndexBuffer,
+	            sizeof(uint32_t) * model->indices.size(),
+	            model->indices.data());
+    		
             return model;
         }
 
     	void BuildIndirectBuffers()
     	{
-		    for (int i = 0; i < models.size(); ++i)
+    		indirectDrawsCmdInfos.clear();
+		    for (auto& pair : indirectModelsToDraw)
 		    {
-			    for (int j = 0; j < models[i]->meshCount; ++j)
+		    	Model* model = pair.second;
+
+			    for (int j = 0; j < model->meshCount; ++j)
 			    {
 				    ENGINE::DrawIndirectIndexedCmd indirectCmd{};
-			    	indirectCmd.firstIndex = models[i]->firstIndices[j];
-			    	indirectCmd.firstInstance = 0;
-			    	indirectCmd.indexCount = models[i]->indicesCount[j];
-			    	indirectCmd.instanceCount= 0;
-			    	indirectCmd.vertexOffset = models[i]->firstVertices[j];
-			    	indirectDrawsCmdInfos.emplace_back(indirectCmd);
-			    }
+				    indirectCmd.firstIndex = model->firstIndices[j];
+				    indirectCmd.firstInstance = 0;
+				    indirectCmd.indexCount = model->indicesCount[j];
+				    indirectCmd.instanceCount = 0;
+				    indirectCmd.vertexOffset = model->firstVertices[j];
+				    indirectDrawsCmdInfos.emplace_back(indirectCmd);
+			    }    
 		    }
 		    indirectDrawBuffer = ENGINE::ResourcesManager::GetInstance()->GetBuffer( "IndirectCmds", vk::BufferUsageFlagBits::eIndirectBuffer | vk::BufferUsageFlagBits::eStorageBuffer,
 			    vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible,
 			    sizeof(ENGINE::DrawIndirectIndexedCmd) * indirectDrawsCmdInfos.size(), indirectDrawsCmdInfos.data());
     		
     	}
+    	
     	void UpdateResources()
     	{
-
     		cullCount = 0;
     		if (indirectDrawBuffer->mappedMem != nullptr)
     		{
@@ -571,8 +588,28 @@ namespace Rendering
 			    "IndirectCmds", sizeof(ENGINE::DrawIndirectIndexedCmd) * indirectDrawsCmdInfos.size(),
 			    indirectDrawsCmdInfos.data());
     	}
-    	
-        
+
+    	Model* PushModelToIndirectBatch(std::string name)
+    	{
+    		if (indirectModelsToDraw.contains(name))
+    		{
+    			return indirectModelsToDraw.at(name);
+    		}
+    		Model* model = GetModel(name);
+    		indirectModelsToDraw.try_emplace(name ,model);
+    		return model;
+    	}
+
+	    Model* PushModelToIndividualDraw(std::string name)
+    	{
+    		if (individualDrawModels.contains(name))
+    		{
+    			return individualDrawModels.at(name);
+    		}
+    		Model* model = GetModel(name);
+    		individualDrawModels.try_emplace(name ,model);
+    		return model;
+    	}
         std::map<std::string, int> materialsNames;
         std::map<std::string, int> modelsNames;
         std::map<std::string, int> texturesNames;
@@ -581,6 +618,8 @@ namespace Rendering
         std::vector<MaterialPackedData*> materialPackedData;
         std::vector<std::unique_ptr<Model>> models;
     	ENGINE::Buffer* indirectDrawBuffer;
+    	std::map<std::string, Model*> individualDrawModels;
+    	std::map<std::string, Model*> indirectModelsToDraw;
     	std::vector<ENGINE::DrawIndirectIndexedCmd> indirectDrawsCmdInfos;
     	int cullCount =0;
         

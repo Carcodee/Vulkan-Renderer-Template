@@ -780,7 +780,8 @@ namespace ENGINE
                 }
                 if (dependancyNeed)
                 {
-                    RenderGraphNode* dependancyNode = renderNodes.at(dependancyName).get(); 
+                    RenderGraphNode* dependancyNode = renderNodes.at(dependancyName).get();
+                    if (!dependancyNode->active){}
                     BufferUsageTypes lastNodeType = (dependancyNode->pipelineType == vk::PipelineBindPoint::eGraphics)
                                                         ? B_GRAPHICS_WRITE
                                                         : B_COMPUTE_WRITE;

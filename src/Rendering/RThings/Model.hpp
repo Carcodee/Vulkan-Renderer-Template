@@ -27,6 +27,7 @@ namespace Rendering
     };
     struct Model
     {
+        int id;
         std::vector<M_Vertex3D> vertices;
         std::vector<uint32_t> indices;
         
@@ -40,6 +41,10 @@ namespace Rendering
         std::vector<glm::mat4> modelsMat;
         std::vector<int> materials;
         std::vector<Sphere> meshesSpheres;
+        
+        ENGINE::StagedBuffer* vertBuffer = nullptr;
+        ENGINE::StagedBuffer* indexBuffer = nullptr;
+        
         void SetWorldMatrices(){
             modelsMat.reserve(meshCount);
             for (auto& node : nodeMats)

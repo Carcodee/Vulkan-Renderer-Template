@@ -56,13 +56,16 @@ namespace Rendering
                 BuildFrustumPlanes();
                 
                 meshesSpheresCompact.clear();
-                for (auto& model : RenderingResManager::GetInstance()->models)
+                std::vector<Sphere> meshesSpheresCompact2;
+                for (auto& model : RenderingResManager::GetInstance()->indirectModelsToDraw)
                 {
-                    for (auto& sphere : model->meshesSpheres)
+                    for (auto& sphere : model.second->meshesSpheres)
                     {
                         meshesSpheresCompact.emplace_back(sphere);
+                        meshesSpheresCompact2.emplace_back(sphere);
                     }
                 }
+
             });
 
             auto meshCullRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -160,19 +163,32 @@ namespace Rendering
                     {
                         materials.emplace_back(MaterialPackedData());
                     }
+
+                    std::vector<glm::mat4> modelMats;
+                    std::vector<int> meshMatIds;
+                    for (auto& model : RenderingResManager::GetInstance()->models)
+                    {
+                        for (int i = 0; i < model->modelsMat.size(); ++i)
+                        {
+                            modelMats.push_back(model->modelsMat[i]);
+                        }
+                        for (int i = 0; i < model->materials.size(); ++i)
+                        {
+                            meshMatIds.push_back(model->materials[i]);
+                        }
+                        
+                    }
                    
                     gBuffDescCache->SetSamplerArray("textures", textures);
                     gBuffDescCache->SetBuffer("MaterialsPacked", materials);
-                    gBuffDescCache->SetBuffer("MeshMaterialsIds", model->materials);
-                    gBuffDescCache->SetBuffer("MeshesModelMatrices", model->modelsMat);
+                    gBuffDescCache->SetBuffer("MeshMaterialsIds", meshMatIds);
+                    gBuffDescCache->SetBuffer("MeshesModelMatrices", modelMats);
                     
                     commandBuffer.bindDescriptorSets(renderGraphRef->GetNode(gBufferPassName)->pipelineType,
                                                      renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(), 0,
                                                      1,
                                                      &gBuffDescCache->dstSet.get(), 0, nullptr);
 
-                    commandBuffer.bindVertexBuffers(0, 1, &vertexBuffer->deviceBuffer.get()->bufferHandle.get(), &offset);
-                    commandBuffer.bindIndexBuffer(indexBuffer->deviceBuffer.get()->bufferHandle.get(), 0, vk::IndexType::eUint32);
 
                     pc.projView = camera.matrices.perspective * camera.matrices.view;
                     commandBuffer.pushConstants(renderGraphRef->GetNode(gBufferPassName)->pipelineLayout.get(),
@@ -181,9 +197,15 @@ namespace Rendering
                                                 0, sizeof(MvpPc), &pc);
  
                     int meshOffset = 0;
-                    for (int i = 0; i < RenderingResManager::GetInstance()->models.size(); ++i)
+
+                    for (auto& modelPair : RenderingResManager::GetInstance()->indirectModelsToDraw)
                     {
-                        Model* modelRef = RenderingResManager::GetInstance()->models[i].get();
+                        
+                        Model* modelRef = modelPair.second;
+                        commandBuffer.bindVertexBuffers(0, 1, &modelRef->vertBuffer->deviceBuffer->bufferHandle.get(),
+                                                        &offset);
+                        commandBuffer.bindIndexBuffer(modelRef->indexBuffer->GetBuffer(), 0, vk::IndexType::eUint32);
+
                         vk::DeviceSize sizeOffset = (meshOffset) * sizeof(DrawIndirectIndexedCmd);
                         uint32_t stride = sizeof(DrawIndirectIndexedCmd);
                         commandBuffer.drawIndexedIndirect(
@@ -193,7 +215,6 @@ namespace Rendering
                             stride);
                         meshOffset += modelRef->meshCount;
                     }
-             
                 });
 
             renderGraphRef->GetNode(gBufferPassName)->SetRenderOperation(renderOp);
@@ -287,7 +308,7 @@ namespace Rendering
             camera.position = glm::vec3(0.0f);
 
             std::string path = SYSTEMS::OS::GetInstance()->GetAssetsPath();
-            model = RenderingResManager::GetInstance()->GetModel(path + "\\Models\\Cubes\\cubes.gltf");
+            RenderingResManager::GetInstance()->PushModelToIndirectBatch(path + "\\Models\\sponza\\scene.gltf");
 
             //compute
             std::random_device rd;
@@ -358,12 +379,6 @@ namespace Rendering
         {
 
             RenderingResManager::GetInstance()->BuildIndirectBuffers();
-            
-            vertexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("vertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
-                sizeof(M_Vertex3D) * model->vertices.size(), model->vertices.data());
-            
-            indexBuffer = ResourcesManager::GetInstance()->GetStageBuffer("indexBuffer", vk::BufferUsageFlagBits::eIndexBuffer,
-                sizeof(uint32_t) * model->indices.size(), model->indices.data());
             
             lVertexBuffer =  ResourcesManager::GetInstance()->GetBuffer("lVertexBuffer",vk::BufferUsageFlagBits::eVertexBuffer,
                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
@@ -604,7 +619,6 @@ namespace Rendering
         Camera camera = {glm::vec3(5.0f), Camera::CameraMode::E_FREE};
         Camera debugCam = {glm::vec3(10.0f), Camera::CameraMode::E_FREE};
         Camera* currCamera = nullptr;
-        Model* model{};
         MvpPc pc{};
 
         //culling
