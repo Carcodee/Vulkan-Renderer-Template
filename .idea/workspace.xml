@@ -31,28 +31,12 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Adding frustum culling">
-      <change afterPath="$PROJECT_DIR$/src/Shaders/glsl/DebugRendering/debug.frag" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/Shaders/glsl/DebugRendering/debug.vert" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/editor.xml" afterDir="false" />
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="frustum culling and frustum visualization">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/EngineInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/EngineInclude.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Engine/RenderGraph.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/RenderGraph.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/Camera.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/Camera.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/Model.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/Model.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/light.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/ClusterRendering/light.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Common/meshCull.comp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Common/meshCull.comp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uMath.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uMath.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uRendering.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uRendering.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/spirv/ClusterRendering/light.frag.spv" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/spirv/ClusterRendering/light.frag.spv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Systems/Logger.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Systems/Logger.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Systems/SystemsInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Systems/SystemsInclude.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -488,7 +472,8 @@
       <workItem from="1733516725343" duration="2595000" />
       <workItem from="1733549333060" duration="1278000" />
       <workItem from="1733605997578" duration="13291000" />
-      <workItem from="1733690823479" duration="13269000" />
+      <workItem from="1733690823479" duration="13575000" />
+      <workItem from="1733758724053" duration="1225000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -714,7 +699,15 @@
       <option name="project" value="LOCAL" />
       <updated>1733270742076</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="frustum culling and frustum visualization">
+      <option name="closed" value="true" />
+      <created>1733704779731</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1733704779731</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -755,7 +748,8 @@
     <MESSAGE value="Fonts and style for ImguiRenderer.hpp" />
     <MESSAGE value="Added extra sync structures" />
     <MESSAGE value="Adding frustum culling" />
-    <option name="LAST_COMMIT_MESSAGE" value="Adding frustum culling" />
+    <MESSAGE value="frustum culling and frustum visualization" />
+    <option name="LAST_COMMIT_MESSAGE" value="frustum culling and frustum visualization" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -13,6 +13,9 @@
 
 
 
+
+
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -284,6 +287,7 @@ namespace Rendering
         	ImGui::Text("%s", cameraRight.c_str());
         	ImGui::Text("%s", cameraUp.c_str());
 
+
             ImGui::SeparatorText("Virtual Cam Info");
 	    	static bool detachedCam = false;
             if(ImGui::Checkbox("Debug Cull", &detachedCam))
@@ -328,6 +332,26 @@ namespace Rendering
 	    	{
 			    clusterRenderer->currCamera = &clusterRenderer->camera;
 	    	}
+
+	    	struct NodeInfo
+            {
+	            bool* active;
+            	std::string name;
+            };
+	    	static std::vector<NodeInfo> nodeInfos;
+
+            for (auto& node : core->renderGraphRef->renderNodesSorted)
+            {
+            	nodeInfos.emplace_back(NodeInfo{&node->active, node->passName});
+            }
+
+	    	ImGui::SeparatorText("Render Nodes");
+            for (auto& nodeInfo : nodeInfos)
+            {
+            	std::string name = "Node: "+ nodeInfo.name;
+            	ImGui::Checkbox(name.c_str(), nodeInfo.active);
+            }
+	    	nodeInfos.clear();
         	
         	ImGui::End();
         }

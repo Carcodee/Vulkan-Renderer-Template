@@ -53,7 +53,7 @@ namespace Rendering
                 cPropsUbo.pos = currCamera->position;
                 cPropsUbo.zNear = currCamera->cameraProperties.zNear;
                 cPropsUbo.zFar = currCamera->cameraProperties.zFar;
-                DebugFrustumPlanes();
+                BuildFrustumPlanes();
                 
                 meshesSpheresCompact.clear();
                 for (auto& model : RenderingResManager::GetInstance()->models)
@@ -73,6 +73,7 @@ namespace Rendering
                                                RenderingResManager::GetInstance()->indirectDrawBuffer);
                     cullMeshesCache->SetBuffer("MeshesSpheres", meshesSpheresCompact);
                     cullMeshesCache->SetBuffer("CamProps", cPropsUbo);
+                    cullMeshesCache->SetBuffer("CullInfo", camFrustum);
                     
                     auto& renderNode = renderGraphRef->renderNodes.at(meshCullPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
@@ -517,38 +518,24 @@ namespace Rendering
             return plane;
         }
 
-        float u_SDF_Plane(glm::vec3 pos, glm::vec3 n, float dToPlane)
-        {
-            return dot(pos, n) + dToPlane;
-        }
-
-        bool u_SphereInsidePlane(glm::vec3 pos, float r, glm::vec3 n, float dToPlane)
-        {
-            float d = u_SDF_Plane(pos, n, dToPlane);
-            bool behindNormal = d < -r;
-            SYSTEMS::Logger::GetInstance()->LogMessage(
-                "BehindPlane: " + std::to_string(behindNormal) + ", Distance: " + std::to_string(d) + ", Radius: " +
-                std::to_string(r));
-            return behindNormal;
-        }
-        glm::vec4 u_ScreenToViewNDC(glm::mat4 invProj, float depth, glm::vec2 ndcCoords)
+        glm::vec4 ScreenToViewNDC(glm::mat4 invProj, float depth, glm::vec2 ndcCoords)
         {
             glm::vec4 ndcPos = glm::vec4(ndcCoords, depth, 1.0);
             glm::vec4 viewPos = invProj * ndcPos;
             viewPos = viewPos / viewPos.w;
             return viewPos;
         }
-        void DebugFrustumPlanes()
+        void BuildFrustumPlanes()
         {
-            glm::vec3 nearTopL = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(-1.0, 1.0));
-            glm::vec3 nearTopR = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(1.0, 1.0));
-            glm::vec3 nearBottomL = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(-1.0, -1.0));
-            glm::vec3 nearBottomR = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(1.0, -1.0));
+            glm::vec3 nearTopL = ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(-1.0, 1.0));
+            glm::vec3 nearTopR = ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(1.0, 1.0));
+            glm::vec3 nearBottomL = ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(-1.0, -1.0));
+            glm::vec3 nearBottomR = ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(1.0, -1.0));
 
-            glm::vec3 farTopL = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(-1.0, 1.0));
-            glm::vec3 farTopR = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(1.0, 1.0));
-            glm::vec3 farBottomL = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(-1.0, -1.0));
-            glm::vec3 farBottomR = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(1.0, -1.0));
+            glm::vec3 farTopL = ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(-1.0, 1.0));
+            glm::vec3 farTopR = ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(1.0, 1.0));
+            glm::vec3 farBottomL = ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(-1.0, -1.0));
+            glm::vec3 farBottomR = ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(1.0, -1.0));
 
             camFrustum.points[0] =nearTopL;
             camFrustum.points[1] =nearTopR;
@@ -560,8 +547,6 @@ namespace Rendering
             camFrustum.points[6] =farBottomL;
             camFrustum.points[7] =farBottomR;
             
-            glm::vec3 eye = glm::vec3(0.0);
-
             //left
             camFrustum.planes[0] = u_GetPlane(nearBottomL, farBottomL, nearTopL);
 
@@ -579,15 +564,6 @@ namespace Rendering
 
             // Far Plane
             camFrustum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
-            int idx = 2;
-            glm::vec4 viewSpacePos = debugCam.matrices.view * glm::vec4(0.0, 0.0, 0.0, 1.0);
-            // SYSTEMS::Logger::GetInstance()->LogMessage("("+std::to_string(viewSpacePos.x)+ ", "+std::to_string(viewSpacePos.y)+ ", "+std::to_string(viewSpacePos.z) + ")");
-            
-            if (!u_SphereInsidePlane(viewSpacePos, 1.0f, camFrustum.planes[idx], camFrustum.planes[idx].w))
-            {
-                
-            }
-
         }
 
         DescriptorAllocator* descriptorAllocatorRef;

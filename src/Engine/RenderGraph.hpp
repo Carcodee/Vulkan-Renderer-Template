@@ -375,7 +375,10 @@ namespace ENGINE
             depthImage = imageView;
             AddImageToProxy(name, imageView);
         }
-
+        void ActivateNode(bool value)
+        {
+            this->active = value;
+        }
         //We change the image view if the name already exist when using resources
         void AddColorImageResource(std::string name, ImageView* imageView)
         {
@@ -451,7 +454,7 @@ namespace ENGINE
             }
             renderOperations = nullptr;
             tasks.clear();
-        }       
+        }
         void AddImageToProxy(std::string name, ImageView* imageView)
         {
             if (!imagesProxyRef->contains(name))
@@ -480,6 +483,8 @@ namespace ENGINE
         vk::PushConstantRange pushConstantRange;
         vk::PipelineBindPoint pipelineType;
         DynamicRenderPass dynamicRenderPass;
+        std::string passName;
+        bool active = true;
         
     private:
         
@@ -507,7 +512,6 @@ namespace ENGINE
         std::function<void(vk::CommandBuffer& commandBuffer)>* renderOperations = nullptr;
         std::vector<std::function<void()>*> tasks;
 
-        std::string passName;
         std::set<std::string> dependencies;
         
         Core* core;
@@ -760,6 +764,8 @@ namespace ENGINE
             int idx = 0;
             for (auto& renderNode : renderNodesSorted)
             {
+                if (!renderNode->active){continue;}
+                
                 Profiler::GetInstance()->AddProfilerGpuSpot(legit::Colors::getColor(idx), "RenderPass: " + renderNode->passName);
                 RenderGraphNode* node = renderNode;
                 bool dependancyNeed = false;
