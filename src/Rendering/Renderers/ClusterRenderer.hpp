@@ -308,7 +308,7 @@ namespace Rendering
             camera.position = glm::vec3(0.0f);
 
             std::string path = SYSTEMS::OS::GetInstance()->GetAssetsPath();
-            RenderingResManager::GetInstance()->PushModelToIndirectBatch(path + "\\Models\\sponza\\scene.gltf");
+            RenderingResManager::GetInstance()->PushModelToIndirectBatch(path + "\\Models\\Cubes\\cubes.gltf");
 
             //compute
             std::random_device rd;
@@ -397,7 +397,7 @@ namespace Rendering
             //Cull meshes
             std::string shaderPath = SYSTEMS::OS::GetInstance()->GetShadersPath();
 
-            cullMeshesCompShader = std::make_unique<Shader>(logicalDevice, shaderPath + "\\spirv\\Common\\meshCull.comp.spv");
+            cullMeshesCompShader = std::make_unique<Shader>(logicalDevice, shaderPath + "\\spirv\\Compute\\meshCull.comp.spv");
 
             cullMeshesCache->AddShaderInfo(cullMeshesCompShader.get()->sParser.get());
             cullMeshesCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);
@@ -413,7 +413,7 @@ namespace Rendering
             
             //Cull pass//
 
-            cullCompShader = std::make_unique<Shader>(logicalDevice, shaderPath+ "\\spirv\\ClusterRendering\\lightCulling.comp.spv");
+            cullCompShader = std::make_unique<Shader>(logicalDevice, shaderPath+ "\\spirv\\Compute\\lightCulling.comp.spv");
 
             computeDescCache->AddShaderInfo(cullCompShader.get()->sParser.get());
             computeDescCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eFragment);

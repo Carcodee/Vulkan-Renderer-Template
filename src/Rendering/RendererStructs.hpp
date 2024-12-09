@@ -107,6 +107,17 @@ namespace Rendering
 		glm::mat4 model = glm::mat4(1.0);
 		glm::mat4 projView = glm::mat4(1.0);
 	};
+	enum PintMode
+	{
+		P_OCCLUDER = 0,
+		P_LIGHT_SOURCE = 1
+	};
+	struct RcPc
+	{
+		float xMousePos = 0;
+		float yMousePos = 0;
+		int mode = 0;
+	};
 	struct CPropsUbo
 	{
 		glm::mat4 invProj= glm::mat4(1.0);

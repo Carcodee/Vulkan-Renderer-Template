@@ -30,38 +30,11 @@ layout(set = 0, binding = 3, scalar) uniform CullInfo{
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 void main(){
-//    vec3 nearTopL =  u_ScreenToViewNDC(cProps.invProj, 0.0,vec2(-1.0, 1.0)).xyz;
-//    vec3 nearTopR= u_ScreenToViewNDC(cProps.invProj, 0.0, vec2(1.0, 1.0)).xyz;
-//    vec3 nearBottomL = u_ScreenToViewNDC(cProps.invProj, 0.0,vec2(-1.0, -1.0)).xyz;
-//    vec3 nearBottomR = u_ScreenToViewNDC(cProps.invProj, 0.0,vec2(1.0, -1.0)).xyz;
-//
-//    vec3 farTopL = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(-1.0, 1.0)).xyz;
-//    vec3 farTopR = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(1.0, 1.0)).xyz;
-//    vec3 farBottomL = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(-1.0, -1.0)).xyz;
-//    vec3 farBottomR = u_ScreenToViewNDC(cProps.invProj, 1.0, vec2(1.0, -1.0)).xyz;
 
     u_Frustum camFrustum = cullInfo.frustum;
     
     vec3 eye = vec3(0.0);
-//
-//    //left
-//    camFrustum.planes[0] = u_GetPlane(nearBottomL, farBottomL, nearTopL);
-//
-//    // Right Plane
-//    camFrustum.planes[1] = u_GetPlane(nearTopR, farTopR, nearBottomR);
-//
-//    // Top Plane
-//    camFrustum.planes[2] = u_GetPlane(nearTopL, farTopL, nearTopR);
-//
-//    // Bottom Plane
-//    camFrustum.planes[3] = u_GetPlane(nearBottomR, farBottomR, nearBottomL);
-//
-//    // Near Plane
-//    camFrustum.planes[4] = u_GetPlane(nearTopL, nearBottomR, nearBottomL);
-//
-//    // Far Plane
-//    camFrustum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
-//    
+
     uint threadId = gl_GlobalInvocationID.x;
     int instanceCountToAdd = 1;
     vec4 viewSpacePos = -inverse(cProps.invView) * vec4(meshesSpheres[threadId].center, 1.0);
