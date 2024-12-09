@@ -24,11 +24,19 @@
 #include <queue>
 #include <condition_variable>
 #include <functional>
-
-
 #include <iostream>
 #include <filesystem>
 #include <assert.h>
+
+
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_RIGHT_HANDED
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/hash.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 
 #include "TaskThreat.hpp"
 #include "SingletonStorage.hpp"

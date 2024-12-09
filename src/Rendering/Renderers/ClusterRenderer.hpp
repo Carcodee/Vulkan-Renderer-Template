@@ -13,14 +13,14 @@
 
 
 
+
 #ifndef CLUSTERRENDERER_HPP
 #define CLUSTERRENDERER_HPP
 
 namespace Rendering
 {
     using namespace ENGINE;
-    class ClusterRenderer : BaseRenderer
-    {
+    class ClusterRenderer : public BaseRenderer {
     public:
         ClusterRenderer(Core* core, WindowProvider* windowProvider,
                         DescriptorAllocator* descriptorAllocator)
@@ -47,6 +47,14 @@ namespace Rendering
         {
             auto meshCullTak = new std::function<void()>([this, inflightQueue]()
             {
+                
+                cPropsUbo.invProj = glm::inverse(currCamera->matrices.perspective);
+                cPropsUbo.invView = glm::inverse(currCamera->matrices.view);
+                cPropsUbo.pos = currCamera->position;
+                cPropsUbo.zNear = currCamera->cameraProperties.zNear;
+                cPropsUbo.zFar = currCamera->cameraProperties.zFar;
+                DebugFrustumPlanes();
+                
                 meshesSpheresCompact.clear();
                 for (auto& model : RenderingResManager::GetInstance()->models)
                 {
@@ -81,7 +89,30 @@ namespace Rendering
 
             auto cullTask = new std::function<void()>([this, inflightQueue]()
             {
-                Debug();
+                cullDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
+                cullDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
+                cullDataPc.pointLightsCount = pointLights.size();
+                cullDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / xTileSizePx +
+                    1);
+                cullDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / yTileSizePx +
+                    1);
+
+                lightsMap.clear();
+                for (int i = 0; i < cullDataPc.xTileCount * cullDataPc.yTileCount * zSlicesSize; ++i)
+                {
+                    lightsMap.emplace_back(ArrayIndexer{});
+                }
+                lightsIndices.clear();
+                lightsIndices.reserve(lightsMap.size() * pointLights.size());
+                for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
+                {
+                    lightsIndices.emplace_back(-1);
+                }
+                cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
+                cPropsUbo.invView = glm::inverse(camera.matrices.view);
+                cPropsUbo.pos = camera.position;
+                cPropsUbo.zNear = camera.cameraProperties.zNear;
+                cPropsUbo.zFar = camera.cameraProperties.zFar;
             });
 
             auto cullRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -123,6 +154,10 @@ namespace Rendering
                     for (auto& mat : RenderingResManager::GetInstance()->materialPackedData)
                     {
                         materials.emplace_back(*mat);
+                    }
+                    if (materials.empty())
+                    {
+                        materials.emplace_back(MaterialPackedData());
                     }
                    
                     gBuffDescCache->SetSamplerArray("textures", textures);
@@ -206,42 +241,6 @@ namespace Rendering
             renderGraphRef->GetNode(lightPassName)->SetRenderOperation(lRenderOp);
         }
 
-        void Debug()
-        {
-            cullDataPc.sWidth = (int)windowProvider->GetWindowSize().x;
-            cullDataPc.sHeight = (int)windowProvider->GetWindowSize().y;
-            cullDataPc.pointLightsCount = pointLights.size();
-            cullDataPc.xTileCount = static_cast<uint32_t>((core->swapchainRef->extent.width - 1) / xTileSizePx +
-                1);
-            cullDataPc.yTileCount = static_cast<uint32_t>((core->swapchainRef->extent.height - 1) / yTileSizePx +
-                1);
-
-            lightsMap.clear();
-            for (int i = 0; i < cullDataPc.xTileCount * cullDataPc.yTileCount * zSlicesSize; ++i)
-            {
-                lightsMap.emplace_back(ArrayIndexer{});
-            }
-            lightsIndices.clear();
-            lightsIndices.reserve(lightsMap.size() * pointLights.size());
-            for (int i = 0; i < lightsMap.size() * pointLights.size(); ++i)
-            {
-                lightsIndices.emplace_back(-1);
-            }
-
-            cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
-            cPropsUbo.invView = glm::inverse(camera.matrices.view);
-            cPropsUbo.pos = camera.position;
-            cPropsUbo.zNear = camera.cameraProperties.zNear;
-            cPropsUbo.zFar = camera.cameraProperties.zFar;
-            
-            cPropsUboDebug.invProj = glm::inverse(debugCam.matrices.perspective);
-            cPropsUboDebug.invView = glm::inverse(debugCam.matrices.view);
-            cPropsUboDebug.pos = debugCam.position;
-            cPropsUboDebug.zNear = debugCam.cameraProperties.zNear;
-            cPropsUboDebug.zFar = debugCam.cameraProperties.zFar;
-
-        }
-
         void ReloadShaders() override
         {
             auto* gRenderNode = renderGraphRef->GetNode(gBufferPassName);
@@ -280,20 +279,21 @@ namespace Rendering
                 45.0f, (float)windowProvider->GetWindowSize().x / (float)windowProvider->GetWindowSize().y,
                 0.1f, 512.0f);
 
+            currCamera = &camera;
 
 
             camera.SetLookAt(glm::vec3(0.0f, 0.0f, 1.0f));
             camera.position = glm::vec3(0.0f);
 
             std::string path = SYSTEMS::OS::GetInstance()->GetAssetsPath();
-            model = RenderingResManager::GetInstance()->GetModel(path + "\\Models\\sponza\\scene.gltf");
+            model = RenderingResManager::GetInstance()->GetModel(path + "\\Models\\Cubes\\cubes.gltf");
 
             //compute
             std::random_device rd;
             std::mt19937 gen(rd());
 
-            pointLights.reserve(400);
-            for (int i = 0; i < 400; ++i)
+            pointLights.reserve(1);
+            for (int i = 0; i < 1; ++i)
             {
                 std::uniform_real_distribution<> distributionPos(-10.0f, 10.0f);
                 std::uniform_real_distribution<> distributionCol(0.0f, 1.0f);
@@ -339,12 +339,13 @@ namespace Rendering
             //light
             quadVert = Vertex2D::GetQuadVertices();
             quadIndices = Vertex2D::GetQuadIndices();
+            
             cPropsUbo.invProj = glm::inverse(camera.matrices.perspective);
             cPropsUbo.invView = glm::inverse(camera.matrices.view);
             cPropsUbo.pos = camera.position;
             cPropsUbo.zNear = camera.cameraProperties.zNear;
             cPropsUbo.zFar = camera.cameraProperties.zFar;
-            
+             
             lightPc.xTileCount = cullDataPc.xTileCount;
             lightPc.yTileCount = cullDataPc.yTileCount;
             lightPc.xTileSizePx = xTileSizePx;
@@ -502,6 +503,92 @@ namespace Rendering
             lRenderNode->DependsOn(computePassName);
             lRenderNode->BuildRenderGraphNode();
         }
+        glm::vec4 u_GetPlane(glm::vec3 p0, glm::vec3 p1, glm::vec3 p2)
+        {
+            glm::vec3 v1 = p1 - p0;
+            glm::vec3 v2 = p2 - p0;
+
+            glm::vec3 norm;
+            norm = normalize(cross(v1, v2));
+
+            float d = dot(norm, p0);
+
+            glm::vec4 plane = glm::vec4(norm, d);
+            return plane;
+        }
+
+        float u_SDF_Plane(glm::vec3 pos, glm::vec3 n, float dToPlane)
+        {
+            return dot(pos, n) + dToPlane;
+        }
+
+        bool u_SphereInsidePlane(glm::vec3 pos, float r, glm::vec3 n, float dToPlane)
+        {
+            float d = u_SDF_Plane(pos, n, dToPlane);
+            bool behindNormal = d < -r;
+            SYSTEMS::Logger::GetInstance()->LogMessage(
+                "BehindPlane: " + std::to_string(behindNormal) + ", Distance: " + std::to_string(d) + ", Radius: " +
+                std::to_string(r));
+            return behindNormal;
+        }
+        glm::vec4 u_ScreenToViewNDC(glm::mat4 invProj, float depth, glm::vec2 ndcCoords)
+        {
+            glm::vec4 ndcPos = glm::vec4(ndcCoords, depth, 1.0);
+            glm::vec4 viewPos = invProj * ndcPos;
+            viewPos = viewPos / viewPos.w;
+            return viewPos;
+        }
+        void DebugFrustumPlanes()
+        {
+            glm::vec3 nearTopL = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(-1.0, 1.0));
+            glm::vec3 nearTopR = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(1.0, 1.0));
+            glm::vec3 nearBottomL = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(-1.0, -1.0));
+            glm::vec3 nearBottomR = u_ScreenToViewNDC(cPropsUbo.invProj, 0.0, glm::vec2(1.0, -1.0));
+
+            glm::vec3 farTopL = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(-1.0, 1.0));
+            glm::vec3 farTopR = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(1.0, 1.0));
+            glm::vec3 farBottomL = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(-1.0, -1.0));
+            glm::vec3 farBottomR = u_ScreenToViewNDC(cPropsUbo.invProj, 1.0, glm::vec2(1.0, -1.0));
+
+            camFrustum.points[0] =nearTopL;
+            camFrustum.points[1] =nearTopR;
+            camFrustum.points[2] =nearBottomL;
+            camFrustum.points[3] =nearBottomR;
+            
+            camFrustum.points[4] =farTopL;
+            camFrustum.points[5] =farTopR;
+            camFrustum.points[6] =farBottomL;
+            camFrustum.points[7] =farBottomR;
+            
+            glm::vec3 eye = glm::vec3(0.0);
+
+            //left
+            camFrustum.planes[0] = u_GetPlane(nearBottomL, farBottomL, nearTopL);
+
+            // Right Plane
+            camFrustum.planes[1] = u_GetPlane(nearTopR, farTopR, nearBottomR);
+
+            // Top Plane
+            camFrustum.planes[2] = u_GetPlane(nearTopL, farTopL, nearTopR);
+
+            // Bottom Plane
+            camFrustum.planes[3] = u_GetPlane(nearBottomR, farBottomR, nearBottomL);
+
+            // Near Plane
+            camFrustum.planes[4] = u_GetPlane(nearTopL, nearBottomR, nearBottomL);
+
+            // Far Plane
+            camFrustum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
+            int idx = 2;
+            glm::vec4 viewSpacePos = debugCam.matrices.view * glm::vec4(0.0, 0.0, 0.0, 1.0);
+            // SYSTEMS::Logger::GetInstance()->LogMessage("("+std::to_string(viewSpacePos.x)+ ", "+std::to_string(viewSpacePos.y)+ ", "+std::to_string(viewSpacePos.z) + ")");
+            
+            if (!u_SphereInsidePlane(viewSpacePos, 1.0f, camFrustum.planes[idx], camFrustum.planes[idx].w))
+            {
+                
+            }
+
+        }
 
         DescriptorAllocator* descriptorAllocatorRef;
         WindowProvider* windowProvider;
@@ -540,6 +627,7 @@ namespace Rendering
         //gbuff
         Camera camera = {glm::vec3(5.0f), Camera::CameraMode::E_FREE};
         Camera debugCam = {glm::vec3(10.0f), Camera::CameraMode::E_FREE};
+        Camera* currCamera = nullptr;
         Model* model{};
         MvpPc pc{};
 
@@ -559,8 +647,8 @@ namespace Rendering
         std::vector<Vertex2D> quadVert;
         std::vector<uint32_t> quadIndices;
         CPropsUbo cPropsUbo;
-        CPropsUbo cPropsUboDebug;
         LightPc lightPc{};
+        Frustum camFrustum;
     };
 }
 

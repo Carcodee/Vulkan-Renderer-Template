@@ -544,6 +544,25 @@ namespace Rendering
     	}
     	void UpdateResources()
     	{
+
+    		cullCount = 0;
+    		if (indirectDrawBuffer->mappedMem != nullptr)
+    		{
+			    indirectDrawBuffer->Unmap();
+			    ENGINE::DrawIndirectIndexedCmd* infos = nullptr;
+			    infos = reinterpret_cast<ENGINE::DrawIndirectIndexedCmd*>(indirectDrawBuffer->Map());
+			    for (int i = 0; i < RenderingResManager::GetInstance()->indirectDrawsCmdInfos.size(); ++i)
+			    {
+				    if (infos->instanceCount > 0)
+				    {
+					    cullCount++;
+				    }
+				    ++infos;
+			    }
+			    indirectDrawBuffer->Unmap();
+    		}
+
+        	
 		    for (int i = 0; i < indirectDrawsCmdInfos.size(); ++i)
 		    {
 		    	indirectDrawsCmdInfos[i].instanceCount = 0;
@@ -563,6 +582,7 @@ namespace Rendering
         std::vector<std::unique_ptr<Model>> models;
     	ENGINE::Buffer* indirectDrawBuffer;
     	std::vector<ENGINE::DrawIndirectIndexedCmd> indirectDrawsCmdInfos;
+    	int cullCount =0;
         
         RenderingResManager() = default;
         ~RenderingResManager() = default;

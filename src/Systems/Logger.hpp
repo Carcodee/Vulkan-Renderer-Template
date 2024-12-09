@@ -146,6 +146,23 @@ namespace SYSTEMS
             }
         }
 
+        void LogVec(const glm::vec3 vec)
+        {
+            std::string message = "Position: ("
+                + std::to_string(vec.x) + ", "
+                + std::to_string(vec.y) + ", "
+                + std::to_string(vec.z) + ")";
+            if (logOutput == LogOutput::FILE)
+            {
+                logFile << message << std::endl;
+            }
+            else
+            {
+                std::cout << message << std::endl;
+            }
+        }
+        
+
     private:
         LogLevel logLevel;
         LogOutput logOutput;

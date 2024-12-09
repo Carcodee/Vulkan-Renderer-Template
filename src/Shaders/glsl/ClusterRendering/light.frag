@@ -80,11 +80,11 @@ void main() {
     int lightOffset = lightMap[mapIndex].offset;
     int lightsInTile = lightMap[mapIndex].size;
     
-    vec3 lightPos = vec3(2.0,10.0, 0.0);
+    vec3 lightPos = vec3(2.0, -50.0, 0.0);
     vec3 lightDir = normalize(lightPos - pos);
     vec3 lightCol = vec3(1.0, 1.0, 1.0);
     vec3 ambientCol = vec3(0.0, 0.0, 0.0);
-    vec3 finalCol = col.xyz * dot(lightDir, norm.xyz) * lightCol  * 0.5f + ambientCol;
+    vec3 finalCol = col.xyz * lightCol  * 1.5f + ambientCol;
 
     for (int i = 0; i < lightsInTile; i++) {
         int lightIndex = lightIndices[lightOffset + i];
@@ -103,7 +103,7 @@ void main() {
 //         finalCol += debugCol*2 + tileCol * 0.3;
 //    }
 
-    if(distance(pos, vec3(0.0)) < 1.0){
+    if(distance(pos, vec3(0.0)) < 0.1){
         finalCol = vec3(1.0, 0.0, 0.0);
     } 
     

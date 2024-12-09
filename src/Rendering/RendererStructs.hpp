@@ -82,6 +82,24 @@ namespace Rendering
  		}
 
     };
+	struct D_Vertex3D
+	{
+	    glm::vec3 pos;
+        
+		bool operator==(const M_Vertex3D& other) const {
+			return pos == other.pos;
+		}
+
+    	static ENGINE::VertexInput GetVertexInput()
+		{
+			
+            ENGINE::VertexInput vertexInput;
+            vertexInput.AddVertexAttrib(ENGINE::VertexInput::VEC3, 0, offsetof(D_Vertex3D, pos), 0);
+            vertexInput.AddVertexInputBinding(0, sizeof(D_Vertex3D));
+			return vertexInput;
+ 		}
+	
+	};
 	
 
 	struct MvpPc 
@@ -148,7 +166,12 @@ namespace Rendering
 	{
 		bool loadMeshesSpheres;
 		bool compactMesh;
-		
+	};
+
+	struct Frustum
+	{
+		glm::vec4 planes[6];
+		glm::vec3 points[8];
 	};
 
 

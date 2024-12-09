@@ -251,7 +251,6 @@ namespace ENGINE
                     (*tasks[i])();
                 }
             }
-
             switch (pipelineType)
             {
             case vk::PipelineBindPoint::eGraphics:
@@ -735,7 +734,6 @@ namespace ENGINE
         }
         void RecreateFrameResources()
         {
-            
             for (auto& renderNode : renderNodes)
             {
                 renderNode.second->ClearOperations();

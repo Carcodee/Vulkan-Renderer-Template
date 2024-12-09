@@ -121,7 +121,8 @@ float u_SDF_Plane(vec3 pos, vec3 n, float dToPlane){
 }
 
 bool u_SphereInsidePlane(vec3 pos, float r, vec3 n, float dToPlane){
-    return u_SDF_Plane(pos, n, dToPlane) > -r;
+    bool behindPlane = u_SDF_Plane(pos, n, dToPlane) < -r;
+    return !behindPlane;
 }
 vec3 u_LineIntersectionToZPlane(vec3 A, vec3 B, float zDistance){
     vec3 normal = vec3(0.0, 0.0, 1.0);

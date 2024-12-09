@@ -51,7 +51,9 @@ namespace Rendering
 		{
 			position += forward * input.y * movementSpeed * deltaTime;
 			position += right * input.x * movementSpeed * deltaTime;
-			
+		}
+		void UpdateCam()
+		{
 			matrices.view = glm::lookAt(position, position + forward, up);
 		}
 		void RotateCamera()

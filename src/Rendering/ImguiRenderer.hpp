@@ -3,8 +3,10 @@
 
 
 
+
 // Created by carlo on 2024-10-10.
 //
+
 
 
 
@@ -19,9 +21,9 @@ namespace Rendering
     class ImguiRenderer
     {
     public:
-        ImguiRenderer(ENGINE::Core* core, WindowProvider* windowProvider, ClusterRenderer* clusterRenderer)
+	    ImguiRenderer(ENGINE::Core* core, WindowProvider* windowProvider, std::map<std::string, std::unique_ptr<BaseRenderer>>& renderers)
         {
-            this->clusterRenderer = clusterRenderer;
+            this->clusterRenderer = dynamic_cast<ClusterRenderer*>(renderers.at("ClusterRenderer").get());
             this->core =core;
             this->windowProvider= windowProvider;
 
@@ -69,13 +71,14 @@ namespace Rendering
 
 
         }
+    	
         void RenderFrame(vk::CommandBuffer commandBuffer, vk::ImageView& imageView)
         {
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
-            ImGui::ShowDemoWindow();
+            // ImGui::ShowDemoWindow();
             ClusterRendererInfo();
             RenderGraphProfiler();
             
@@ -176,9 +179,6 @@ namespace Rendering
         {
             ImGui::Begin("Debug Info");
 
-            // ImGui::Text("Gpu frame ms: %f.3f ms", gpuMs);
-            // ImGui::Text("Cpu Frame ms: %f.3f ms", cpuMs);
-
             
             ImGui::SeparatorText("Light Info");
             
@@ -251,19 +251,85 @@ namespace Rendering
                 clusterRenderer->zSlicesSize = zSlicesSize;
             }
 
+        	ImGui::SeparatorText("Cull Info");
 
-            ImGui::SeparatorText("Camera Info");
-            
-            ImGui::LabelText(":X", "%f.3f", clusterRenderer->camera.position.x);
-            ImGui::LabelText(":Y", "%f.3f", clusterRenderer->camera.position.y);
-            ImGui::LabelText(":Z", "%f.3f", clusterRenderer->camera.position.z);
-            
-            ImGui::LabelText("Forward :X", "%f.3f", clusterRenderer->camera.forward.x);
-            ImGui::LabelText("Forward :Y", "%f.3f", clusterRenderer->camera.forward.y);
-            ImGui::LabelText("Forward :Z", "%f.3f", clusterRenderer->camera.forward.z);
-            
-            ImGui::End();
-            
+        	std::string cullCount = "Cull Count: " + std::to_string(
+				RenderingResManager::GetInstance()->cullCount) + " / " + std::to_string(
+				RenderingResManager::GetInstance()->indirectDrawsCmdInfos.size());
+
+        	ImGui::Text("%s", cullCount.c_str());
+
+        	ImGui::SeparatorText("First Person Camera Info");
+
+            std::string cameraPos = "Position: ("
+	            + std::to_string(clusterRenderer->camera.position.x) + ", "
+	            + std::to_string(clusterRenderer->camera.position.y) + ", "
+	            + std::to_string(clusterRenderer->camera.position.z) + ")";
+	    	
+	    	std::string cameraForward = "Forward: ("
+	            + std::to_string(clusterRenderer->camera.forward.x) + ", "
+	            + std::to_string(clusterRenderer->camera.forward.y) + ", "
+	            + std::to_string(clusterRenderer->camera.forward.z) + ")";
+	    	std::string cameraRight = "Right: ("
+	            + std::to_string(clusterRenderer->camera.right.x) + ", "
+	            + std::to_string(clusterRenderer->camera.right.y) + ", "
+	            + std::to_string(clusterRenderer->camera.right.z) + ")";
+	    	std::string cameraUp = "Up: ("
+	            + std::to_string(clusterRenderer->camera.up.x) + ", "
+	            + std::to_string(clusterRenderer->camera.up.y) + ", "
+	            + std::to_string(clusterRenderer->camera.up.z) + ")";
+
+        	ImGui::Text("%s", cameraPos.c_str());
+        	ImGui::Text("%s", cameraForward.c_str());
+        	ImGui::Text("%s", cameraRight.c_str());
+        	ImGui::Text("%s", cameraUp.c_str());
+
+            ImGui::SeparatorText("Virtual Cam Info");
+	    	static bool detachedCam = false;
+            if(ImGui::Checkbox("Debug Cull", &detachedCam))
+            {
+            	if (detachedCam)
+            	{
+		            clusterRenderer->debugCam.position = clusterRenderer->camera.position;
+		            clusterRenderer->debugCam.yaw = clusterRenderer->camera.yaw;
+		            clusterRenderer->debugCam.pitch = clusterRenderer->camera.pitch;
+            	}
+            }
+	    	if (detachedCam)
+	    	{
+	    		clusterRenderer->currCamera = &clusterRenderer->debugCam;
+			    clusterRenderer->debugCam.UpdateCam();
+			    clusterRenderer->debugCam.RotateCamera();
+			    static float yaw = clusterRenderer->debugCam.yaw;
+			    static float pitch = clusterRenderer->debugCam.pitch;
+
+			    if (ImGui::SliderFloat("Yaw", &yaw, 0.0f, 360.0f))
+			    {
+				    clusterRenderer->debugCam.yaw = yaw;
+			    }
+			    if (ImGui::SliderFloat("Pitch", &pitch, 0.0f, 360.0f))
+			    {
+				    clusterRenderer->debugCam.pitch = pitch;
+			    }
+			    static float pos[3] = {
+				    clusterRenderer->debugCam.position.x, clusterRenderer->debugCam.position.y,
+				    clusterRenderer->debugCam.position.z
+			    };
+
+			    if (ImGui::Button("Snap Cam to view", {50, 50}))
+			    {
+				    clusterRenderer->debugCam.position = clusterRenderer->camera.position;
+				    clusterRenderer->debugCam.yaw = clusterRenderer->camera.yaw;
+				    clusterRenderer->debugCam.pitch = clusterRenderer->camera.pitch;
+			    };
+			    clusterRenderer->debugCam.UpdateCam();
+			    clusterRenderer->debugCam.RotateCamera();	
+	    	}else
+	    	{
+			    clusterRenderer->currCamera = &clusterRenderer->camera;
+	    	}
+        	
+        	ImGui::End();
         }
 
         void Destroy()

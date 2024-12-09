@@ -14,15 +14,6 @@
 #include <random>
 
 
-#define GLM_FORCE_RADIANS
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
-#define GLM_FORCE_RIGHT_HANDED
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/glm.hpp>
-
-#include <glm/gtx/hash.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
