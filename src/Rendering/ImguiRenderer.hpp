@@ -26,7 +26,10 @@ namespace Rendering
     public:
 	    ImguiRenderer(ENGINE::Core* core, WindowProvider* windowProvider, std::map<std::string, std::unique_ptr<BaseRenderer>>& renderers)
         {
-            this->clusterRenderer = dynamic_cast<ClusterRenderer*>(renderers.at("ClusterRenderer").get());
+	    	if (renderers.contains("ClusterRenderer"))
+	    	{
+			    this->clusterRenderer = dynamic_cast<ClusterRenderer*>(renderers.at("ClusterRenderer").get());
+	    	}
             this->core =core;
             this->windowProvider= windowProvider;
 
@@ -82,7 +85,10 @@ namespace Rendering
             ImGui::NewFrame();
 
             // ImGui::ShowDemoWindow();
-            ClusterRendererInfo();
+	    	if (clusterRenderer)
+	    	{
+			    ClusterRendererInfo();
+	    	}
             RenderGraphProfiler();
             
             ImGui::Render();
@@ -364,7 +370,7 @@ namespace Rendering
         WindowProvider* windowProvider;
         DescriptorAllocator descriptorAllocator;
         Core* core;
-        ClusterRenderer* clusterRenderer;
+        ClusterRenderer* clusterRenderer = nullptr;;
         ImGuiUtils::ProfilersWindow profilersWindow{};
     };
 }

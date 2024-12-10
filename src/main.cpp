@@ -76,10 +76,16 @@ void run(WindowProvider* windowProvider)
 
     std::map<std::string, std::unique_ptr<Rendering::BaseRenderer>> renderers;
     
-    renderers.try_emplace("ClusterRenderer", std::make_unique<Rendering::ClusterRenderer>(
-        core.get(), windowProvider, descriptorAllocator.get()));
-    Rendering::ClusterRenderer* clusterRenderer = dynamic_cast<Rendering::ClusterRenderer*>(renderers.at("ClusterRenderer").get());
-    clusterRenderer->SetRenderOperation(inFlightQueue.get());
+    // renderers.try_emplace("ClusterRenderer", std::make_unique<Rendering::ClusterRenderer>(
+        // core.get(), windowProvider, descriptorAllocator.get()));
+     renderers.try_emplace("FlatRenderer", std::make_unique<Rendering::FlatRenderer>(
+                              core.get(), windowProvider, descriptorAllocator.get()));
+    
+    // Rendering::ClusterRenderer* clusterRenderer = dynamic_cast<Rendering::ClusterRenderer*>(renderers.at("ClusterRenderer").get());
+    // clusterRenderer->SetRenderOperation(inFlightQueue.get());
+   
+    Rendering::FlatRenderer* flatRenderer = dynamic_cast<Rendering::FlatRenderer*>(renderers.at("FlatRenderer").get());
+    flatRenderer->SetRenderOperation(inFlightQueue.get());
     
     std::unique_ptr<Rendering::ImguiRenderer> imguiRenderer = std::make_unique<Rendering::ImguiRenderer>(
         core.get(), windowProvider, renderers);
@@ -124,8 +130,9 @@ void run(WindowProvider* windowProvider)
                 if (glfwGetKey(windowProvider->window, GLFW_KEY_R))
                 {
                     renderGraph->RecompileShaders();
-                    clusterRenderer->ReloadShaders();
+                    // clusterRenderer->ReloadShaders();
                     debugRenderer->ReloadShaders();
+                    flatRenderer->ReloadShaders();
                 }
 
                 renderingResManager->UpdateResources();
@@ -140,30 +147,7 @@ void run(WindowProvider* windowProvider)
                 
                 core->renderGraphRef->ExecuteAll(&currFrame);
               
-                glm::vec2 input = glm::vec2(0.0f);
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input += glm::vec2(0.0f, 1.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input += glm::vec2(0.0f, -1.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_D)) { input += glm::vec2(1.0f, 0.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_A)) { input += glm::vec2(-1.0f, 0.0f); }
-                if (glfwGetKey(windowProvider->window, GLFW_KEY_LEFT_SHIFT))
-                {
-                    clusterRenderer->camera.movementSpeed = 40;
-                }else
-                {
-                    clusterRenderer->camera.movementSpeed = 5;
-                }
-                input =glm::clamp(input, glm::vec2(-1.0, -1.0), glm::vec2(1.0, 1.0));
-                glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
-                clusterRenderer->camera.mouseInput = mouseInput;
-                if (glfwGetMouseButton(windowProvider->window, GLFW_MOUSE_BUTTON_2))
-                {
-                    clusterRenderer->camera.RotateCamera();
-                    clusterRenderer->camera.Move(deltaTime, input);
-                }else
-                {
-                    clusterRenderer->camera.firstMouse = true;
-                }
-                clusterRenderer->camera.UpdateCam();
+
 
                 profiler->AddProfilerCpuSpot(legit::Colors::alizarin,"Imgui");
                 imguiRenderer->RenderFrame(currFrame.commandBuffer.get(),

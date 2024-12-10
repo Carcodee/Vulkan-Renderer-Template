@@ -187,6 +187,7 @@ namespace ENGINE
     public:
         Shader(vk::Device logicalDevice, std::string path)
         {
+            assert(std::filesystem::exists(path) && "Path does not exist");
             this->path = path;
             this->logicalDevice = logicalDevice;
             std::vector<uint32_t> byteCode = GetByteCode(path);

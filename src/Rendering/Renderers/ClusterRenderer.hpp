@@ -45,9 +45,10 @@ namespace Rendering
 
         void SetRenderOperation(InFlightQueue* inflightQueue) override
         {
-            auto meshCullTak = new std::function<void()>([this, inflightQueue]()
+            auto meshCullTask = new std::function<void()>([this, inflightQueue]()
             {
-                
+
+                MoveCam();
                 cPropsUbo.invProj = glm::inverse(currCamera->matrices.perspective);
                 cPropsUbo.invView = glm::inverse(currCamera->matrices.view);
                 cPropsUbo.pos = currCamera->position;
@@ -89,7 +90,7 @@ namespace Rendering
                 });
             
             renderGraphRef->GetNode(meshCullPassName)->SetRenderOperation(meshCullRenderOp);
-            renderGraphRef->GetNode(meshCullPassName)->AddTask(meshCullTak);
+            renderGraphRef->GetNode(meshCullPassName)->AddTask(meshCullTask);
 
             auto cullTask = new std::function<void()>([this, inflightQueue]()
             {
@@ -289,9 +290,9 @@ namespace Rendering
                                                               vk::ImageUsageFlagBits::eSampled);
 
 
-            colAttachmentView = ResourcesManager::GetInstance()->GetImage("colAttachment", imageInfo, 0, 1, 0, 1);
-            normAttachmentView = ResourcesManager::GetInstance()->GetImage("normAttachment", imageInfo, 0, 1, 0, 1); 
-            depthAttachmentView = ResourcesManager::GetInstance()->GetImage("depthAttachment", depthImageInfo, 0, 1, 0, 1); 
+            colAttachmentView = ResourcesManager::GetInstance()->GetImage("colAttachment", imageInfo, 0,  0);
+            normAttachmentView = ResourcesManager::GetInstance()->GetImage("normAttachment", imageInfo, 0, 0); 
+            depthAttachmentView = ResourcesManager::GetInstance()->GetImage("depthAttachment", depthImageInfo, 0, 0); 
 
             //gbuff
             camera.SetPerspective(
@@ -580,6 +581,35 @@ namespace Rendering
             // Far Plane
             camFrustum.planes[5] = u_GetPlane(farTopL, farBottomL, farBottomR);
         }
+        void MoveCam()
+        {
+            glm::vec2 input = glm::vec2(0.0f);
+            if (glfwGetKey(windowProvider->window, GLFW_KEY_W)) { input += glm::vec2(0.0f, 1.0f); }
+            if (glfwGetKey(windowProvider->window, GLFW_KEY_S)) { input += glm::vec2(0.0f, -1.0f); }
+            if (glfwGetKey(windowProvider->window, GLFW_KEY_D)) { input += glm::vec2(1.0f, 0.0f); }
+            if (glfwGetKey(windowProvider->window, GLFW_KEY_A)) { input += glm::vec2(-1.0f, 0.0f); }
+            if (glfwGetKey(windowProvider->window, GLFW_KEY_LEFT_SHIFT))
+            {
+                camera.movementSpeed = 40;
+            }
+            else
+            {
+                camera.movementSpeed = 5;
+            }
+            input = glm::clamp(input, glm::vec2(-1.0, -1.0), glm::vec2(1.0, 1.0));
+            glm::vec2 mouseInput = glm::vec2(-ImGui::GetMousePos().x, ImGui::GetMousePos().y);
+            camera.mouseInput = mouseInput;
+            if (glfwGetMouseButton(windowProvider->window, GLFW_MOUSE_BUTTON_2))
+            {
+                camera.RotateCamera();
+                camera.Move(deltaTime, input);
+            }
+            else
+            {
+                camera.firstMouse = true;
+            }
+            camera.UpdateCam();
+        };
 
         DescriptorAllocator* descriptorAllocatorRef;
         WindowProvider* windowProvider;

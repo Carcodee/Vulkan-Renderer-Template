@@ -562,6 +562,13 @@ namespace Rendering
     	
     	void UpdateResources()
     	{
+
+    		FlushIndirectBuffers();
+    	}
+
+    	void FlushIndirectBuffers()
+    	{
+     		if (indirectDrawsCmdInfos.empty()){return;}
     		cullCount = 0;
     		if (indirectDrawBuffer->mappedMem != nullptr)
     		{
@@ -578,15 +585,13 @@ namespace Rendering
 			    }
 			    indirectDrawBuffer->Unmap();
     		}
-
-        	
 		    for (int i = 0; i < indirectDrawsCmdInfos.size(); ++i)
 		    {
 		    	indirectDrawsCmdInfos[i].instanceCount = 0;
 		    }
 		    indirectDrawBuffer = ENGINE::ResourcesManager::GetInstance()->SetBuffer(
 			    "IndirectCmds", sizeof(ENGINE::DrawIndirectIndexedCmd) * indirectDrawsCmdInfos.size(),
-			    indirectDrawsCmdInfos.data());
+			    indirectDrawsCmdInfos.data());   		
     	}
 
     	Model* PushModelToIndirectBatch(std::string name)

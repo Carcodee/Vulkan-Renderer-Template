@@ -107,8 +107,7 @@ namespace ENGINE
         }
         
         
-        ImageView* GetImage(std::string name, vk::ImageCreateInfo imageInfo, int baseMipLevel,
-                            int mipLevelCount, int baseArrayLayer, int arrayLayerCount)
+        ImageView* GetImage(std::string name, vk::ImageCreateInfo imageInfo, int baseMipLevel, int baseArrayLayer)
         {
             assert(core!= nullptr &&"core must be set");
             ImageView* imageViewRef = nullptr;
@@ -131,8 +130,8 @@ namespace ENGINE
                 storageImagesNames.try_emplace(name, (int32_t)storageImagesViews.size());
                 storageImagesViews.emplace_back(std::make_unique<ImageView>(
                     core->logicalDevice.get(), image->imageData.get(),
-                    baseMipLevel, mipLevelCount, baseArrayLayer,
-                    arrayLayerCount));
+                    baseMipLevel, imageInfo.mipLevels, baseArrayLayer,
+                    imageInfo.arrayLayers));
                 images.emplace_back(std::move(image));
                 return storageImagesViews.back().get();
             }
@@ -141,8 +140,8 @@ namespace ENGINE
                 assert(!imagesNames.contains(name) && "Image name already exist");
                 imagesNames.try_emplace(name, (int32_t)imageViews.size());
                 imageViews.emplace_back(std::make_unique<ImageView>(core->logicalDevice.get(), image->imageData.get(),
-                                                                    baseMipLevel, mipLevelCount, baseArrayLayer,
-                                                                    arrayLayerCount));
+                                                                    baseMipLevel, imageInfo.mipLevels, baseArrayLayer,
+                                                                    imageInfo.arrayLayers));
                 images.emplace_back(std::move(image));
                 return imageViews.back().get();
             }
@@ -383,7 +382,7 @@ namespace ENGINE
                                                          ENGINE::g_32bFormat,
                                                          vk::ImageUsageFlagBits::eStorage);
 
-            ImageView* defaultStorage = GetImage("default_storage", imageInfo, 0, 1, 0, 1);
+            ImageView* defaultStorage = GetImage("default_storage", imageInfo, 0, 0);
             
             
             

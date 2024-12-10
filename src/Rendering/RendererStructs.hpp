@@ -118,6 +118,12 @@ namespace Rendering
 		float yMousePos = 0;
 		int mode = 0;
 	};
+	struct ProbesGenPc
+	{
+		int cascadeIndex = 0;
+		int intervalSize = 16;
+		int gridSize = 16;
+	};
 	struct CPropsUbo
 	{
 		glm::mat4 invProj= glm::mat4(1.0);
@@ -183,6 +189,10 @@ namespace Rendering
 	{
 		glm::vec4 planes[6];
 		glm::vec3 points[8];
+	};
+	struct CascadesInfo
+	{
+		uint32_t cascadeCount = 4;
 	};
 
 
