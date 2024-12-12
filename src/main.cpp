@@ -146,7 +146,6 @@ void run(WindowProvider* windowProvider)
                 profiler->EndProfilerCpuSpot("Cpu");
                 
                 core->renderGraphRef->ExecuteAll(&currFrame);
-              
 
 
                 profiler->AddProfilerCpuSpot(legit::Colors::alizarin,"Imgui");

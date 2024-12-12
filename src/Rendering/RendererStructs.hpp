@@ -114,15 +114,24 @@ namespace Rendering
 	};
 	struct RcPc
 	{
-		float xMousePos = 0;
-		float yMousePos = 0;
-		int mode = 0;
+		int cascadesCount = 0;
+		int fWidth = 0;
+		int fHeight = 0;
 	};
 	struct ProbesGenPc
 	{
 		int cascadeIndex = 0;
 		int intervalSize = 16;
 		int gridSize = 16;
+	};
+
+	struct PaintingPc 
+	{
+		glm::vec4 color = glm::vec4(1.0);
+		int layerSelected = 0;
+		int painting = 0;
+		int xMousePos = 0;
+		int yMousePos = 0;
 	};
 	struct CPropsUbo
 	{

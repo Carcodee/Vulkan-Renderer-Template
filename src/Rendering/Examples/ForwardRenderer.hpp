@@ -77,8 +77,6 @@ namespace Rendering
             fragShader->sParser->GetLayout(builder);
 
             //automatic descriptor handler
-            // descriptorCache->SetDefaultSampler(imageShipper.imageView.get(), imageShipper.sampler);
-            // descriptorCache->SetDefaultStorageInfo(computeStorage, imageShipper.sampler);
             descriptorCache->AddShaderInfo(vertShader->sParser.get());
             descriptorCache->AddShaderInfo(fragShader->sParser.get());
             descriptorCache->BuildDescriptorsCache(descriptorAllocatorRef, vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment );

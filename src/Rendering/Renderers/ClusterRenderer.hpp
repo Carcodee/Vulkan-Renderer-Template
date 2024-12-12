@@ -148,7 +148,6 @@ namespace Rendering
             auto renderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
-
                     vk::DeviceSize offset = 0;
                     std::vector<ImageView*> textures;
                     for (auto& image : ResourcesManager::GetInstance()->imageShippers)

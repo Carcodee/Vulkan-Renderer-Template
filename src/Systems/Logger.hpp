@@ -161,6 +161,21 @@ namespace SYSTEMS
                 std::cout << message << std::endl;
             }
         }
+
+        void LogVec(const glm::vec2 vec)
+        {
+            std::string message = "Position: ("
+                + std::to_string(vec.x) + ", "
+                + std::to_string(vec.y) + ")";
+            if (logOutput == LogOutput::FILE)
+            {
+                logFile << message << std::endl;
+            }
+            else
+            {
+                std::cout << message << std::endl;
+            }
+        }
         
 
     private:

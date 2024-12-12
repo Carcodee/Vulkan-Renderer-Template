@@ -115,7 +115,7 @@ namespace ENGINE
             {
                 vk::Semaphore waitSemaphores[] = {currFrame.imageAcquiredSemaphore.get()};
                 vk::Semaphore signalSemaphores[] = {currFrame.renderingFinishedSemaphore.get()};
-                vk::PipelineStageFlags waitStages [] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
+                vk::PipelineStageFlags  waitStages[] = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
 
                 auto submitInfo = vk::SubmitInfo()
                 .setWaitSemaphoreCount(1)

@@ -754,7 +754,6 @@ namespace ENGINE
             {
                 assert(false &&"reload shaders failed");
             }
-
         }
 
         void ExecuteAll(FrameResources* currentFrame)

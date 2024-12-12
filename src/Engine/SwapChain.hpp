@@ -98,7 +98,6 @@ namespace ENGINE
 
                 depthImagesFull.emplace_back(std::move(depthImageFull));
             }
-
                         
         }
         vk::ResultValue<uint32_t> AcquireNextImage(vk::Semaphore semaphore)

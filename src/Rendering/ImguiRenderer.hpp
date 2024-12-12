@@ -24,12 +24,54 @@ namespace Rendering
     class ImguiRenderer
     {
     public:
+    	struct ImguiDsetsArray
+    	{
+
+    		~ImguiDsetsArray() = default;
+    		ImguiDsetsArray(Core* core, DescriptorAllocator* descriptorAllocator)
+    		{
+    			this->core = core;
+    			this->descriptorAllocator = descriptorAllocator;
+    		}
+    		void AddSet(std::string name)
+    		{
+    			if (indexes.contains(name))
+    			{
+    				return;
+    			}
+			    ENGINE::DescriptorLayoutBuilder builder;
+			    builder.AddBinding(0, vk::DescriptorType::eCombinedImageSampler);
+			    auto dstLayout = builder.BuildBindings(core->logicalDevice.get(), vk::ShaderStageFlagBits::eFragment);
+			    auto dset = descriptorAllocator->Allocate(core->logicalDevice.get(), dstLayout.get());
+			    indexes.try_emplace(name, dsets.size());
+    			descriptorSetLayouts.emplace_back(std::move(dstLayout));
+    			dsets.emplace_back(std::move(dset));
+    		}
+    		vk::DescriptorSet GetDsetByName(std::string name)
+    		{
+    			return dsets.at(indexes.at(name)).get();
+    		}
+		    vk::DescriptorSetLayout GetLayoutByName(std::string name)
+		    {
+			    return descriptorSetLayouts.at(indexes.at(name)).get();
+		    }
+
+		    Core* core = nullptr;
+    		DescriptorAllocator* descriptorAllocator = nullptr;
+		    std::map<std::string, int> indexes;
+    		std::vector<vk::UniqueDescriptorSet> dsets;
+    		std::vector<vk::UniqueDescriptorSetLayout> descriptorSetLayouts;
+    	};
 	    ImguiRenderer(ENGINE::Core* core, WindowProvider* windowProvider, std::map<std::string, std::unique_ptr<BaseRenderer>>& renderers)
         {
 	    	if (renderers.contains("ClusterRenderer"))
 	    	{
 			    this->clusterRenderer = dynamic_cast<ClusterRenderer*>(renderers.at("ClusterRenderer").get());
 	    	}
+		    if (renderers.contains("FlatRenderer"))
+		    {
+			    this->flatRenderer = dynamic_cast<FlatRenderer*>(renderers.at("FlatRenderer").get());
+		    }
             this->core =core;
             this->windowProvider= windowProvider;
 
@@ -47,6 +89,8 @@ namespace Rendering
                 {vk::DescriptorType::eInputAttachment, 1}
             };
             descriptorAllocator.BeginPool(core->logicalDevice.get(), 1000, poolSizeRatios);
+	    	
+	    	this->dsetsArrays = std::make_unique<ImguiDsetsArray>(core, &descriptorAllocator);
             
             ImGui::CreateContext();
 
@@ -80,6 +124,7 @@ namespace Rendering
     	
         void RenderFrame(vk::CommandBuffer commandBuffer, vk::ImageView& imageView)
         {
+	    	currCommandBuffer = &commandBuffer;
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
@@ -89,6 +134,11 @@ namespace Rendering
 	    	{
 			    ClusterRendererInfo();
 	    	}
+	    	if (flatRenderer)
+	    	{
+	    		RCascadesInfo();
+	    	}
+	    	
             RenderGraphProfiler();
             
             ImGui::Render();
@@ -99,13 +149,23 @@ namespace Rendering
             vk::RenderingAttachmentInfo depthAttachment;
             
             dynamicRenderPass.SetRenderInfoUnsafe(attachmentInfos, windowProvider->GetWindowSize(), &depthAttachment);
-
+	    	
+            for (int i = 0; i < imageViewsToRecover.size(); ++i)
+		    {
+			    TransitionImage(imageViewsToRecover[i]->imageData, LayoutPatterns::GRAPHICS_READ, imageViewsToRecover[i]->GetSubresourceRange(), commandBuffer);
+		    }
+	    	
             commandBuffer.beginRendering(dynamicRenderPass.renderInfo);
-            
             ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
-
-            
             commandBuffer.endRendering();
+
+		    for (int i = 0; i < imageViewsToRecover.size(); ++i)
+		    {
+		    	TransitionImage(imageViewsToRecover[i]->imageData, layoutPatternsesToRecover[i], imageViewsToRecover[i]->GetSubresourceRange(), commandBuffer);
+		    }
+	    	
+	    	imageViewsToRecover.clear();
+	    	layoutPatternsesToRecover.clear();
         }
         void RenderGraphProfiler()
         {
@@ -362,16 +422,68 @@ namespace Rendering
         	ImGui::End();
         }
 
+    	void RCascadesInfo()
+	    {
+		    ImGui::Begin("Radiance Cascades Info");
+
+		    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+
+	    	std::vector<ImageView*> cascades = flatRenderer->cascadesAttachmentsImagesViews;
+
+		    for (int i = 0; i < cascades.size(); ++i)
+		    {
+		    	std::string imageName = "cascade_" + std::to_string(i);
+		    	AddImage(imageName ,cascades[i], viewportSize);
+		    }
+		    std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
+
+		    for (int i = 0; i < paintingLayers.size(); ++i)
+		    {
+			    // std::string imageName = "" + std::to_string(i);
+			    // AddImage(imageName, paintingLayers[i], viewportSize);
+		    }
+	    	ImGui::End();
+	    }
+    	void AddImage(std::string name, ImageView* imageView,ImVec2 size)
+	    {
+		    Sampler* sampler = core->renderGraphRef->samplerPool.GetSampler(
+			    vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
+	    	LayoutPatterns lastLayout = imageView->imageData->currentLayout;
+	    	layoutPatternsesToRecover.push_back(lastLayout);
+	    	imageViewsToRecover.push_back(imageView);
+	    	
+	    	if (dsetsArrays->indexes.contains(name))
+	    	{
+			    ImGui::Image((ImTextureID)dsetsArrays->GetDsetByName(name), size);
+	    		
+			    TransitionImage(imageView->imageData, lastLayout, imageView->GetSubresourceRange(),
+			                    *currCommandBuffer);
+	    		return;
+	    	}
+	    	dsetsArrays->AddSet(name);
+	    	ENGINE::DescriptorWriterBuilder writerBuilder;
+	    	writerBuilder.AddWriteImage(0, imageView, sampler->samplerHandle.get(), vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler);
+	    	writerBuilder.UpdateSet(core->logicalDevice.get(), dsetsArrays->GetDsetByName(name));
+	    	
+		    ImGui::Image((ImTextureID)dsetsArrays->GetDsetByName(name), size);
+	    }
         void Destroy()
         {
             ImGui_ImplVulkan_Shutdown();
         }
+
+	    vk::CommandBuffer* currCommandBuffer = nullptr;
         DynamicRenderPass dynamicRenderPass;
         WindowProvider* windowProvider;
         DescriptorAllocator descriptorAllocator;
         Core* core;
-        ClusterRenderer* clusterRenderer = nullptr;;
+        ClusterRenderer* clusterRenderer = nullptr;
+        FlatRenderer* flatRenderer = nullptr;
         ImGuiUtils::ProfilersWindow profilersWindow{};
+    	std::unique_ptr<ImguiDsetsArray> dsetsArrays;
+    	std::vector<LayoutPatterns> layoutPatternsesToRecover;
+    	std::vector<ImageView*> imageViewsToRecover;
     };
 }
 
