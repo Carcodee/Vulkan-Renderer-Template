@@ -16,6 +16,7 @@
 
 
 
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -136,6 +137,7 @@ namespace Rendering
 	    	}
 	    	if (flatRenderer)
 	    	{
+	    		PaintingInfo();
 	    		RCascadesInfo();
 	    	}
 	    	
@@ -421,6 +423,27 @@ namespace Rendering
         	
         	ImGui::End();
         }
+    	void PaintingInfo()
+	    {
+		    ImGui::Begin("Painting Info");
+
+	    	ImGui::SliderInt("Brush Radius", &flatRenderer->paintingPc.radius, 1, 100);
+
+	    	float color[4] = {1.0f, 1.0f, 1.0f, 1.0};
+	    	if(ImGui::ColorEdit4("Brush Radius", color))
+	    	{
+	    		flatRenderer->paintingPc.color = glm::make_vec4(color);
+	    	}
+		    ImGui::SliderInt("Layer", &flatRenderer->paintingPc.layerSelected, 0, 1);
+
+	    	if (ImGui::Button("Clear Canvas"))
+	    	{
+	    		ResourcesManager::GetInstance()->RequestStorageImageClear("PaintingLayer");
+	    	}
+	    	
+	    	
+	    	ImGui::End();
+	    }
 
     	void RCascadesInfo()
 	    {
@@ -438,11 +461,6 @@ namespace Rendering
 		    }
 		    std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
 
-		    for (int i = 0; i < paintingLayers.size(); ++i)
-		    {
-			    // std::string imageName = "" + std::to_string(i);
-			    // AddImage(imageName, paintingLayers[i], viewportSize);
-		    }
 	    	ImGui::End();
 	    }
     	void AddImage(std::string name, ImageView* imageView,ImVec2 size)

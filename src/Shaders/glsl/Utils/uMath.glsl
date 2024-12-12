@@ -1,7 +1,8 @@
 #ifndef U_MATH 
 #define U_MATH 
+#define PI 3.1415
+#define INVERSE_PI 3.1415
 
-#define PI 3.1415;
 //float
 float u_Lerp(float start, float end, float v){
     return start + v * (end - start);

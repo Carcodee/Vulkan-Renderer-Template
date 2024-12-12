@@ -132,6 +132,7 @@ namespace Rendering
 		int painting = 0;
 		int xMousePos = 0;
 		int yMousePos = 0;
+		int radius = 5;
 	};
 	struct CPropsUbo
 	{

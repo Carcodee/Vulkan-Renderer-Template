@@ -111,7 +111,7 @@ namespace ENGINE
         {
             assert(core!= nullptr &&"core must be set");
             ImageView* imageViewRef = nullptr;
-            if (imagesNames.contains(name) && imageInfo.usage == vk::ImageUsageFlagBits::eStorage)
+            if (imagesNames.contains(name) && (imageInfo.usage & vk::ImageUsageFlagBits::eStorage))
             {
                 imageViewRef = GetStorageFromName(name);
                 return imageViewRef;
@@ -124,7 +124,7 @@ namespace ENGINE
             
             auto image = std::make_unique<
                 Image>(core->physicalDevice, core->logicalDevice.get(), imageInfo);
-            if (imageInfo.usage == vk::ImageUsageFlagBits::eStorage)
+            if (imageInfo.usage & vk::ImageUsageFlagBits::eStorage)
             {
                 assert(!storageImagesNames.contains(name) && "Image name already exist");
                 storageImagesNames.try_emplace(name, (int32_t)storageImagesViews.size());
@@ -337,7 +337,6 @@ namespace ENGINE
                     bufferUpdateInfo.state = VALID;
                 }
             }
-
             auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
             auto commandBuffer = commandExecutor->BeginCommandBuffer();
             for (auto& name : stagedBufferNames)
@@ -361,7 +360,23 @@ namespace ENGINE
             commandExecutor->EndCommandBuffer();
             Notify();
             invalidateBuffers = false;
-            
+        }
+        void EndFrameDynamicUpdates(vk::CommandBuffer commandBuffer)
+        {
+            for (int i = 0; i < storageImagesToClear.size(); ++i)
+            {
+                ImageView* imageView = GetStorageFromName(storageImagesToClear[i]);
+                vk::ClearColorValue clearColor(std::array<float, 4>{0.0f, 0.0f, 0.0f, 0.0f});
+
+                commandBuffer.clearColorImage(
+                    imageView->imageData->imageHandle,
+                    vk::ImageLayout::eGeneral,
+                    clearColor,
+                   imageView->GetSubresourceRange() 
+                );
+
+            }
+            storageImagesToClear.clear();
         }
 
         ResourcesManager(Core* coreRefs)
@@ -384,9 +399,18 @@ namespace ENGINE
 
             ImageView* defaultStorage = GetImage("default_storage", imageInfo, 0, 0);
             
-            
-            
         }
+
+        void RequestStorageImageClear(std::string name)
+        {
+            if (!storageImagesNames.contains(name))
+            {
+                SYSTEMS::Logger::GetInstance()->LogMessage("Storage Image with name does not exist: " + name);
+                return;
+            }
+            storageImagesToClear.push_back(name);
+        }
+        
         static ResourcesManager* GetInstance(Core* coreRef = nullptr)
         {
             if (instance == nullptr && coreRef != nullptr)
@@ -434,6 +458,7 @@ namespace ENGINE
         std::vector<std::unique_ptr<ImageShipper>> imageShippers;
         std::vector<ImagesUpdateInfo> imagesUpdateInfos;
         std::vector<std::unique_ptr<Image>> images;
+        std::vector<std::string> storageImagesToClear;
       
         bool invalidateBuffers = false;
         bool updateImagesShippers = false;

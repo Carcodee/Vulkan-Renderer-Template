@@ -154,6 +154,8 @@ void run(WindowProvider* windowProvider)
 
                 profiler->EndProfilerCpuSpot("Imgui");
                 profiler->AddProfilerGpuSpot(legit::Colors::carrot,"Gpu");
+
+                resourcesManager->EndFrameDynamicUpdates(currFrame.commandBuffer.get());
                 inFlightQueue->EndFrame();
                 profiler->EndProfilerGpuSpot("Gpu");
 

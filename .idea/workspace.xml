@@ -9,6 +9,7 @@
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
     <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
     <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="4" type="long" />
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexRemoved" />
   </component>
   <component name="CMakePresetLoader">{
   &quot;useNewFormat&quot;: true
@@ -30,20 +31,13 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Probes textures generated">
-      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/editor.xml" afterDir="false" />
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Painting gen pipeline">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/PresentQueue.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/PresentQueue.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/RenderGraph.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/RenderGraph.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Engine/SwapChain.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/SwapChain.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/Examples/ForwardRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Examples/ForwardRenderer.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/ClusterRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Examples/fSample.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Examples/fSample.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uMath.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uMath.glsl" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Systems/Logger.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Systems/Logger.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -226,7 +220,9 @@
       <workItem from="1733941717111" duration="5834000" />
       <workItem from="1733978008762" duration="11000" />
       <workItem from="1733978458388" duration="210000" />
-      <workItem from="1733980147543" duration="2000" />
+      <workItem from="1733980147543" duration="34000" />
+      <workItem from="1734028817645" duration="3593000" />
+      <workItem from="1734037792769" duration="4201000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -492,7 +488,15 @@
       <option name="project" value="LOCAL" />
       <updated>1733858049323</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Painting gen pipeline">
+      <option name="closed" value="true" />
+      <created>1733980164134</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1733980164134</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -538,7 +542,8 @@
     <MESSAGE value="moved vertex buffer creation to models" />
     <MESSAGE value="Starting to work on the rc implementation" />
     <MESSAGE value="Probes textures generated" />
-    <option name="LAST_COMMIT_MESSAGE" value="Probes textures generated" />
+    <MESSAGE value="Painting gen pipeline" />
+    <option name="LAST_COMMIT_MESSAGE" value="Painting gen pipeline" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
