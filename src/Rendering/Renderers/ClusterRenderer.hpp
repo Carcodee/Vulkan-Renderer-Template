@@ -308,7 +308,7 @@ namespace Rendering
             camera.position = glm::vec3(0.0f);
 
             std::string path = SYSTEMS::OS::GetInstance()->GetAssetsPath();
-            RenderingResManager::GetInstance()->PushModelToIndirectBatch(path + "\\Models\\Cubes\\cubes.gltf");
+            RenderingResManager::GetInstance()->PushModelToIndirectBatch(path + "\\Models\\sponza\\scene.gltf");
 
             //compute
             std::random_device rd;

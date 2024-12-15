@@ -429,7 +429,7 @@ namespace Rendering
 
 	    	ImGui::SliderInt("Brush Radius", &flatRenderer->paintingPc.radius, 1, 100);
 
-	    	float color[4] = {1.0f, 1.0f, 1.0f, 1.0};
+	    	static float color[4] = {1.0f, 1.0f, 1.0f, 1.0};
 	    	if(ImGui::ColorEdit4("Brush Radius", color))
 	    	{
 	    		flatRenderer->paintingPc.color = glm::make_vec4(color);
