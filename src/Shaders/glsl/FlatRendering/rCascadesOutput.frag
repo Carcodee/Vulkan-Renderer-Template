@@ -30,15 +30,22 @@ vec4 MergeIntervals(vec4 near, vec4 far){
     return vec4(radiance, near.rgb * far.a);
 }
 
-vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd){
+vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
     vec4 accumulatedRadiance = vec4(0.0);
     vec2 dir = intervalEnd - intervalStart;
-    int steps = 30;
+    int steps = 10;
     vec2 stepSize = vec2(dir)/float(steps);
     bool occluded = false;
     for (int i = 0; i < steps; ++i){
         vec2 pos = intervalStart + (stepSize * float(i));
         ivec2 screenPos = ivec2(pos * vec2(pc.fWidth, pc.fHeight));
+
+
+        vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
+        //debug
+        imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
+        //
+
         vec4 sampleCol= imageLoad(PaintingLayers[0], screenPos);
         if(sampleCol != vec4(0.0)){
             occluded = true;
@@ -71,27 +78,40 @@ void main() {
         cascades[i] = texture(Cascades[i], textCoord).xy;
     }
 
-    vec2 texelDir[CASCADE_SIZE];
     int interval= 4;
     int gridSize = 16;
     vec4 radiances[CASCADE_SIZE];
-    ivec2 probeIndexTest = ivec2(textCoord * gridSize) + 1;
-    vec2 probePosTest = (vec2(probeIndexTest) / float(gridSize));
+    //debug
+    vec2 texelDir[CASCADE_SIZE];
+    vec2 probePositions[CASCADE_SIZE];
+    vec2 startPositions[CASCADE_SIZE];
+    
     for(int i= 0; i < CASCADE_SIZE; i++ ){
         
         uint dirCount = interval * interval;
         ivec2 textIdx = ivec2(cascades[i].xy * float(interval));
         uint dirIndex = textIdx.x + textIdx.y * interval;
-        float angle = 2.0 * 3.1415 * ((float(dirIndex) + 0.5) / float(dirCount));
+        
+        float angle = 2.0 * PI * ((float(dirIndex) + 0.5) / float(dirCount));
         texelDir[i] = vec2(cos(angle), sin(angle));
+
+        ivec2 probeStart = ivec2(textCoord * gridSize);
+        ivec2 probeEnd = ivec2(textCoord * gridSize) + 1;
+
+        vec2 probeStartPos = (vec2(probeStart) / float(gridSize));
+        vec2 probeEndPos = (vec2(probeEnd) / float(gridSize));
+        vec2 deltaStartEndPos = (probeEndPos - probeStartPos)/2.0;
         
-        ivec2 probeIndex = ivec2(textCoord * gridSize) + 1;
-        vec2 probePos = (vec2(probeIndex) / float(gridSize));
+        vec2 probePos = probeStartPos + deltaStartEndPos;
+        probePositions[i] = probePos;
         
-        vec2 intervalRange = IntervalRange(i, 0.01);
+        
+        vec2 intervalRange = IntervalRange(i, 0.006);
         vec2 intervalStart = probePos + texelDir[i] * intervalRange.x;
         vec2 intervalEnd = probePos + texelDir[i] * intervalRange.y;
-        radiances[i] = CastInterval(intervalStart, intervalEnd);
+        radiances[i] = CastInterval(intervalStart, intervalEnd, i + 1);
+        startPositions[i] = intervalStart; 
+        
         interval = interval * 2;
         gridSize = gridSize / 2;
     }
@@ -103,13 +123,15 @@ void main() {
 
     ivec2 coord = ivec2(gl_FragCoord.xy);
     vec4 storageArr = imageLoad(PaintingLayers[0], coord);
-
-    if(distance(probePosTest, textCoord) < 0.01){
-
-        outColor = vec4(probePosTest, 0.0, 1.0);
-    }else{
-        outColor = vec4(0.0);
-    }
-//    outColor = radiance;
+    vec4 debugImg = imageLoad(PaintingLayers[2], coord);
+//    
+//    if(distance(startPositions[0], textCoord) < 0.001){
+//        outColor = vec4(0.0);
+//    }else{
+//        outColor = vec4(probePositions[0], 0.0, 1.0);
+//    }
+//      outColor = storageArr + radiance;
+//    outColor = storageArr + radiances[0];
+    outColor = debugImg;
 
 }

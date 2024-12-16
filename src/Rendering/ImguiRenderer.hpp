@@ -439,6 +439,7 @@ namespace Rendering
 	    	if (ImGui::Button("Clear Canvas"))
 	    	{
 	    		ResourcesManager::GetInstance()->RequestStorageImageClear("PaintingLayer");
+	    		ResourcesManager::GetInstance()->RequestStorageImageClear("DebugRaysLayer");
 	    	}
 	    	
 	    	
