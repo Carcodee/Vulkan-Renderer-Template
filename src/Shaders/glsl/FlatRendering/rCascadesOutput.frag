@@ -34,7 +34,7 @@ vec4 MergeIntervals(vec4 near, vec4 far){
 vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
     vec4 accumulatedRadiance = vec4(0.0);
     vec2 dir = intervalEnd - intervalStart;
-    int steps = (10 << (cascadeIndex));
+    int steps = (30 << (cascadeIndex));
 //    int steps = 10;
     vec2 stepSize = vec2(dir)/float(steps);
     bool occluded = false;
@@ -49,7 +49,7 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
         vec4 sampleCol= imageLoad(PaintingLayers[0], screenPos);
         vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
         
-        if(cascadeIndex == 1 ){
+        if(cascadeIndex == 3 ){
         }
         imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
         
@@ -71,7 +71,7 @@ float IntervalScale(int cascadeIndex){
     if(cascadeIndex<= 0){
         return 0.0;
     }
-    return float(1 << (2 * cascadeIndex));
+    return float(1 << (1 * cascadeIndex));
 }
 
 vec2 IntervalRange(int cascadeIndex, float baseLenght){
@@ -153,8 +153,8 @@ void main() {
 //    }else{
 //        outColor = vec4(probePositions[0], 0.0, 1.0);
 //    }
-//      outColor = storageArr + radiance;
-    outColor = storageArr + radiances[0];
+      outColor = storageArr + radiance;
+//    outColor = storageArr + radiances[0];
 //    outColor = debugImg;
 
 }
