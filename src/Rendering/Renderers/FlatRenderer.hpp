@@ -47,8 +47,8 @@ namespace Rendering
                 cascadesAttachmentsImagesViews.emplace_back(imageView);
             }
             probesGenPc.cascadeIndex = 0;
-            probesGenPc.gridSize = cascadesInfo.cascadeCount * cascadesInfo.cascadeCount;
-            probesGenPc.intervalSize = cascadesInfo.cascadeCount * cascadesInfo.cascadeCount;
+            probesGenPc.intervalSize = 2;
+            probesGenPc.gridSize = 16;
 
             paintingPc.radius = 5;
 
@@ -232,8 +232,8 @@ namespace Rendering
                 });
             renderGraph->GetNode(paintingPassName)->SetRenderOperation(paintingRenderOP);
             
-            int intervalSize = cascadesInfo.cascadeCount;
-            int gridAxisSize = cascadesInfo.cascadeCount * cascadesInfo.cascadeCount;
+            int intervalSize = 2;
+            int gridAxisSize = 16;
             for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
             {
                 auto probesGenOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -263,7 +263,7 @@ namespace Rendering
                         commandBuffer.drawIndexed(Vertex2D::GetQuadIndices().size(), 1, 0, 0, 0);
                     });
                 renderGraph->GetNode(probesGenPassNames[i])->SetRenderOperation(probesGenOp);
-                intervalSize *= 2;
+                intervalSize *= 4;
                 gridAxisSize /= 2;
             }
 

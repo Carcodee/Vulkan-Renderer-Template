@@ -117,6 +117,7 @@ namespace Rendering
 		int cascadesCount = 0;
 		int fWidth = 0;
 		int fHeight = 0;
+		float baseIntervalLength = 0.01f;
 	};
 	struct ProbesGenPc
 	{

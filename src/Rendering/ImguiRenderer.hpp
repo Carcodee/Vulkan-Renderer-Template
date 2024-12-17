@@ -439,8 +439,9 @@ namespace Rendering
 	    	if (ImGui::Button("Clear Canvas"))
 	    	{
 	    		ResourcesManager::GetInstance()->RequestStorageImageClear("PaintingLayer");
-	    		ResourcesManager::GetInstance()->RequestStorageImageClear("DebugRaysLayer");
+			    ResourcesManager::GetInstance()->RequestStorageImageClear("DebugRaysLayer");
 	    	}
+	    	
 	    	
 	    	
 	    	ImGui::End();
@@ -450,8 +451,14 @@ namespace Rendering
 	    {
 		    ImGui::Begin("Radiance Cascades Info");
 
+	    	
+	    	static float baseIntervalLength= flatRenderer->rcPc.baseIntervalLength;
+	    	if (ImGui::SliderFloat("Base Interval Length", &baseIntervalLength, 0.000001f, 0.1f))
+	    	{
+	    		flatRenderer->rcPc.baseIntervalLength = baseIntervalLength;
+	    	}
+	    	
 		    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
 
 	    	std::vector<ImageView*> cascades = flatRenderer->cascadesAttachmentsImagesViews;
 
@@ -462,6 +469,7 @@ namespace Rendering
 		    }
 		    std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
 
+	    	
 	    	ImGui::End();
 	    }
     	void AddImage(std::string name, ImageView* imageView,ImVec2 size)

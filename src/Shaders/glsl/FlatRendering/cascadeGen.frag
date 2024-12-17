@@ -34,7 +34,7 @@ void main() {
     ivec2 index = ivec2(localUV * (pc.intervalSize));
     vec2 indexCol = vec2(index)/(pc.intervalSize);
     
-    int dirCount = pc.intervalSize * pc.intervalSize;
+    int dirCount = pc.intervalSize;
     int dirIndex = index.x + index.y * (pc.intervalSize);
 
     float test = float(dirIndex)/float(dirCount);

@@ -363,6 +363,9 @@ namespace ENGINE
         }
         void EndFrameDynamicUpdates(vk::CommandBuffer commandBuffer)
         {
+            BufferAccessPattern src = GetSrcBufferAccessPattern(BufferUsageTypes::B_GRAPHICS_WRITE);
+            BufferAccessPattern dst = GetSrcBufferAccessPattern(BufferUsageTypes::B_TRANSFER_DST);
+            CreateMemBarrier(src, dst, commandBuffer);
             for (int i = 0; i < storageImagesToClear.size(); ++i)
             {
                 ImageView* imageView = GetStorageFromName(storageImagesToClear[i]);
