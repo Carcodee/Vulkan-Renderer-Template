@@ -62,6 +62,12 @@ struct u_Sphere{
     vec3 center;
     float radius;
 };
+
+struct u_CascadeInfo{
+    ivec2 probeCentersPositionsPx;
+    ivec2 probeSizesPx;
+    int dirIndices;
+};
 //End Util
 
 #endif 

@@ -453,7 +453,7 @@ namespace Rendering
 
 	    	
 	    	static float baseIntervalLength= flatRenderer->rcPc.baseIntervalLength;
-	    	if (ImGui::SliderFloat("Base Interval Length", &baseIntervalLength, 0.000001f, 0.1f))
+	    	if (ImGui::SliderFloat("Base Interval Length", &baseIntervalLength, 0.000001f, 1.0f))
 	    	{
 	    		flatRenderer->rcPc.baseIntervalLength = baseIntervalLength;
 	    	}

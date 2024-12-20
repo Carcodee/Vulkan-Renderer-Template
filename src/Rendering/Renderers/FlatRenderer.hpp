@@ -48,7 +48,7 @@ namespace Rendering
             }
             probesGenPc.cascadeIndex = 0;
             probesGenPc.intervalSize = 2;
-            probesGenPc.gridSize = 16;
+            probesGenPc.gridSize = 256;
 
             paintingPc.radius = 5;
 
@@ -233,7 +233,7 @@ namespace Rendering
             renderGraph->GetNode(paintingPassName)->SetRenderOperation(paintingRenderOP);
             
             int intervalSize = 2;
-            int gridAxisSize = 16;
+            int gridAxisSize = 256;
             for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
             {
                 auto probesGenOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -323,6 +323,10 @@ namespace Rendering
 
         std::string rCascadesPassName = "rCascadesPass";
 
+        std::unique_ptr<DescriptorCache> mergeCascCache;
+        std::unique_ptr<Shader> mergeVertShader;
+        std::unique_ptr<Shader> mergeFragShader;
+        
         std::unique_ptr<DescriptorCache> outputCache;
         std::unique_ptr<Shader> vertShader;
         std::unique_ptr<Shader> fragShader;
