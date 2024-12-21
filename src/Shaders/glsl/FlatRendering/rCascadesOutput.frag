@@ -71,7 +71,7 @@ float IntervalScale(int cascadeIndex){
     if(cascadeIndex<= 0){
         return 0.0;
     }
-    return float(1 << (1 * cascadeIndex));
+    return float(1 << (2 * cascadeIndex));
 }
 
 vec2 IntervalRange(int cascadeIndex, float baseLenght){
@@ -118,7 +118,6 @@ void main() {
         vec4 radiance = CastInterval(intervalStart, intervalEnd, i);
         
         imageStore(Radiances[i], coord, radiance);
-        
 
         intervalGrid = intervalGrid * 2;
         gridSize = gridSize / 2;

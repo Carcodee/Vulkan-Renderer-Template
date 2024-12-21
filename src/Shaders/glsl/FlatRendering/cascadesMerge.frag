@@ -45,13 +45,12 @@ void BilinearSamples(vec2 destCenter, vec2 bilinearSize, out vec4 weights, out i
     baseIndex = ivec2(floor(baseCoord));
 }
 ivec2 bilinearOffset(int offsetIndex) {
-    const ivec2 offsets[4] = { ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1) };
+    const ivec2 offsets[4] = {ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1)};
     return offsets[offsetIndex];
 }
 
 #define CASCADE_SIZE 4
 void main() {
-
 
     ivec2 coords = ivec2(gl_FragCoord.xy);
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
@@ -62,7 +61,7 @@ void main() {
     ivec2 probeSizesPx[CASCADE_SIZE];
     int dirIndices[CASCADE_SIZE];
 
-    for(int i = 0; i <= 0; i++){
+    for(int i = 0; i <= CASCADE_SIZE; i++){
         vec2 cascade = texture(Cascades[i], textCoord).xy;
         uint dirCount = intervalGrid * intervalGrid;
         ivec2 textIdx = ivec2(cascade.xy * float(intervalGrid));
@@ -75,10 +74,9 @@ void main() {
         vec2 probeEndPos = (vec2(probeEnd) / float(gridSize));
         vec2 deltaStartEndPos = (probeEndPos - probeStartPos)/2.0;
 
-        vec2 probePos = probeStartPos + deltaStartEndPos;
+        vec2 probeCenterPos = probeStartPos + deltaStartEndPos;
         probeSizesPx[i] = ivec2(vec2(fSize) / vec2(gridSize));
-        probeCentersPositionsPx[i] = ivec2(probePos * vec2(pc.fWidth, pc.fHeight));
-        
+        probeCentersPositionsPx[i] = ivec2(probeCenterPos * vec2(fSize));
         intervalGrid = intervalGrid * 2;
         gridSize = gridSize / 2;
     }
@@ -87,12 +85,14 @@ void main() {
     for(int i = CASCADE_SIZE - 2; i >= 0; i--){
         int n = i;
         int nPlusOne = i + 1;
-        ivec2 dstCenter = probeCentersPositionsPx[n];
+        ivec2 destCenter = probeCentersPositionsPx[n];
         ivec2 bilinearSize = probeSizesPx[nPlusOne];
         vec4 weights = vec4(0.0);
         ivec2 baseIndex = ivec2(0.0);
-        BilinearSamples(vec2(dstCenter), vec2(bilinearSize), weights, baseIndex);
-
+        BilinearSamples(vec2(destCenter), vec2(bilinearSize), weights, baseIndex);
+        if(nPlusOne == 3){
+            imageStore(Radiances[0], baseIndex, vec4(1.0));
+        }
         for(int d = 0; d < 4; d++){
             vec4 radianceBilinear = vec4(0.0);
             for (int b = 0; b < 4; b++){
@@ -103,14 +103,14 @@ void main() {
                 const ivec2 bilinearDirCoord = ivec2(bilinearDirIndex % bilinearSize.x,
                                                         bilinearDirIndex / bilinearSize.y);
                 const ivec2 bilinearTexel = bilinearIndex * bilinearSize + bilinearDirCoord;
-
                 vec4 bilinearInterval = imageLoad(Radiances[nPlusOne], bilinearTexel);
                 vec4 destInterval = imageLoad(Radiances[n], coords);
-                radianceBilinear += MergeIntervals(destInterval, bilinearInterval);
+                radianceBilinear += MergeIntervals(destInterval, bilinearInterval) * weights[b];
             }
             merged += radianceBilinear / 4.0;
         }
     }
+    
     vec4 destInterval = imageLoad(Radiances[0], coords);
     outColor = merged;
 
