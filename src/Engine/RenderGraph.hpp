@@ -198,7 +198,7 @@ namespace ENGINE
             dynamicRenderPass.SetViewport(frameBufferSize, frameBufferSize);
             commandBuffer.setViewport(0,1,&dynamicRenderPass.viewport);
             commandBuffer.setScissor(0, 1, &dynamicRenderPass.scissor);
-            
+
             assert(imagesAttachment.size()== colAttachments.size()&& "Not all color attachments were set");
             int index = 0;
             std::vector<vk::RenderingAttachmentInfo> attachmentInfos;

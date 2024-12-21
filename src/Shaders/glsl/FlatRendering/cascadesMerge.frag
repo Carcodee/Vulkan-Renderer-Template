@@ -54,6 +54,7 @@ void main() {
 
 
     ivec2 coords = ivec2(gl_FragCoord.xy);
+    ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     //debug
     int intervalGrid= 2;
     int gridSize = 256;
@@ -75,7 +76,7 @@ void main() {
         vec2 deltaStartEndPos = (probeEndPos - probeStartPos)/2.0;
 
         vec2 probePos = probeStartPos + deltaStartEndPos;
-        probeSizesPx[i] = ivec2(vec2(gridSize) * vec2(pc.fWidth, pc.fHeight));
+        probeSizesPx[i] = ivec2(vec2(fSize) / vec2(gridSize));
         probeCentersPositionsPx[i] = ivec2(probePos * vec2(pc.fWidth, pc.fHeight));
         
         intervalGrid = intervalGrid * 2;
@@ -86,11 +87,11 @@ void main() {
     for(int i = CASCADE_SIZE - 2; i >= 0; i--){
         int n = i;
         int nPlusOne = i + 1;
-        vec2 center = probeCentersPositionsPx[n];
+        ivec2 dstCenter = probeCentersPositionsPx[n];
         ivec2 bilinearSize = probeSizesPx[nPlusOne];
-        vec4 weights;
-        ivec2 baseIndex;
-        BilinearSamples(center, bilinearSize, weights, baseIndex);
+        vec4 weights = vec4(0.0);
+        ivec2 baseIndex = ivec2(0.0);
+        BilinearSamples(vec2(dstCenter), vec2(bilinearSize), weights, baseIndex);
 
         for(int d = 0; d < 4; d++){
             vec4 radianceBilinear = vec4(0.0);
@@ -103,9 +104,9 @@ void main() {
                                                         bilinearDirIndex / bilinearSize.y);
                 const ivec2 bilinearTexel = bilinearIndex * bilinearSize + bilinearDirCoord;
 
-                vec4 bilinearInterval = imageLoad(Radiances[nPlusOne], coords);
+                vec4 bilinearInterval = imageLoad(Radiances[nPlusOne], bilinearTexel);
                 vec4 destInterval = imageLoad(Radiances[n], coords);
-                radianceBilinear += MergeIntervals(destInterval, bilinearInterval) * weights[b];
+                radianceBilinear += MergeIntervals(destInterval, bilinearInterval);
             }
             merged += radianceBilinear / 4.0;
         }

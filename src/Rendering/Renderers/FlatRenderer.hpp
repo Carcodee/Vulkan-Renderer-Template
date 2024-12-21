@@ -24,6 +24,7 @@ namespace Rendering
             probesGenCache = std::make_unique<DescriptorCache>(core);
             paintingCache = std::make_unique<DescriptorCache>(core);
             mergeCascadesCache = std::make_unique<DescriptorCache>(core);
+            cascadesResultCache = std::make_unique<DescriptorCache>(core);
             CreateResources();
             CreateBuffers();
             CreatePipelines();
@@ -64,6 +65,7 @@ namespace Rendering
                 ImageView* imageView = ResourcesManager::GetInstance()->GetImage(name, storageImageInfo, 0, 0);
                 radiancesImages.emplace_back(imageView);
             }
+            mergedCascadesResult = ResourcesManager::GetInstance()->GetImage("mergedCascades", imageInfo, 0, 0);;
             
             
         }
@@ -198,6 +200,9 @@ namespace Rendering
                 renderNode->DependsOn(probesGenPassNames[i]);
             }
 
+            AttachmentInfo mergeColInfo = GetColorAttachmentInfo(
+                glm::vec4(0.0f), g_32bFormat);
+
             mergeVertShader = std::make_unique<Shader>(logicalDevice,
                                                   shaderPath + "\\spirv\\Common\\Quad.vert.spv");
             mergeFragShader = std::make_unique<Shader>(logicalDevice,
@@ -219,7 +224,8 @@ namespace Rendering
             mergeRenderNode->SetFramebufferSize(windowProvider->GetWindowSize());
             mergeRenderNode->SetPipelineLayoutCI(mergeLayoutCreateInfo);
             mergeRenderNode->SetVertexInput(vertexInput);
-            mergeRenderNode->AddColorAttachmentOutput("mergeColor", outputColInfo);
+            mergeRenderNode->AddColorAttachmentOutput("mergeColor", mergeColInfo);
+            mergeRenderNode->AddColorImageResource("mergedColor", mergedCascadesResult);
             mergeRenderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
             mergeRenderNode->SetRasterizationConfigs(RasterizationConfigs::R_FILL);
             int i = 0;
@@ -231,7 +237,34 @@ namespace Rendering
             }
             mergeRenderNode->BuildRenderGraphNode();
             mergeRenderNode->DependsOn(rCascadesPassName);
+
             
+            resultVertShader = std::make_unique<Shader>(logicalDevice,
+                                                  shaderPath + "\\spirv\\Common\\Quad.vert.spv");
+            resultFragShader = std::make_unique<Shader>(logicalDevice,
+                                                  shaderPath + "\\spirv\\FlatRendering\\cascadesResult.frag.spv");
+            cascadesResultCache->AddShaderInfo(resultVertShader->sParser.get());
+            cascadesResultCache->AddShaderInfo(resultFragShader->sParser.get());
+            cascadesResultCache->BuildDescriptorsCache(descriptorAllocator,
+                                               vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment);
+
+            auto resultLayoutCreateInfo = vk::PipelineLayoutCreateInfo()
+                                    .setSetLayoutCount(1)
+                                    .setPushConstantRanges(pushConstantRange)
+                                    .setPSetLayouts(&cascadesResultCache->dstLayout.get());
+
+            auto resultNode = renderGraph->AddPass(resultPassName);
+
+            resultNode->SetVertShader(resultVertShader.get());
+            resultNode->SetFragShader(resultFragShader.get());
+            resultNode->SetFramebufferSize(windowProvider->GetWindowSize());
+            resultNode->SetPipelineLayoutCI(resultLayoutCreateInfo);
+            resultNode->SetVertexInput(vertexInput);
+            resultNode->AddColorAttachmentOutput("resultColor", outputColInfo);
+            resultNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
+            resultNode->SetRasterizationConfigs(RasterizationConfigs::R_FILL);
+            resultNode->BuildRenderGraphNode();
+            resultNode->DependsOn(rMergePassName);
 
         }
 
@@ -345,7 +378,6 @@ namespace Rendering
             auto mergeTask = new std::function<void()>([this, inflightQueue]()
             {
                 auto* currImage = inflightQueue->currentSwapchainImageView;
-                renderGraph->AddColorImageResource(rMergePassName, "mergeColor", currImage);
                 renderGraph->GetNode(rMergePassName)->SetFramebufferSize(windowProvider->GetWindowSize());
             });
             auto mergeRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -373,6 +405,37 @@ namespace Rendering
                 });
             renderGraph->GetNode(rMergePassName)->SetRenderOperation(mergeRenderOp);
             renderGraph->GetNode(rMergePassName)->AddTask(mergeTask);
+            auto resultTask = new std::function<void()>([this, inflightQueue]()
+            {
+                auto* currImage = inflightQueue->currentSwapchainImageView;
+                renderGraph->GetNode(resultPassName)->AddColorImageResource("resultColor",currImage);
+                renderGraph->GetNode(resultPassName)->SetFramebufferSize(windowProvider->GetWindowSize());
+            });
+            auto resultRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
+                [this](vk::CommandBuffer& commandBuffer)
+                {
+                    cascadesResultCache->SetSampler("MergedCascades", mergedCascadesResult);
+                    cascadesResultCache->SetStorageImageArray("PaintingLayers", paintingLayers);
+                    
+                    auto& renderNode = renderGraph->renderNodes.at(resultPassName);
+                    commandBuffer.bindDescriptorSets(renderNode->pipelineType,
+                                                     renderNode->pipelineLayout.get(), 0,
+                                                     1,
+                                                     &cascadesResultCache->dstSet.get(), 0, nullptr);
+                    vk::DeviceSize offset = 0;
+                    commandBuffer.bindVertexBuffers(0, 1, &quadVertBufferRef->bufferHandle.get(), &offset);
+                    commandBuffer.bindIndexBuffer(quadIndexBufferRef->bufferHandle.get(), 0, vk::IndexType::eUint32);
+                    
+                    commandBuffer.pushConstants(renderNode->pipelineLayout.get(),
+                                                vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
+                                                0, sizeof(RcPc), &rcPc);
+                    commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
+
+                    commandBuffer.drawIndexed(Vertex2D::GetQuadIndices().size(), 1, 0,
+                                              0, 0);
+                });
+            renderGraph->GetNode(resultPassName)->SetRenderOperation(resultRenderOp);
+            renderGraph->GetNode(resultPassName)->AddTask(resultTask);
         }
 
         void ReloadShaders() override
@@ -383,6 +446,8 @@ namespace Rendering
             outputNode->RecreateResources();
             auto* mergeNode = renderGraph->GetNode(rMergePassName);
             mergeNode->RecreateResources();
+            auto* resultNode = renderGraph->GetNode(resultPassName);
+            resultNode->RecreateResources();
             for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
             {
                 auto* genNode = renderGraph->GetNode(probesGenPassNames[i]);
@@ -395,13 +460,20 @@ namespace Rendering
         WindowProvider* windowProvider;
         DescriptorAllocator* descriptorAllocator;
 
+        std::string paintingPassName = "PaintingPass";
         std::string rCascadesPassName = "rCascadesPass";
         std::string rMergePassName = "rMergePass";
+        std::string resultPassName = "resultPass";
 
+         std::unique_ptr<DescriptorCache> cascadesResultCache;
+        std::unique_ptr<Shader> resultVertShader;
+        std::unique_ptr<Shader> resultFragShader;
+        
         std::unique_ptr<DescriptorCache> mergeCascadesCache;
         std::unique_ptr<Shader> mergeVertShader;
         std::unique_ptr<Shader> mergeFragShader;
         std::vector<ImageView*> radiancesImages;
+        ImageView* mergedCascadesResult;
         
         std::unique_ptr<DescriptorCache> outputCache;
         std::unique_ptr<Shader> vertShader;
@@ -417,7 +489,6 @@ namespace Rendering
         std::unique_ptr<DescriptorCache> paintingCache;
         std::unique_ptr<Shader> paintCompShader;
         std::vector<ImageView*> paintingLayers;
-        std::string paintingPassName = "PaintingPass";
 
 
         Buffer* quadVertBufferRef;
