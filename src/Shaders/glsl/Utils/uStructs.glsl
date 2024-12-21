@@ -63,7 +63,7 @@ struct u_Sphere{
     float radius;
 };
 
-struct u_CascadeInfo{
+struct u_MergeCascadesInfo{
     ivec2 probeCentersPositionsPx;
     ivec2 probeSizesPx;
     int dirIndices;

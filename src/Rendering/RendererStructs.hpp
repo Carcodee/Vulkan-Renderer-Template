@@ -206,7 +206,12 @@ namespace Rendering
 		uint32_t cascadeCount = 4;
 	};
 
-
+	struct MergeCascadesInfo 
+	{
+		glm::uvec2 probeCentersPositionsPx;
+		glm::uvec2 probeSizesPx;
+		int dirIndices;
+	};
     
 }
 
