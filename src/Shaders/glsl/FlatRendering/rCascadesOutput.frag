@@ -37,7 +37,7 @@ vec4 MergeIntervals(vec4 near, vec4 far){
 vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
     vec4 accumulatedRadiance = vec4(0.0);
     vec2 dir = intervalEnd - intervalStart;
-    int steps = (30 << (cascadeIndex));
+    int steps = (20 << (cascadeIndex));
 //    int steps = 10;
     vec2 stepSize = vec2(dir)/float(steps);
     bool occluded = false;
@@ -51,15 +51,19 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
         ivec2 screenPos = ivec2(pos);
         
         vec4 sampleCol= imageLoad(PaintingLayers[0], screenPos);
+        vec4 ocluddersCol= imageLoad(PaintingLayers[1], screenPos);
         vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
         if(cascadeIndex == 3){
             imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
         }       
    
-        if(sampleCol != vec4(0.0)){
+        if(sampleCol != vec4(0.0)|| ocluddersCol != vec4(0.0)){
             occluded = true;
         }else{
-            sampleCol = vec4(0.0, 0.0, 0.0, 1.0);
+            sampleCol = vec4(0.001, 0.001, 0.001, 1.0);
+        }
+        if(ocluddersCol != vec4(0.0)){
+            sampleCol = vec4(0.0);
         }
         accumulatedRadiance+= sampleCol;
     }

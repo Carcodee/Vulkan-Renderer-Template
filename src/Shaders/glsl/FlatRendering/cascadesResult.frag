@@ -61,9 +61,10 @@ void main() {
     vec4 col = mix(mix(tlCol, trCol, cellFrac.x), mix(blCol, brCol, cellFrac.x), cellFrac.y);
 
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
+    vec4 blackOc= imageLoad(PaintingLayers[1], coord);
     vec4 debug= imageLoad(PaintingLayers[2], coord);
     
-//    outColor = vec4(pos, 0.0, 1.0) + paintingImage;
-    outColor = col + paintingImage;
+//    outColor = blackOc;
+    outColor = (baseCol * vec4(1.0) - blackOc) + paintingImage;
 
 }

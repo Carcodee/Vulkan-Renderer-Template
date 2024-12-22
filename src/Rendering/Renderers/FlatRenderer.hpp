@@ -464,17 +464,18 @@ namespace Rendering
         {
             auto* paintingNode = renderGraph->GetNode(paintingPassName);
             paintingNode->RecreateResources();
+            for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
+            {
+                auto* genNode = renderGraph->GetNode(probesGenPassNames[i]);
+                genNode->RecreateResources();
+            }
             auto* outputNode = renderGraph->GetNode(rCascadesPassName);
             outputNode->RecreateResources();
             auto* mergeNode = renderGraph->GetNode(rMergePassName);
             mergeNode->RecreateResources();
             auto* resultNode = renderGraph->GetNode(resultPassName);
             resultNode->RecreateResources();
-            for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
-            {
-                auto* genNode = renderGraph->GetNode(probesGenPassNames[i]);
-                genNode->RecreateResources();
-            }
+
         }
 
         Core* core;

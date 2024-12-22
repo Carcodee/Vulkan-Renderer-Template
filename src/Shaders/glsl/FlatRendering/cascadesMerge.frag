@@ -91,9 +91,9 @@ void main() {
         vec4 weights = vec4(0.0);
         ivec2 baseIndex = ivec2(0.0);
         BilinearSamples(vec2(destCenter), vec2(bilinearSize), weights, baseIndex);
-        if(nPlusOne == 3){
-            imageStore(Radiances[0], baseIndex, vec4(1.0));
-        }
+//        if(nPlusOne == 3){
+//            imageStore(Radiances[0], baseIndex, vec4(1.0));
+//        }
         for(int d = 0; d < 4; d++){
             vec4 radianceBilinear = vec4(0.0);
             for (int b = 0; b < 4; b++){

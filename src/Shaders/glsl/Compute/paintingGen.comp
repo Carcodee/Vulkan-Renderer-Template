@@ -38,7 +38,7 @@ void main() {
             imageStore(PaintingLayers[0], xy , pc.color);
         }
         if(painting && pc.layerSelected == 1){
-            imageStore(PaintingLayers[1], xy , vec4(0.0));
+            imageStore(PaintingLayers[1], xy , vec4(1.0));
         }       
     }
 
