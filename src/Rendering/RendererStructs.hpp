@@ -115,15 +115,17 @@ namespace Rendering
 	struct RcPc
 	{
 		int cascadesCount = 0;
+		int probeSizePx = 8;
+		int intervalCount = 2;
 		int fWidth = 0;
 		int fHeight = 0;
-		float baseIntervalLength = 0.01f;
+		int baseIntervalLength = 12;
 	};
 	struct ProbesGenPc
 	{
 		int cascadeIndex = 0;
 		int intervalSize = 16;
-		int gridSize = 16;
+		int probeSizePx = 16;
 	};
 
 	struct PaintingPc 
@@ -204,6 +206,9 @@ namespace Rendering
 	struct CascadesInfo
 	{
 		uint32_t cascadeCount = 4;
+		int probeSizePx = 16;
+		int intervalCount = 2;
+		int baseIntervalLength = 12;
 	};
 
 	struct MergeCascadesInfo 

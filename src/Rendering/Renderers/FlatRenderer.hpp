@@ -1,4 +1,11 @@
 //
+
+
+
+
+
+
+
 // Created by carlo on 2024-12-02.
 //
 
@@ -32,6 +39,10 @@ namespace Rendering
 
         void CreateResources()
         {
+            cascadesInfo.cascadeCount = 4;
+            cascadesInfo.probeSizePx = 8;
+            cascadesInfo.intervalCount = 2;
+            cascadesInfo.baseIntervalLength = 12;
             auto imageInfo = Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                  ENGINE::g_32bFormat,
                                                  vk::ImageUsageFlagBits::eColorAttachment |
@@ -43,11 +54,18 @@ namespace Rendering
                 ImageView* imageView = ResourcesManager::GetInstance()->GetImage(name, imageInfo, 0, 0);
                 cascadesAttachmentsImagesViews.emplace_back(imageView);
             }
+
+            
             probesGenPc.cascadeIndex = 0;
             probesGenPc.intervalSize = 2;
-            probesGenPc.gridSize = 240;
+            probesGenPc.probeSizePx = cascadesInfo.probeSizePx;
 
+            rcPc.probeSizePx = cascadesInfo.probeSizePx;
+            rcPc.intervalCount = cascadesInfo.intervalCount;
+            rcPc.baseIntervalLength = cascadesInfo.baseIntervalLength;
+            
             paintingPc.radius = 5;
+
 
             auto storageImageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                          ENGINE::g_32bFormat,
@@ -304,19 +322,22 @@ namespace Rendering
                 });
             renderGraph->GetNode(paintingPassName)->SetRenderOperation(paintingRenderOP);
             
-            int intervalSize = 2;
-            int gridAxisSize = 8;
             for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
             {
                 auto probesGenOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
-                    [this, i, gridAxisSize, intervalSize](vk::CommandBuffer& commandBuffer)
+                    [this, i](vk::CommandBuffer& commandBuffer)
                     {
                         int idx = i;
-                        int gridSizePc = gridAxisSize;
-                        int intervalSizePc = intervalSize;
+                        int intervalSizePc = cascadesInfo.intervalCount;
+                        int gridSizePc = cascadesInfo.probeSizePx;
+                        for (int j = 0; j < idx; ++j)
+                        {
+                            intervalSizePc *= 2;
+                            gridSizePc *= 2;
+                        }
                         probesGenPc.cascadeIndex = idx;
                         probesGenPc.intervalSize = intervalSizePc;
-                        probesGenPc.gridSize = gridSizePc;
+                        probesGenPc.probeSizePx = gridSizePc;
                         auto& renderNode = renderGraph->renderNodes.at(probesGenPassNames[idx]);
                         commandBuffer.bindDescriptorSets(renderNode->pipelineType,
                                                          renderNode->pipelineLayout.get(), 0,
@@ -335,13 +356,14 @@ namespace Rendering
                         commandBuffer.drawIndexed(Vertex2D::GetQuadIndices().size(), 1, 0, 0, 0);
                     });
                 renderGraph->GetNode(probesGenPassNames[i])->SetRenderOperation(probesGenOp);
-                intervalSize *= 4;
-                gridAxisSize *= 2;
             }
 
             auto radianceOutputTask = new std::function<void()>([this, inflightQueue]()
             {
                 rcPc.cascadesCount = cascadesInfo.cascadeCount;
+                rcPc.probeSizePx = cascadesInfo.probeSizePx;
+                rcPc.intervalCount = cascadesInfo.intervalCount;
+                rcPc.baseIntervalLength = cascadesInfo.baseIntervalLength;
                 rcPc.fWidth = windowProvider->GetWindowSize().x;
                 rcPc.fHeight = windowProvider->GetWindowSize().y;
 

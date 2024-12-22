@@ -17,6 +17,7 @@
 
 
 
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -449,15 +450,8 @@ namespace Rendering
 
     	void RCascadesInfo()
 	    {
-		    ImGui::Begin("Radiance Cascades Info");
-
-	    	
-	    	static float baseIntervalLength= flatRenderer->rcPc.baseIntervalLength;
-	    	if (ImGui::SliderFloat("Base Interval Length", &baseIntervalLength, 0.000001f, 1.0f))
-	    	{
-	    		flatRenderer->rcPc.baseIntervalLength = baseIntervalLength;
-	    	}
-	    	
+		    ImGui::Begin("Radiance Output Info");
+		
 		    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 
 	    	std::vector<ImageView*> cascades = flatRenderer->cascadesAttachmentsImagesViews;
@@ -471,6 +465,25 @@ namespace Rendering
 
 	    	
 	    	ImGui::End();
+	    	
+		    ImGui::Begin("Radiance Cascades Configs");
+		    static int probeSizePx = flatRenderer->cascadesInfo.probeSizePx;
+		    if (ImGui::SliderInt("Probe Size in Px", &probeSizePx, 2, 1024))
+		    {
+			    flatRenderer->cascadesInfo.probeSizePx = probeSizePx;
+		    }
+		    static int intervalCount = flatRenderer->cascadesInfo.intervalCount;
+		    if (ImGui::SliderInt("Interval Count", &intervalCount, 2, 16))
+		    {
+			    flatRenderer->cascadesInfo.intervalCount = intervalCount;
+		    }
+
+		    static int baseIntervalLength = flatRenderer->cascadesInfo.baseIntervalLength;
+		    if (ImGui::SliderInt("Base Interval Length", &baseIntervalLength, 1, 1000))
+		    {
+			    flatRenderer->cascadesInfo.baseIntervalLength = baseIntervalLength;
+		    }
+			ImGui::End();	
 	    }
     	void AddImage(std::string name, ImageView* imageView,ImVec2 size)
 	    {

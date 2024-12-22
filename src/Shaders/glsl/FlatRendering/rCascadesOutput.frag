@@ -16,9 +16,11 @@ layout(location = 0) out vec4 outColor;
 
 layout(push_constant) uniform pushConstants{
     int cascadesCount;
+    int probeSizePx;
+    int intervalCount;
     int fWidth;
     int fHeight;
-    float baseIntervalLength;
+    int baseIntervalLength;
 }pc;
 
 layout (set = 0, binding = 0) uniform sampler2D Cascades[];
@@ -45,13 +47,14 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
 //        if (pos.x < 0 || pos.x >= 1.0 || pos.y < 0 || pos.y >= 1.0) {
 //            continue;
 //        }
-        ivec2 screenPos = ivec2(pos * vec2(pc.fWidth, pc.fHeight));
+//        ivec2 screenPos = ivec2(pos * vec2(pc.fWidth, pc.fHeight));
+        ivec2 screenPos = ivec2(pos);
         
         vec4 sampleCol= imageLoad(PaintingLayers[0], screenPos);
         vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
-//        if(cascadeIndex == 3){
-//            imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
-//        }       
+        if(cascadeIndex == 3){
+            imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
+        }       
    
         if(sampleCol != vec4(0.0)){
             occluded = true;
@@ -83,9 +86,9 @@ void main() {
     float aspect = float(pc.fWidth)/float(pc.fHeight);
     vec2 normalizedTextCoords = vec2(textCoord.x, textCoord.y);
     ivec2 coord = ivec2(gl_FragCoord.xy);
-
-    int intervalGrid= 2;
-    int gridSize = 8;
+    
+    int intervalGrid= pc.intervalCount;
+    int gridSize = pc.probeSizePx;
     //debug
     vec2 possi;
    
@@ -101,7 +104,8 @@ void main() {
 
         vec2 probeCenterGrid = floor(vec2(gl_FragCoord.xy) / float(gridSize)) + vec2(0.5);
 
-        vec2 probePos = (probeCenterGrid * (gridSize)) / vec2(pc.fWidth, pc.fHeight);
+        vec2 probePos = (probeCenterGrid * (gridSize));
+//        probePos.y /= aspect;
         
         possi = probePos;
 
@@ -119,6 +123,6 @@ void main() {
     }
 
     vec4 storageArr = imageLoad(PaintingLayers[0], coord);
-    vec4 debugImg = imageLoad(PaintingLayers[2], coord);
+    
 
 }

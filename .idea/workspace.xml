@@ -34,6 +34,8 @@
     <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Working on the cascades merging">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadeGen.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadeGen.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" afterDir="false" />
@@ -66,6 +68,53 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -226,7 +275,8 @@
       <workItem from="1734746538664" duration="811000" />
       <workItem from="1734759771557" duration="7519000" />
       <workItem from="1734805095104" duration="8413000" />
-      <workItem from="1734845851637" duration="7811000" />
+      <workItem from="1734845851637" duration="8920000" />
+      <workItem from="1734894723745" duration="8554000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -580,7 +630,15 @@
       <option name="project" value="LOCAL" />
       <updated>1734812517967</updated>
     </task>
-    <option name="localTasksCounter" value="45" />
+    <task id="LOCAL-00045" summary="Working on the cascades merging">
+      <option name="closed" value="true" />
+      <created>1734853995791</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1734853995791</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -603,7 +661,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Buffer handling" />
     <MESSAGE value="all buffers and textures works as expected in the main branch" />
     <MESSAGE value="Simple input system and changed all the absolute paths" />
     <MESSAGE value="Adding resource manager" />
@@ -628,7 +685,8 @@
     <MESSAGE value="nothing crazy" />
     <MESSAGE value="Adding debug to rc" />
     <MESSAGE value="Working on the cascades mergin" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working on the cascades mergin" />
+    <MESSAGE value="Working on the cascades merging" />
+    <option name="LAST_COMMIT_MESSAGE" value="Working on the cascades merging" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

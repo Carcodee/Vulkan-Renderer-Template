@@ -12,9 +12,11 @@
 
 layout(push_constant) uniform pushConstants{
     int cascadesCount;
+    int probeSizePx;
+    int intervalCount;
     int fWidth;
     int fHeight;
-    float baseIntervalLength;
+    int baseIntervalLength;
 }pc;
 
 layout (set = 0, binding = 0) uniform sampler2D Cascades[];
@@ -55,8 +57,9 @@ void main() {
     ivec2 coords = ivec2(gl_FragCoord.xy);
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     //debug
-    int intervalGrid= 2;
-    int gridSize = 8;
+    //this is grid so interval is the double of this val e.g 2 inteval count means 4 directions
+    int intervalGrid= pc.intervalCount;
+    int gridSize = pc.probeSizePx;
     vec2 probeCentersPositionsPx[CASCADE_SIZE];
     vec2 probeSizesPx[CASCADE_SIZE];
     int dirIndices[CASCADE_SIZE];
@@ -103,13 +106,13 @@ void main() {
                 const ivec2 bilinearTexel = bilinearIndex * ivec2(bilinearSize) + bilinearDirCoord;
                 vec4 bilinearInterval = imageLoad(Radiances[nPlusOne], bilinearTexel);
                 vec4 destInterval = imageLoad(Radiances[n], coords);
-                radianceBilinear += MergeIntervals(destInterval, destInterval) * weights[b];
+                radianceBilinear += MergeIntervals(destInterval, bilinearInterval) * weights[b];
             }
             merged += radianceBilinear / 4.0;
         }
     }
     
-    vec4 destInterval = imageLoad(Radiances[0], coords);
+    vec4 destInterval = imageLoad(Radiances[3], coords);
     outColor = merged;
 
 }
