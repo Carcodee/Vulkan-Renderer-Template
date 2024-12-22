@@ -28,7 +28,7 @@ layout (set = 0, binding = 1, rgba8) uniform image2D PaintingLayers[];
 void main() {
 
     int intervalCount = 4;
-    int gridSize = 256;
+    int gridSize = 240;
     ivec2 coord = ivec2(gl_FragCoord.xy);
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     ivec2 probeSizePx = ivec2(vec2(fSize) / float(gridSize));

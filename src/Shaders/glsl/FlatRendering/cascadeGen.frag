@@ -24,6 +24,11 @@ layout(location = 0) out vec4 outColor;
 void main() {
 
     vec2 textCoordPerGrid = vec2(1.0)/ pc.gridSize;
+    
+    ivec2 dirCoord = ivec2(ivec2(gl_FragCoord.xy) % pc.gridSize) % int(pc.intervalSize);
+    vec2 indexColNew = vec2(dirCoord)/ float(pc.intervalSize);
+    
+    
     ivec2 probeId = ivec2(textCoord * pc.gridSize);
     vec2 gridCol = vec2(probeId) / pc.gridSize;
     
@@ -32,13 +37,13 @@ void main() {
     vec2 localUV = ((textCoord) - origin) / textCoordPerGrid;
     
     ivec2 index = ivec2(localUV * (pc.intervalSize));
-    vec2 indexCol = vec2(index)/(pc.intervalSize);
+    vec2 indexCol = vec2(index)/(float(pc.intervalSize));
     
     int dirCount = pc.intervalSize;
     int dirIndex = index.x + index.y * (pc.intervalSize);
 
 //    float test = float(dirIndex)/float(dirCount);
    
-    outColor = vec4(indexCol, 0.0, 1.0);
+    outColor = vec4(indexColNew, 0.0, 1.0);
 
 }

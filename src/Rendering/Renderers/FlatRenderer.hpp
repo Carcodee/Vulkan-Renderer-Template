@@ -45,7 +45,7 @@ namespace Rendering
             }
             probesGenPc.cascadeIndex = 0;
             probesGenPc.intervalSize = 2;
-            probesGenPc.gridSize = 256;
+            probesGenPc.gridSize = 240;
 
             paintingPc.radius = 5;
 
@@ -305,7 +305,7 @@ namespace Rendering
             renderGraph->GetNode(paintingPassName)->SetRenderOperation(paintingRenderOP);
             
             int intervalSize = 2;
-            int gridAxisSize = 256;
+            int gridAxisSize = 8;
             for (int i = 0; i < cascadesInfo.cascadeCount; ++i)
             {
                 auto probesGenOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
@@ -336,7 +336,7 @@ namespace Rendering
                     });
                 renderGraph->GetNode(probesGenPassNames[i])->SetRenderOperation(probesGenOp);
                 intervalSize *= 4;
-                gridAxisSize /= 2;
+                gridAxisSize *= 2;
             }
 
             auto radianceOutputTask = new std::function<void()>([this, inflightQueue]()

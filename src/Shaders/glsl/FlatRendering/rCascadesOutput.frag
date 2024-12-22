@@ -85,7 +85,7 @@ void main() {
     ivec2 coord = ivec2(gl_FragCoord.xy);
 
     int intervalGrid= 2;
-    int gridSize = 256;
+    int gridSize = 8;
     //debug
     vec2 possi;
    
@@ -99,15 +99,10 @@ void main() {
         float angle = 2.0 * PI * ((float(dirIndex) + 0.5) / float(dirCount));
         vec2 texelDir = vec2(cos(angle), sin(angle));
 
+        vec2 probeCenterGrid = floor(vec2(gl_FragCoord.xy) / float(gridSize)) + vec2(0.5);
 
-        ivec2 probeStart = ivec2(normalizedTextCoords * gridSize);
-        ivec2 probeEnd = ivec2(normalizedTextCoords * gridSize) + 1;
-
-        vec2 probeStartPos = (vec2(probeStart) / float(gridSize));
-        vec2 probeEndPos = (vec2(probeEnd) / float(gridSize));
-        vec2 deltaStartEndPos = (probeEndPos - probeStartPos)/2.0;
-
-        vec2 probePos = probeStartPos + deltaStartEndPos;
+        vec2 probePos = (probeCenterGrid * (gridSize)) / vec2(pc.fWidth, pc.fHeight);
+        
         possi = probePos;
 
         if(distance(probePos, normalizedTextCoords) < 0.01){
@@ -119,8 +114,8 @@ void main() {
         
         imageStore(Radiances[i], coord, radiance);
 
-        intervalGrid = intervalGrid * 2;
-        gridSize = gridSize / 2;
+        intervalGrid *= 2;
+        gridSize *= 2;
     }
 
     vec4 storageArr = imageLoad(PaintingLayers[0], coord);
