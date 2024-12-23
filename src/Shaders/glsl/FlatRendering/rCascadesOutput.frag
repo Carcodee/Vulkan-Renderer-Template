@@ -70,7 +70,8 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
     }
     accumulatedRadiance = accumulatedRadiance / float(sampleCount);
     if(occluded){
-        accumulatedRadiance.w = 0.0;
+//        accumulatedRadiance.w = 0.0;
+        accumulatedRadiance = vec4(0.0, 0.0, 1.0, 0.0);
     }
     return accumulatedRadiance;
 }
@@ -89,17 +90,18 @@ vec2 IntervalRange(int cascadeIndex, float baseLenght){
 
 void main() {
     float aspect = float(pc.fWidth)/float(pc.fHeight);
+    ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     vec2 normalizedTextCoords = vec2(textCoord.x, textCoord.y);
     ivec2 coord = ivec2(gl_FragCoord.xy);
     
     int intervalGrid= pc.intervalCount;
     int gridSize = pc.probeSizePx;
     //debug
-    vec2 possi;
    
     for(int i= 0; i < CASCADE_SIZE; i++ ){
 
-        vec2 cascades = texture(Cascades[i], textCoord).xy;
+        vec2 pos = vec2(gl_FragCoord.xy) / vec2(fSize);
+        vec2 cascades = texture(Cascades[i], pos).xy;
         uint dirCount = intervalGrid * intervalGrid;
         ivec2 textIdx = ivec2(cascades.xy * float(intervalGrid));
         int dirIndex = textIdx.x + textIdx.y * intervalGrid;
@@ -110,9 +112,6 @@ void main() {
         vec2 probeCenterGrid = floor(vec2(gl_FragCoord.xy) / float(gridSize)) + vec2(0.5);
 
         vec2 probePos = (probeCenterGrid * (gridSize));
-//        probePos.y /= aspect;
-        
-        possi = probePos;
 
         if(distance(probePos, normalizedTextCoords) < 0.01){
         }
@@ -121,13 +120,17 @@ void main() {
         vec2 intervalEnd = probePos + texelDir * intervalRange.y;
         vec4 radiance = CastInterval(intervalStart, intervalEnd, i);
         
-        imageStore(Radiances[i], coord, radiance);
+        ivec2 dirPos = ivec2((probeCenterGrid - vec2(0.5)) * gridSize) + ivec2(dirIndex % gridSize, dirIndex / gridSize);
+        vec2 dirCol = vec2(dirPos) / vec2(fSize);
+
+
+//        imageStore(Radiances[i], ivec2(coord), vec4(dirCol, 0.0, 1.0));
+        imageStore(Radiances[i], ivec2(dirPos), radiance);
 
         intervalGrid *= 2;
         gridSize *= 2;
     }
 
-    vec4 storageArr = imageLoad(PaintingLayers[0], coord);
     
 
 }

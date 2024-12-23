@@ -442,7 +442,14 @@ namespace Rendering
 	    		ResourcesManager::GetInstance()->RequestStorageImageClear("PaintingLayer");
 			    ResourcesManager::GetInstance()->RequestStorageImageClear("OccluderLayer");
 			    ResourcesManager::GetInstance()->RequestStorageImageClear("DebugRaysLayer");
+
 	    	}
+		    for (int i = 0; i < flatRenderer->cascadesInfo.cascadeCount; ++i)
+		    {
+			    std::string name = "radianceStorage_" + std::to_string(i);
+			    ResourcesManager::GetInstance()->RequestStorageImageClear(name);
+		    }
+
 	    	
 	    	
 	    	

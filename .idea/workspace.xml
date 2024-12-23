@@ -31,13 +31,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="ocludders layers">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
-    </list>
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="merging not working" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -279,7 +273,7 @@
       <workItem from="1734805095104" duration="8413000" />
       <workItem from="1734845851637" duration="8920000" />
       <workItem from="1734894723745" duration="18583000" />
-      <workItem from="1734918821302" duration="10051000" />
+      <workItem from="1734918821302" duration="10086000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -657,7 +651,15 @@
       <option name="project" value="LOCAL" />
       <updated>1734906508655</updated>
     </task>
-    <option name="localTasksCounter" value="48" />
+    <task id="LOCAL-00048" summary="merging not working">
+      <option name="closed" value="true" />
+      <created>1734930747874</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1734930747874</updated>
+    </task>
+    <option name="localTasksCounter" value="49" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -680,7 +682,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Simple input system and changed all the absolute paths" />
     <MESSAGE value="Adding resource manager" />
     <MESSAGE value="Fixed some weird stuff in the ResourcesManager.hpp" />
     <MESSAGE value="dynamic buffers updates" />
@@ -705,7 +706,8 @@
     <MESSAGE value="Working on the cascades mergin" />
     <MESSAGE value="Working on the cascades merging" />
     <MESSAGE value="ocludders layers" />
-    <option name="LAST_COMMIT_MESSAGE" value="ocludders layers" />
+    <MESSAGE value="merging not working" />
+    <option name="LAST_COMMIT_MESSAGE" value="merging not working" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -33,7 +33,7 @@ void main() {
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     
     int intervalCount = pc.intervalCount;
-    int probeSizePx = 1;
+    int probeSizePx = pc.probeSizePx;
     
     vec2 probeCount = floor(vec2(fSize) / float(probeSizePx));
 
@@ -68,7 +68,7 @@ void main() {
     if(paintingImage != vec4(0.0)){
         outColor = paintingImage;
     }else{
-        outColor = col;
+        outColor = baseCol;
     }
 
 }
