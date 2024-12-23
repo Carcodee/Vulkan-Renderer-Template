@@ -31,12 +31,9 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Working on the cascades merging">
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="ocludders layers">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Compute/paintingGen.comp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Compute/paintingGen.comp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
@@ -281,7 +278,8 @@
       <workItem from="1734759771557" duration="7519000" />
       <workItem from="1734805095104" duration="8413000" />
       <workItem from="1734845851637" duration="8920000" />
-      <workItem from="1734894723745" duration="11169000" />
+      <workItem from="1734894723745" duration="18583000" />
+      <workItem from="1734918821302" duration="10051000" />
     </task>
     <task id="LOCAL-00001" summary="adding support for bindless">
       <option name="closed" value="true" />
@@ -651,7 +649,15 @@
       <option name="project" value="LOCAL" />
       <updated>1734903994171</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="ocludders layers">
+      <option name="closed" value="true" />
+      <created>1734906508655</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1734906508655</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -674,7 +680,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="all buffers and textures works as expected in the main branch" />
     <MESSAGE value="Simple input system and changed all the absolute paths" />
     <MESSAGE value="Adding resource manager" />
     <MESSAGE value="Fixed some weird stuff in the ResourcesManager.hpp" />
@@ -699,7 +704,8 @@
     <MESSAGE value="Adding debug to rc" />
     <MESSAGE value="Working on the cascades mergin" />
     <MESSAGE value="Working on the cascades merging" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working on the cascades merging" />
+    <MESSAGE value="ocludders layers" />
+    <option name="LAST_COMMIT_MESSAGE" value="ocludders layers" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

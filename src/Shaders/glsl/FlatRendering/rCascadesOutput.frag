@@ -42,32 +42,33 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
     vec2 stepSize = vec2(dir)/float(steps);
     bool occluded = false;
     
+    int sampleCount = 0;
     for (int i = 0; i < steps; i++){
         vec2 pos = intervalStart + (stepSize * float(i));
-//        if (pos.x < 0 || pos.x >= 1.0 || pos.y < 0 || pos.y >= 1.0) {
-//            continue;
+//        if (pos.x < 0 || pos.x >= pc.fWidth || pos.y < 0 || pos.y >= pc.fHeight) {
+//            break;
 //        }
 //        ivec2 screenPos = ivec2(pos * vec2(pc.fWidth, pc.fHeight));
         ivec2 screenPos = ivec2(pos);
         
         vec4 sampleCol= imageLoad(PaintingLayers[0], screenPos);
-        vec4 ocluddersCol= imageLoad(PaintingLayers[1], screenPos);
         vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
         if(cascadeIndex == 3){
             imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
         }       
-   
-        if(sampleCol != vec4(0.0)|| ocluddersCol != vec4(0.0)){
+        if(sampleCol != vec4(0.0, 0.0, 0.0, 0.0)){
             occluded = true;
         }else{
-            sampleCol = vec4(0.001, 0.001, 0.001, 1.0);
+//            sampleCol = vec4(0.01, 0.01, 0.01, 1.0);
+            sampleCol = vec4(0.0, 0.0, 0.0, 1.0);
         }
-        if(ocluddersCol != vec4(0.0)){
-            sampleCol = vec4(0.0);
-        }
+        sampleCount++;
         accumulatedRadiance+= sampleCol;
+//        if(occluded){
+//            break;
+//        }
     }
-    accumulatedRadiance = accumulatedRadiance / float(steps);
+    accumulatedRadiance = accumulatedRadiance / float(sampleCount);
     if(occluded){
         accumulatedRadiance.w = 0.0;
     }
