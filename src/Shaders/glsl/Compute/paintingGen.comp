@@ -24,14 +24,17 @@ layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 void main() {
 
     
-    int posX =int(gl_GlobalInvocationID.x);
-    int posY =int(gl_GlobalInvocationID.y);
+    int posX =int(gl_GlobalInvocationID.x - float(pc.radius / 2.0) + 1);
+    int posY =int(gl_GlobalInvocationID.y - float(pc.radius / 2.0) + 1);
     
-    float squaredD = pow(2.0, posX) + pow(2.0, posY);
+
+    int xCoord = (pc.xMouseCoord - int(gl_WorkGroupSize.x) + int(posX));
+    int yCoord = (pc.yMouseCoord - int(gl_WorkGroupSize.y) + int(posY));
     
-    if(squaredD < pow(2.0, pc.radius)){
-        int xCoord = (pc.xMouseCoord - int(gl_WorkGroupSize.x) + int(posX));
-        int yCoord = (pc.yMouseCoord - int(gl_WorkGroupSize.y) + int(posY));
+    vec2 dir = vec2(xCoord, yCoord) - vec2(pc.xMouseCoord, pc.yMouseCoord);
+    float squaredD = pow(2.0, dir.x) + pow(2.0, dir.y);
+    
+    if(distance(vec2(xCoord, yCoord), vec2(pc.xMouseCoord, pc.yMouseCoord)) < pc.radius/2.0){
         ivec2 xy = ivec2(xCoord, yCoord);
         bool painting = (pc.painting == 1);
         if(painting && pc.layerSelected == 0){
@@ -41,5 +44,4 @@ void main() {
             imageStore(PaintingLayers[1], xy , vec4(1.0));
         }       
     }
-
 }

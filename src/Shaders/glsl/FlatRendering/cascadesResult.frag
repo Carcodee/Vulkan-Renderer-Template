@@ -21,10 +21,12 @@ layout(push_constant) uniform pushConstants{
     int fWidth;
     int fHeight;
     int baseIntervalLength;
+    int cascadeIndex;
 }pc;
 
 layout (set = 0, binding = 0)uniform sampler2D MergedCascades;
 layout (set = 0, binding = 1, rgba8) uniform image2D PaintingLayers[];
+layout (set = 0, binding = 2, rgba8) uniform image2D Radiances[];
 
 
 void main() {
@@ -56,10 +58,10 @@ void main() {
         vec2 blPosTextCoords = blProbePos / probeCount;
         vec2 brPosTextCoords = brProbePos / probeCount;
 
-        vec4 tlCol = texture(MergedCascades, tlPosTextCoords);
-        vec4 trCol = texture(MergedCascades, trPosTextCoords);
-        vec4 blCol = texture(MergedCascades, blPosTextCoords);
-        vec4 brCol = texture(MergedCascades, brPosTextCoords);
+        vec4 tlCol = imageLoad(Radiances[0], ivec2(tlPosTextCoords * vec2(fSize)));
+        vec4 trCol = imageLoad(Radiances[0], ivec2(trPosTextCoords * vec2(fSize)));
+        vec4 blCol = imageLoad(Radiances[0], ivec2(blPosTextCoords * vec2(fSize)));
+        vec4 brCol = imageLoad(Radiances[0], ivec2(brPosTextCoords * vec2(fSize)));
 
         interpolated += mix(mix(tlCol, trCol, cellFrac.x), mix(blCol, brCol, cellFrac.x), cellFrac.y);
         intervalCount *= 2;
@@ -67,7 +69,7 @@ void main() {
     }
     interpolated /= maxInterpolationSize;
 
-    vec4 baseCol = texture(MergedCascades, textCoord);
+    vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
     vec4 blackOc= imageLoad(PaintingLayers[1], coord);
     vec4 debug= imageLoad(PaintingLayers[2], coord);

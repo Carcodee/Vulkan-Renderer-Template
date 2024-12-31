@@ -9,7 +9,6 @@
 #include "../Utils/uStructs.glsl"
 #include "../Utils/uMath.glsl"
 
-
 layout(push_constant) uniform pushConstants{
     int cascadesCount;
     int probeSizePx;
@@ -17,6 +16,7 @@ layout(push_constant) uniform pushConstants{
     int fWidth;
     int fHeight;
     int baseIntervalLength;
+    int cascadeIndex;
 }pc;
 
 layout (set = 0, binding = 0) uniform sampler2D Cascades[];
@@ -52,7 +52,7 @@ ivec2 bilinearOffset(int offsetIndex) {
 }
 
 
-#define CASCADE_SIZE 4
+#define CASCADE_SIZE 5
 void main() {
 
     ivec2 coords = ivec2(gl_FragCoord.xy);
@@ -65,7 +65,6 @@ void main() {
     vec2 probeSizesPx[CASCADE_SIZE];
     int dirIndices[CASCADE_SIZE];
     vec2 texelDir[CASCADE_SIZE];
-
     vec2 dirCol;
     for(int i = 0; i < CASCADE_SIZE; i++){
         vec2 pos = vec2(gl_FragCoord.xy) / vec2(fSize);
@@ -79,7 +78,6 @@ void main() {
 
         dirIndices[i] = dirIndex;
 
-
         vec2 probeCenterGrid = floor(vec2(gl_FragCoord.xy) / float(gridSize)) + vec2(0.5);
         vec2 probeCenterPos = (probeCenterGrid * (gridSize)); 
 
@@ -89,28 +87,24 @@ void main() {
         gridSize *= 2;
     }
 
+    int n = pc.cascadeIndex;
+    int nPlusOne = n + 1;
+    vec2 destCenter = probeCentersPositionsPx[n];
+    vec2 bilinearSize = probeSizesPx[nPlusOne];
+    vec4 weights = vec4(0.0);
+    ivec2 baseIndex = ivec2(0.0);
+    BilinearSamples(destCenter, bilinearSize, weights, baseIndex);
+
+    ivec2 destDirCoord = ivec2(dirIndices[n] % int(probeSizesPx[n].x), dirIndices[n] / probeSizesPx[n].y);
+    vec2 destBaseCoord =floor(destCenter / probeSizesPx[n]) * probeSizesPx[n];
+    ivec2 destTexel = ivec2(destBaseCoord + destDirCoord);
+
+    vec4 destInterval = imageLoad(Radiances[n], destTexel);
     vec4 merged = vec4(0.0);
 
-    for(int i = 0; i >= 0; i--){
-        int n = i;
-        int nPlusOne = i + 1;
-        vec2 destCenter = probeCentersPositionsPx[n];
-        vec2 bilinearSize = probeSizesPx[nPlusOne];
-        vec4 weights = vec4(0.0);
-        ivec2 baseIndex = ivec2(0.0);
-        BilinearSamples(destCenter, bilinearSize, weights, baseIndex);
-
-        ivec2 destDirCoord = ivec2(dirIndices[n] % int(probeSizesPx[n].x), dirIndices[n] / probeSizesPx[n].y);
-        vec2 destBaseCoord =floor(destCenter / probeSizesPx[n]) * probeSizesPx[n];
-        ivec2 destTexel = ivec2(destBaseCoord + destDirCoord);
-        
-        vec4 destInterval = imageLoad(Radiances[n], destTexel);
-        
-        if(destInterval.a == 0.0){
-            merged += destInterval;
-            continue;
-        }
-
+    if(destInterval.a < 1.0){
+        merged += destInterval;
+    }else{
         //per direction in n+1 
         for(int d = 0; d < 4; d++){
             vec4 radianceBilinear = vec4(0.0);
@@ -121,28 +115,27 @@ void main() {
                 const int baseDirIndex = dirIndices[n] * 4;
                 const int bilinearDirIndex = baseDirIndex + d;
                 const ivec2 bilinearDirCoord = ivec2(bilinearDirIndex % int(bilinearSize.x),
-                                                        bilinearDirIndex / bilinearSize.y);
+                bilinearDirIndex / bilinearSize.y);
                 const ivec2 bilinearTexel = bilinearIndex * ivec2(bilinearSize) + bilinearDirCoord;
                 vec4 bilinearInterval = imageLoad(Radiances[nPlusOne], bilinearTexel);
                 radianceBilinear += MergeIntervals(destInterval, bilinearInterval) * weights[b];
             }
             merged += radianceBilinear;
         }
+        merged/= 4.0;       
     }
+    imageStore(Radiances[n], destTexel, merged);
 
     
 //    vec2 pos = ivec2(gl_FragCoord.xy) % ivec2(probeSizesPx[3]);
 //    vec4 col = vec4( pos / probeSizesPx[3], 0.0, 1.0);
 //    imageStore(Radiances[3] , ivec2(probeCentersPositionsPx[3]), vec4(1.0, 0.0, 0.0, 1.0));
 //    vec4 destInterval = imageLoad(Radiances[3], coords);
-    ivec2 destDirCoord = ivec2(dirIndices[3] % int(probeSizesPx[3].x), dirIndices[3] / probeSizesPx[3].y);
-    vec2 destBaseCoord =floor(probeCentersPositionsPx[3] / probeSizesPx[3]) * probeSizesPx[3];
-    ivec2 destTexel = ivec2(destBaseCoord + destDirCoord);
+//    ivec2 destDirCoord = ivec2(dirIndices[0] % int(probeSizesPx[0].x), dirIndices[0] / probeSizesPx[0].y);
+//    vec2 destBaseCoord =floor(probeCentersPositionsPx[0] / probeSizesPx[0]) * probeSizesPx[0];
+//    ivec2 destTexel = ivec2(destBaseCoord + destDirCoord);
 
-    vec4 destInterval = imageLoad(Radiances[3], destTexel);
+//    vec4 destInterval = imageLoad(Radiances[0], destTexel);
 
-    outColor = merged;
-
-    
-
+//    outColor = destInterval;
 }

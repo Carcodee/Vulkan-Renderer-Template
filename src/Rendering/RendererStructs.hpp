@@ -120,7 +120,9 @@ namespace Rendering
 		int fWidth = 0;
 		int fHeight = 0;
 		int baseIntervalLength = 12;
+		int cascadeIndex = -1;
 	};
+
 	struct ProbesGenPc
 	{
 		int cascadeIndex = 0;

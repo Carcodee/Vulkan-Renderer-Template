@@ -22,7 +22,7 @@ double previousTime;
 
 #include "Rendering/RenderingInclude.hpp"
 
-CONST int WINDOWS_WIDTH = 1920;
+CONST int WINDOWS_WIDTH = 1280;
 CONST int WINDOWS_HEIGHT = 1080;
 
 #define ENGINE_ENABLE_DEBUGGING

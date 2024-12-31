@@ -10,6 +10,7 @@
 //
 
 
+
 #ifndef FLATRENDERER_HPP
 #define FLATRENDERER_HPP
 
@@ -39,7 +40,7 @@ namespace Rendering
 
         void CreateResources()
         {
-            cascadesInfo.cascadeCount = 4;
+            cascadesInfo.cascadeCount = 5;
             cascadesInfo.probeSizePx = 8;
             cascadesInfo.intervalCount = 2;
             cascadesInfo.baseIntervalLength = 12;
@@ -83,7 +84,6 @@ namespace Rendering
                 ImageView* imageView = ResourcesManager::GetInstance()->GetImage(name, storageImageInfo, 0, 0);
                 radiancesImages.emplace_back(imageView);
             }
-            mergedCascadesResult = ResourcesManager::GetInstance()->GetImage("mergedCascades", imageInfo, 0, 0);;
             
             
         }
@@ -219,7 +219,7 @@ namespace Rendering
             }
 
             AttachmentInfo mergeColInfo = GetColorAttachmentInfo(
-                glm::vec4(0.0f), g_32bFormat);
+                glm::vec4(0.0f), core->swapchainRef->GetFormat(), vk::AttachmentLoadOp::eLoad, vk::AttachmentStoreOp::eStore);
 
             mergeVertShader = std::make_unique<Shader>(logicalDevice,
                                                   shaderPath + "\\spirv\\Common\\Quad.vert.spv");
@@ -235,26 +235,32 @@ namespace Rendering
                                     .setPushConstantRanges(pushConstantRange)
                                     .setPSetLayouts(&mergeCascadesCache->dstLayout.get());
 
-            auto mergeRenderNode = renderGraph->AddPass(rMergePassName);
-
-            mergeRenderNode->SetVertShader(mergeVertShader.get());
-            mergeRenderNode->SetFragShader(mergeFragShader.get());
-            mergeRenderNode->SetFramebufferSize(windowProvider->GetWindowSize());
-            mergeRenderNode->SetPipelineLayoutCI(mergeLayoutCreateInfo);
-            mergeRenderNode->SetVertexInput(vertexInput);
-            mergeRenderNode->AddColorAttachmentOutput("mergeColor", mergeColInfo);
-            mergeRenderNode->AddColorImageResource("mergedColor", mergedCascadesResult);
-            mergeRenderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
-            mergeRenderNode->SetRasterizationConfigs(RasterizationConfigs::R_FILL);
-            int i = 0;
-            for (auto& imageView : radiancesImages)
+            for (int i = cascadesInfo.cascadeCount - 2; i >= 0 ; i--)
             {
-                std::string name = "radianceStorage_" + std::to_string(i);
-                mergeRenderNode->AddStorageResource(name, imageView);
-                i++;
+                std::string name =rMergePassName + "_" + std::to_string(i);
+                auto mergeRenderNode = renderGraph->AddPass(name);
+                            mergeRenderNode->SetVertShader(mergeVertShader.get());
+                mergeRenderNode->SetFragShader(mergeFragShader.get());
+                mergeRenderNode->SetFramebufferSize(windowProvider->GetWindowSize());
+                mergeRenderNode->SetPipelineLayoutCI(mergeLayoutCreateInfo);
+                mergeRenderNode->SetVertexInput(vertexInput);
+                mergeRenderNode->AddColorAttachmentOutput("mergeColor_"+std::to_string(i), mergeColInfo);
+                mergeRenderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
+                mergeRenderNode->SetRasterizationConfigs(RasterizationConfigs::R_FILL);
+                std::string name1 = "radianceStorage_" + std::to_string(i);
+                mergeRenderNode->AddStorageResource(name1, radiancesImages[i]);
+                std::string name2 = "radianceStorage_" + std::to_string(i + 1);
+                mergeRenderNode->AddStorageResource(name2, radiancesImages[i + 1]);
+                
+                mergeRenderNode->BuildRenderGraphNode();
+                mergeRenderNode->DependsOn(rCascadesPassName);
+                if (i < cascadesInfo.cascadeCount - 2)
+                {
+                    std::string dependancyName = rMergePassName + "_" + std::to_string(i + 1);
+                    mergeRenderNode->DependsOn(rCascadesPassName);
+                }
+
             }
-            mergeRenderNode->BuildRenderGraphNode();
-            mergeRenderNode->DependsOn(rCascadesPassName);
 
             
             resultVertShader = std::make_unique<Shader>(logicalDevice,
@@ -396,37 +402,50 @@ namespace Rendering
                 });
             renderGraph->GetNode(rCascadesPassName)->SetRenderOperation(radianceOutputOp);
             renderGraph->GetNode(rCascadesPassName)->AddTask(radianceOutputTask);
-            
-            auto mergeTask = new std::function<void()>([this, inflightQueue]()
+
+            for (int i = cascadesInfo.cascadeCount - 2; i >= 0 ; i--)
             {
-                auto* currImage = inflightQueue->currentSwapchainImageView;
-                renderGraph->GetNode(rMergePassName)->SetFramebufferSize(windowProvider->GetWindowSize());
-            });
-            auto mergeRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
-                [this](vk::CommandBuffer& commandBuffer)
+                std::string mergeNameCascades = rMergePassName + "_" + std::to_string(i);
+                auto mergeTask = new std::function<void()>([this, inflightQueue, i]()
                 {
-                    mergeCascadesCache->SetSamplerArray("Cascades", cascadesAttachmentsImagesViews);
-                    mergeCascadesCache->SetStorageImageArray("Radiances", radiancesImages);
-                    
-                    auto& renderNode = renderGraph->renderNodes.at(rMergePassName);
-                    commandBuffer.bindDescriptorSets(renderNode->pipelineType,
-                                                     renderNode->pipelineLayout.get(), 0,
-                                                     1,
-                                                     &mergeCascadesCache->dstSet.get(), 0, nullptr);
-                    vk::DeviceSize offset = 0;
-                    commandBuffer.bindVertexBuffers(0, 1, &quadVertBufferRef->bufferHandle.get(), &offset);
-                    commandBuffer.bindIndexBuffer(quadIndexBufferRef->bufferHandle.get(), 0, vk::IndexType::eUint32);
-
-                    commandBuffer.pushConstants(renderNode->pipelineLayout.get(),
-                    vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment,
-                    0, sizeof(RcPc), &rcPc);
-                    commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
-
-                    commandBuffer.drawIndexed(Vertex2D::GetQuadIndices().size(), 1, 0,
-                                              0, 0);
+                    int idx = i;
+                    std::string mergeName =rMergePassName + "_" + std::to_string(idx);
+                    auto* currImage = inflightQueue->currentSwapchainImageView;
+                    renderGraph->GetNode(mergeName)->AddColorImageResource("mergeColor_"+std::to_string(idx), currImage);
+                    renderGraph->GetNode(mergeName)->SetFramebufferSize(windowProvider->GetWindowSize());
                 });
-            renderGraph->GetNode(rMergePassName)->SetRenderOperation(mergeRenderOp);
-            renderGraph->GetNode(rMergePassName)->AddTask(mergeTask);
+                auto mergeRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
+                    [this, i](vk::CommandBuffer& commandBuffer)
+                    {
+                        int idx = i;
+                        std::string mergeName = rMergePassName + "_" + std::to_string(idx);
+                        mergeCascadesCache->SetSamplerArray("Cascades", cascadesAttachmentsImagesViews);
+                        mergeCascadesCache->SetStorageImageArray("Radiances", radiancesImages);
+                        rcPc.cascadeIndex = idx;
+
+                        auto& renderNode = renderGraph->renderNodes.at(mergeName);
+                        commandBuffer.bindDescriptorSets(renderNode->pipelineType,
+                                                         renderNode->pipelineLayout.get(), 0,
+                                                         1,
+                                                         &mergeCascadesCache->dstSet.get(), 0, nullptr);
+                        vk::DeviceSize offset = 0;
+                        commandBuffer.bindVertexBuffers(0, 1, &quadVertBufferRef->bufferHandle.get(), &offset);
+                        commandBuffer.bindIndexBuffer(quadIndexBufferRef->bufferHandle.get(), 0,
+                                                      vk::IndexType::eUint32);
+
+                        commandBuffer.pushConstants(renderNode->pipelineLayout.get(),
+                                                    vk::ShaderStageFlagBits::eVertex |
+                                                    vk::ShaderStageFlagBits::eFragment,
+                                                    0, sizeof(RcPc), &rcPc);
+                        commandBuffer.bindPipeline(renderNode->pipelineType, renderNode->pipeline.get());
+
+                        commandBuffer.drawIndexed(Vertex2D::GetQuadIndices().size(), 1, 0,
+                                                  0, 0);
+                    });
+                renderGraph->GetNode(mergeNameCascades)->SetRenderOperation(mergeRenderOp);
+                renderGraph->GetNode(mergeNameCascades)->AddTask(mergeTask);
+            }
+
             auto resultTask = new std::function<void()>([this, inflightQueue]()
             {
                 auto* currImage = inflightQueue->currentSwapchainImageView;
@@ -436,8 +455,8 @@ namespace Rendering
             auto resultRenderOp = new std::function<void(vk::CommandBuffer& command_buffer)>(
                 [this](vk::CommandBuffer& commandBuffer)
                 {
-                    cascadesResultCache->SetSampler("MergedCascades", mergedCascadesResult);
                     cascadesResultCache->SetStorageImageArray("PaintingLayers", paintingLayers);
+                    cascadesResultCache->SetStorageImageArray("Radiances", radiancesImages);
                     
                     auto& renderNode = renderGraph->renderNodes.at(resultPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
@@ -471,8 +490,12 @@ namespace Rendering
             }
             auto* outputNode = renderGraph->GetNode(rCascadesPassName);
             outputNode->RecreateResources();
-            auto* mergeNode = renderGraph->GetNode(rMergePassName);
-            mergeNode->RecreateResources();
+            for (int i = cascadesInfo.cascadeCount - 2; i >= 0; i--)
+            {
+                std::string name = rMergePassName+"_"+ std::to_string(i);
+                auto* mergeNode = renderGraph->GetNode(name);
+                mergeNode->RecreateResources();
+            }
             auto* resultNode = renderGraph->GetNode(resultPassName);
             resultNode->RecreateResources();
 
@@ -496,7 +519,6 @@ namespace Rendering
         std::unique_ptr<Shader> mergeVertShader;
         std::unique_ptr<Shader> mergeFragShader;
         std::vector<ImageView*> radiancesImages;
-        ImageView* mergedCascadesResult;
         
         std::unique_ptr<DescriptorCache> outputCache;
         std::unique_ptr<Shader> vertShader;

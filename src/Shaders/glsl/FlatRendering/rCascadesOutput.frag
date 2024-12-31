@@ -21,13 +21,14 @@ layout(push_constant) uniform pushConstants{
     int fWidth;
     int fHeight;
     int baseIntervalLength;
+    int cascadeIndex;
 }pc;
 
 layout (set = 0, binding = 0) uniform sampler2D Cascades[];
 layout (set = 0, binding = 1, rgba8) uniform image2D PaintingLayers[];
 layout (set = 0, binding = 2, rgba8) uniform image2D Radiances[];
 
-#define CASCADE_SIZE 4
+#define CASCADE_SIZE 5
 
 vec4 MergeIntervals(vec4 near, vec4 far){
     vec3 radiance = near.rgb + (far.rgb * near.a);
@@ -36,10 +37,9 @@ vec4 MergeIntervals(vec4 near, vec4 far){
 
 vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
     vec4 accumulatedRadiance = vec4(0.0, 0.0, 0.0, 1.0);
-    vec2 dir = intervalEnd - intervalStart;
-    float stepSize = 2.0;
-    vec2 dirNorm = normalize(dir) * stepSize;
-    int maxSteps = 500;
+    float stepSize = 1.0;
+    vec2 dir = normalize(intervalEnd - intervalStart) * stepSize;
+    int maxSteps = 800;
     bool occluded = false;
     int sampleCount = 0;
     vec2 pos = intervalStart;
@@ -56,7 +56,7 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
         }
         
         sampleCount++;
-        pos += dirNorm;
+        pos += dir;
         if(occluded){
             accumulatedRadiance = sampleCol;
             break;
@@ -109,6 +109,7 @@ void main() {
         vec2 probePos = (probeCenterGrid * (gridSize));
 
         if(distance(probePos, normalizedTextCoords) < 0.01){
+            continue;
         }
         vec2 intervalRange = IntervalRange(i, pc.baseIntervalLength);
         vec2 intervalStart = probePos + texelDir * intervalRange.x;
