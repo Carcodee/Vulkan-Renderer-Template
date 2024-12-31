@@ -481,7 +481,7 @@ namespace Rendering
 			    flatRenderer->cascadesInfo.probeSizePx = probeSizePx;
 		    }
 		    static int intervalCount = flatRenderer->cascadesInfo.intervalCount;
-		    if (ImGui::SliderInt("Interval Count", &intervalCount, 2, 16))
+		    if (ImGui::SliderInt("Interval Count", &intervalCount, 1, 16))
 		    {
 			    flatRenderer->cascadesInfo.intervalCount = intervalCount;
 		    }

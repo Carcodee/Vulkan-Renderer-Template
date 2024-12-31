@@ -35,43 +35,38 @@ vec4 MergeIntervals(vec4 near, vec4 far){
 }
 
 vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex){
-    vec4 accumulatedRadiance = vec4(0.0);
+    vec4 accumulatedRadiance = vec4(0.0, 0.0, 0.0, 1.0);
     vec2 dir = intervalEnd - intervalStart;
-    int steps = (20 << (cascadeIndex));
-//    int steps = 10;
-    vec2 stepSize = vec2(dir)/float(steps);
+    float stepSize = 2.0;
+    vec2 dirNorm = normalize(dir) * stepSize;
+    int maxSteps = 500;
     bool occluded = false;
-    
     int sampleCount = 0;
-    for (int i = 0; i < steps; i++){
-        vec2 pos = intervalStart + (stepSize * float(i));
-//        if (pos.x < 0 || pos.x >= pc.fWidth || pos.y < 0 || pos.y >= pc.fHeight) {
-//            break;
-//        }
-//        ivec2 screenPos = ivec2(pos * vec2(pc.fWidth, pc.fHeight));
-        ivec2 screenPos = ivec2(pos);
-        
-        vec4 sampleCol= imageLoad(PaintingLayers[0], screenPos);
-        vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
-        if(cascadeIndex == 3){
-            imageStore(PaintingLayers[2], screenPos, vec4(cascadeCol, 1.0));
-        }       
+    vec2 pos = intervalStart;
+    for (int i = 0; i < maxSteps; i++){
+        vec4 sampleCol= imageLoad(PaintingLayers[0], ivec2(pos));
+        ///debug
+//        vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
+//        if(cascadeIndex == 3){
+//            imageStore(PaintingLayers[2], ivec2(pos), vec4(cascadeCol, 1.0));
+//        }       
+        ///
         if(sampleCol != vec4(0.0, 0.0, 0.0, 0.0)){
             occluded = true;
-        }else{
-//            sampleCol = vec4(0.01, 0.01, 0.01, 1.0);
-            sampleCol = vec4(0.0, 0.0, 0.0, 1.0);
         }
+        
         sampleCount++;
-        accumulatedRadiance+= sampleCol;
-//        if(occluded){
-//            break;
-//        }
+        pos += dirNorm;
+        if(occluded){
+            accumulatedRadiance = sampleCol;
+            break;
+        }
+        if (pos.x < 0 || pos.x >= pc.fWidth || pos.y < 0 || pos.y >= pc.fHeight || distance(pos, intervalEnd) < 0.1) {
+            break;
+        }
     }
-    accumulatedRadiance = accumulatedRadiance / float(sampleCount);
     if(occluded){
-//        accumulatedRadiance.w = 0.0;
-        accumulatedRadiance = vec4(0.0, 0.0, 1.0, 0.0);
+        accumulatedRadiance.w = 0.0;
     }
     return accumulatedRadiance;
 }
