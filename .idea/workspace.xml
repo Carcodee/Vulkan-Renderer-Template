@@ -31,16 +31,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="merging not working">
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Mergin works">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Compute/paintingGen.comp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Compute/paintingGen.comp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesMerge.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -281,15 +275,10 @@
       <workItem from="1735593986506" duration="12414000" />
       <workItem from="1735622121738" duration="2699000" />
       <workItem from="1735627298467" duration="319000" />
-      <workItem from="1735668291192" duration="14979000" />
-    </task>
-    <task id="LOCAL-00002" summary="support for bindless added">
-      <option name="closed" value="true" />
-      <created>1732238368733</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1732238368733</updated>
+      <workItem from="1735668291192" duration="15322000" />
+      <workItem from="1735685865750" duration="143000" />
+      <workItem from="1735700046466" duration="220000" />
+      <workItem from="1735701636801" duration="2989000" />
     </task>
     <task id="LOCAL-00003" summary="type safety for storage images and samplers">
       <option name="closed" value="true" />
@@ -675,7 +664,15 @@
       <option name="project" value="LOCAL" />
       <updated>1735607314491</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="Mergin works">
+      <option name="closed" value="true" />
+      <created>1735685540077</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1735685540078</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -698,7 +695,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Adding resource manager" />
     <MESSAGE value="Fixed some weird stuff in the ResourcesManager.hpp" />
     <MESSAGE value="dynamic buffers updates" />
     <MESSAGE value="changed buffers to staged resources" />
@@ -723,7 +719,8 @@
     <MESSAGE value="Working on the cascades merging" />
     <MESSAGE value="ocludders layers" />
     <MESSAGE value="merging not working" />
-    <option name="LAST_COMMIT_MESSAGE" value="merging not working" />
+    <MESSAGE value="Mergin works" />
+    <option name="LAST_COMMIT_MESSAGE" value="Mergin works" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

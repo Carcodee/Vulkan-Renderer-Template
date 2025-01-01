@@ -35,39 +35,32 @@ void main() {
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     
     int intervalCount = pc.intervalCount;
-    int probeSizePx = pc.probeSizePx;
+    int probeSizePx = pc.probeSizePx - 1;
     
+    
+    vec2 probeCount = floor(vec2(fSize) / float(probeSizePx));
+    vec2 baseIndex = ((vec2(gl_FragCoord.xy)) / probeSizePx);
+    vec2 cellFrac = fract(baseIndex);
+
+    baseIndex = floor(baseIndex);
+
+    vec2 tlProbePos= baseIndex;
+    vec2 trProbePos= baseIndex + vec2(1.0, 0.0);
+    vec2 blProbePos= baseIndex + vec2(0.0, 1.0);
+    vec2 brProbePos= baseIndex + vec2(1.0, 1.0);
+
+    vec2 tlFragPos = tlProbePos * probeSizePx;
+    vec2 trFragPos = trProbePos * probeSizePx;
+    vec2 blFragPos = blProbePos * probeSizePx;
+    vec2 brFragPos = brProbePos * probeSizePx;
+
+    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
+    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
+    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
+    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
+
     vec4 interpolated = vec4(0.0);
-    
-    int maxInterpolationSize = 1; 
-    
-    for(int i = 0; i< maxInterpolationSize; i++){
-        vec2 probeCount = floor(vec2(fSize) / float(probeSizePx));
-        vec2 baseIndex = ((vec2(gl_FragCoord.xy) - 0.5) / probeSizePx);
-        vec2 cellFrac = fract(baseIndex);
-
-        baseIndex = floor(baseIndex);
-
-        vec2 tlProbePos= baseIndex;
-        vec2 trProbePos= baseIndex + vec2(1.0, 0.0);
-        vec2 blProbePos= baseIndex + vec2(0.0, 1.0);
-        vec2 brProbePos= baseIndex + vec2(1.0, 1.0);
-
-        vec2 tlPosTextCoords = tlProbePos / probeCount;
-        vec2 trPosTextCoords = trProbePos / probeCount;
-        vec2 blPosTextCoords = blProbePos / probeCount;
-        vec2 brPosTextCoords = brProbePos / probeCount;
-
-        vec4 tlCol = imageLoad(Radiances[0], ivec2(tlPosTextCoords * vec2(fSize)));
-        vec4 trCol = imageLoad(Radiances[0], ivec2(trPosTextCoords * vec2(fSize)));
-        vec4 blCol = imageLoad(Radiances[0], ivec2(blPosTextCoords * vec2(fSize)));
-        vec4 brCol = imageLoad(Radiances[0], ivec2(brPosTextCoords * vec2(fSize)));
-
-        interpolated += mix(mix(tlCol, trCol, cellFrac.x), mix(blCol, brCol, cellFrac.x), cellFrac.y);
-        intervalCount *= 2;
-        probeSizePx *= 2;
-    }
-    interpolated /= maxInterpolationSize;
+    interpolated += mix(mix(tlCol, trCol, cellFrac.x), mix(blCol, brCol, cellFrac.x), cellFrac.y);
 
     vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
@@ -78,6 +71,7 @@ void main() {
     if(paintingImage != vec4(0.0)){
         outColor = paintingImage;
     }else{
+        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
         outColor = baseCol;
     }
 
