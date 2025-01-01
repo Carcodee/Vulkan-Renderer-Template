@@ -114,9 +114,9 @@ void main() {
 
         vec2 probePos = (probeCenterGrid * (gridSize));
 
-//        if(distance(probePos, vec2(gl_FragCoord.xy)) < 0.1){
-//            continue;
-//        }
+        if(distance(probePos, vec2(gl_FragCoord.xy)) < 0.1){
+            continue;
+        }
         vec2 intervalRange = IntervalRange(i, pc.baseIntervalLength);
         vec2 intervalStart = probePos + texelDir * intervalRange.x;
         vec2 intervalEnd = probePos + texelDir * intervalRange.y;

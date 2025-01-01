@@ -69,13 +69,13 @@ void main() {
 //    
 //    imageStore(Radiances[0], ivec2(gl_FragCoord.xy), radiance);
 //
-//    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
-//    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
-//    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
-//    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
-//
-//    vec4 interpolated = vec4(0.0);
-//    interpolated += mix(mix(tlCol, trCol, 0.0), mix(blCol, brCol, cellFrac.x), cellFrac.y);
+    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
+    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
+    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
+    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
+
+    vec4 interpolated = vec4(0.0);
+    interpolated += mix(mix(tlCol, trCol, 0.0), mix(blCol, brCol, cellFrac.x), cellFrac.y);
 
     vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
@@ -84,13 +84,13 @@ void main() {
     vec4 debug= imageLoad(PaintingLayers[2], coord);
 
 //    outColor = blackOc;
-    if(testImg.w > 0.1){
+    if(testImg.w > 0.01){
         outColor = testImg;
     }else{
 //        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
-        outColor = interpolated;
+        outColor = radiance;
     }
-    if(paintingImage.w > 0.1){
+    if(paintingImage.w > 0.01){
         outColor = paintingImage;
     }else{
         outColor = radiance;

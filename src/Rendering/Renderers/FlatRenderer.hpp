@@ -88,7 +88,7 @@ namespace Rendering
             
             std::string resourcesPath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath();
 
-            testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\google.png", 1, 1,
+            testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\VulkanLogo.png", 1, 1,
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ); 
             
             
