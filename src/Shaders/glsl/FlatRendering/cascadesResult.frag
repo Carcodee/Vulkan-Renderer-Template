@@ -27,6 +27,7 @@ layout(push_constant) uniform pushConstants{
 layout (set = 0, binding = 0)uniform sampler2D MergedCascades;
 layout (set = 0, binding = 1, rgba8) uniform image2D PaintingLayers[];
 layout (set = 0, binding = 2, rgba8) uniform image2D Radiances[];
+layout (set = 0, binding = 3) uniform sampler2D TestImage;
 
 
 void main() {
@@ -35,7 +36,7 @@ void main() {
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
     
     int intervalCount = pc.intervalCount;
-    int probeSizePx = pc.probeSizePx - 1;
+    int probeSizePx = pc.probeSizePx;
     
     
     vec2 probeCount = floor(vec2(fSize) / float(probeSizePx));
@@ -43,6 +44,8 @@ void main() {
     vec2 cellFrac = fract(baseIndex);
 
     baseIndex = floor(baseIndex);
+    
+   
 
     vec2 tlProbePos= baseIndex;
     vec2 trProbePos= baseIndex + vec2(1.0, 0.0);
@@ -53,26 +56,45 @@ void main() {
     vec2 trFragPos = trProbePos * probeSizePx;
     vec2 blFragPos = blProbePos * probeSizePx;
     vec2 brFragPos = brProbePos * probeSizePx;
+    
+    vec4 radiance = vec4(0.0);
 
-    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
-    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
-    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
-    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
+    ivec2 currDir = ivec2(0.0);
+    for (int i = 0; i < intervalCount * intervalCount; i++){
 
-    vec4 interpolated = vec4(0.0);
-    interpolated += mix(mix(tlCol, trCol, cellFrac.x), mix(blCol, brCol, cellFrac.x), cellFrac.y);
+        currDir = ivec2(tlFragPos) + ivec2(i % probeSizePx, i / probeSizePx);
+        radiance+= imageLoad(Radiances[0], currDir);
+    }
+    radiance /= (intervalCount * intervalCount);
+//    
+//    imageStore(Radiances[0], ivec2(gl_FragCoord.xy), radiance);
+//
+//    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
+//    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
+//    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
+//    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
+//
+//    vec4 interpolated = vec4(0.0);
+//    interpolated += mix(mix(tlCol, trCol, 0.0), mix(blCol, brCol, cellFrac.x), cellFrac.y);
 
     vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
+    vec4 testImg = texture(TestImage, textCoord);
     vec4 blackOc= imageLoad(PaintingLayers[1], coord);
     vec4 debug= imageLoad(PaintingLayers[2], coord);
 
 //    outColor = blackOc;
-    if(paintingImage != vec4(0.0)){
+    if(testImg.w > 0.1){
+        outColor = testImg;
+    }else{
+//        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
+        outColor = interpolated;
+    }
+    if(paintingImage.w > 0.1){
         outColor = paintingImage;
     }else{
-        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
-        outColor = baseCol;
+        outColor = radiance;
     }
+//    outColor = testImg;
 
 }

@@ -84,6 +84,12 @@ namespace Rendering
                 ImageView* imageView = ResourcesManager::GetInstance()->GetImage(name, storageImageInfo, 0, 0);
                 radiancesImages.emplace_back(imageView);
             }
+
+            
+            std::string resourcesPath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath();
+
+            testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\google.png", 1, 1,
+                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ); 
             
             
         }
@@ -209,7 +215,7 @@ namespace Rendering
             renderNode->SetPipelineLayoutCI(layoutCreateInfo);
             renderNode->SetVertexInput(vertexInput);
             renderNode->AddColorAttachmentOutput("rColor", outputColInfo);
-            renderNode->AddColorBlendConfig(BlendConfigs::B_OPAQUE);
+            renderNode->AddColorBlendConfig(BlendConfigs::B_ALPHA_BLEND);
             renderNode->SetRasterizationConfigs(RasterizationConfigs::R_FILL);
             renderNode->BuildRenderGraphNode();
             renderNode->DependsOn(paintingPassName);
@@ -383,6 +389,7 @@ namespace Rendering
                     outputCache->SetSamplerArray("Cascades", cascadesAttachmentsImagesViews);
                     outputCache->SetStorageImageArray("PaintingLayers", paintingLayers);
                     outputCache->SetStorageImageArray("Radiances", radiancesImages);
+                    outputCache->SetSampler("TestImage", testImage->imageView.get());
                     auto& renderNode = renderGraph->renderNodes.at(rCascadesPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
                                                      renderNode->pipelineLayout.get(), 0,
@@ -457,6 +464,7 @@ namespace Rendering
                 {
                     cascadesResultCache->SetStorageImageArray("PaintingLayers", paintingLayers);
                     cascadesResultCache->SetStorageImageArray("Radiances", radiancesImages);
+                    cascadesResultCache->SetSampler("TestImage", testImage->imageView.get());
                     
                     auto& renderNode = renderGraph->renderNodes.at(resultPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
@@ -534,6 +542,7 @@ namespace Rendering
         std::unique_ptr<DescriptorCache> paintingCache;
         std::unique_ptr<Shader> paintCompShader;
         std::vector<ImageView*> paintingLayers;
+        ImageShipper* testImage;
 
 
         Buffer* quadVertBufferRef;
