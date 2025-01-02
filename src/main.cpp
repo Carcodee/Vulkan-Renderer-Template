@@ -22,8 +22,8 @@ double previousTime;
 
 #include "Rendering/RenderingInclude.hpp"
 
-CONST int WINDOWS_WIDTH = 1280;
-CONST int WINDOWS_HEIGHT = 1080;
+CONST int WINDOWS_WIDTH = 768;
+CONST int WINDOWS_HEIGHT = 768;
 
 #define ENGINE_ENABLE_DEBUGGING
 

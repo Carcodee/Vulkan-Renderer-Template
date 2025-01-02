@@ -94,7 +94,7 @@ namespace ENGINE
             if (imagesShippersNames.contains(name))
             {
                 SYSTEMS::Logger::GetInstance()->SetLogPreferences(SYSTEMS::LogLevel::L_INFO);
-                SYSTEMS::Logger::GetInstance()->Log("",-1 ,"Using texture that already exist: " + name, SYSTEMS::LogLevel::L_INFO);
+                SYSTEMS::Logger::GetInstance()->Log("Using texture that already exist: " + name, SYSTEMS::LogLevel::L_INFO);
                 ImageShipper* shipper = GetShipperFromName(name);
                 return shipper;
             }

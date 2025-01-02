@@ -28,6 +28,11 @@ layout (set = 0, binding = 0) uniform sampler2D Cascades[];
 layout (set = 0, binding = 1, rgba8) uniform image2D PaintingLayers[];
 layout (set = 0, binding = 2, rgba8) uniform image2D Radiances[];
 layout (set = 0, binding = 3) uniform sampler2D TestImage;
+layout (set = 0, binding = 4) uniform sampler2D SpriteAnims[];
+
+layout (set = 0, binding = 5, scalar) buffer SpriteInfo{
+    u_SpriteAnimationInfo spriteAnimInfo;
+};
 
 #define CASCADE_SIZE 5
 
@@ -47,22 +52,26 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
     for (int i = 0; i < maxSteps; i++){
         vec4 sampleCol= imageLoad(PaintingLayers[0], ivec2(pos));
         vec4 sampleColImage= texture(TestImage, vec2(pos)/ fSize);
+        
+        ivec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
+        vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos)/vec2(fSize));
         ///debug
-//        vec3 cascadeCol = u_HSLToRGB(cascadeIndex / 4.0, 0.8, 0.4);
+        vec3 cascadeCol = u_HSLToRGB(float(spriteAnimInfo.currentFrame) / 36.0, 0.8, 0.4);
 //        if(cascadeIndex == 3){
 //            imageStore(PaintingLayers[2], ivec2(pos), vec4(cascadeCol, 1.0));
 //        }       
         ///
-        if(sampleColImage.w > 0.1){
+        if(spriteCol.w > 0.01){
             occluded = true;
-            accumulatedRadiance = sampleColImage;
+            accumulatedRadiance += spriteCol * vec4(cascadeCol, 1.0);
+//            sampleCount++;
         }       
         if(sampleCol != vec4(0.0, 0.0, 0.0, 0.0)){
             occluded = true;
-            accumulatedRadiance = sampleCol;
+            accumulatedRadiance += sampleCol;
+//            sampleCount++;
         }
 
-        sampleCount++;
         pos += dir;
         if(occluded){
             break;
@@ -71,6 +80,7 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
             break;
         }
     }
+//    accumulatedRadiance /= sampleCount;
     if(occluded){
         accumulatedRadiance.w = 0.0;
     }
@@ -125,8 +135,6 @@ void main() {
         ivec2 dirPos = ivec2((probeCenterGrid - vec2(0.5)) * gridSize) + ivec2(dirIndex % gridSize, dirIndex / gridSize);
         vec2 dirCol = vec2(dirPos) / vec2(fSize);
 
-
-//        imageStore(Radiances[i], ivec2(coord), vec4(dirCol, 0.0, 1.0));
         imageStore(Radiances[i], ivec2(dirPos), radiance);
 
         intervalGrid *= 2;

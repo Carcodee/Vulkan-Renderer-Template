@@ -60,7 +60,7 @@ namespace ENGINE
             {
                 if (dstSetBuilder.uniqueBindings.contains(resource.binding))
                 {
-                    SYSTEMS::Logger::GetInstance()->Log("", 0, "Binding: " + std::to_string(resource.binding) + " already exist with name: " + resource.name, SYSTEMS::LogLevel::L_ERROR);
+                    SYSTEMS::Logger::GetInstance()->Log("Binding: " + std::to_string(resource.binding) + " already exist with name: " + resource.name, SYSTEMS::LogLevel::L_ERROR);
                     continue;
                 }
                 Buffer* ubo;

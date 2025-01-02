@@ -20,7 +20,7 @@ namespace Rendering
 
     		if (!std::filesystem::exists(path))
     		{
-    			SYSTEMS::Logger::GetInstance()->Log("" ,0, "Path do not exist: "+ path, SYSTEMS::LogLevel::L_ERROR);
+    			SYSTEMS::Logger::GetInstance()->Log("Path do not exist: "+ path, SYSTEMS::LogLevel::L_ERROR);
     			return;
     		}
     		tinygltf::Model gltfModel;

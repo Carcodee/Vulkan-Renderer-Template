@@ -34,9 +34,17 @@
     <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="post merge average done">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/DescriptorCache.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/DescriptorCache.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Engine/ResourcesManager.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RThings/RenderingResManager.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RenderingInclude.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uRendering.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uRendering.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uStructs.glsl" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/Utils/uStructs.glsl" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Systems/Logger.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Systems/Logger.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.cpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,6 +72,9 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -241,15 +252,8 @@
       <workItem from="1735700046466" duration="220000" />
       <workItem from="1735701636801" duration="3150000" />
       <workItem from="1735711345093" duration="2745000" />
-      <workItem from="1735753235955" duration="3676000" />
-    </task>
-    <task id="LOCAL-00005" summary="Buffer handling">
-      <option name="closed" value="true" />
-      <created>1732251110692</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1732251110692</updated>
+      <workItem from="1735753235955" duration="19528000" />
+      <workItem from="1735776099583" duration="1000" />
     </task>
     <task id="LOCAL-00006" summary="all buffers and textures works as expected in the main branch">
       <option name="closed" value="true" />
@@ -635,7 +639,15 @@
       <option name="project" value="LOCAL" />
       <updated>1735755591835</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="post merge average done">
+      <option name="closed" value="true" />
+      <created>1735757433918</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1735757433918</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

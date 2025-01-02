@@ -29,6 +29,12 @@ layout (set = 0, binding = 1, rgba8) uniform image2D PaintingLayers[];
 layout (set = 0, binding = 2, rgba8) uniform image2D Radiances[];
 layout (set = 0, binding = 3) uniform sampler2D TestImage;
 
+layout (set = 0, binding = 4) uniform sampler2D SpriteAnims[];
+
+layout (set = 0, binding = 5, scalar) buffer SpriteInfo{
+    u_SpriteAnimationInfo spriteAnimInfo;
+};
+
 
 void main() {
    
@@ -69,13 +75,13 @@ void main() {
 //    
 //    imageStore(Radiances[0], ivec2(gl_FragCoord.xy), radiance);
 //
-    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
-    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
-    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
-    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
-
-    vec4 interpolated = vec4(0.0);
-    interpolated += mix(mix(tlCol, trCol, 0.0), mix(blCol, brCol, cellFrac.x), cellFrac.y);
+//    vec4 tlCol = imageLoad(Radiances[0], ivec2(tlFragPos));
+//    vec4 trCol = imageLoad(Radiances[0], ivec2(trFragPos));
+//    vec4 blCol = imageLoad(Radiances[0], ivec2(blFragPos));
+//    vec4 brCol = imageLoad(Radiances[0], ivec2(brFragPos));
+//
+//    vec4 interpolated = vec4(0.0);
+//    interpolated += mix(mix(tlCol, trCol, 0.0), mix(blCol, brCol, cellFrac.x), cellFrac.y);
 
     vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
@@ -83,9 +89,13 @@ void main() {
     vec4 blackOc= imageLoad(PaintingLayers[1], coord);
     vec4 debug= imageLoad(PaintingLayers[2], coord);
 
+    ivec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(gl_FragCoord.xy), fSize);
+    
+    vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos)/vec2(fSize));
+
 //    outColor = blackOc;
-    if(testImg.w > 0.01){
-        outColor = testImg;
+    if(spriteCol.w > 0.01){
+        outColor = spriteCol;
     }else{
 //        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
         outColor = radiance;
@@ -95,6 +105,6 @@ void main() {
     }else{
         outColor = radiance;
     }
-//    outColor = testImg;
+//    outColor = col;
 
 }

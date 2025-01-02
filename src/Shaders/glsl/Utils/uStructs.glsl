@@ -68,6 +68,15 @@ struct u_MergeCascadesInfo{
     ivec2 probeSizesPx;
     int dirIndices;
 };
+
+struct u_SpriteAnimationInfo{
+    ivec2 spriteSizePx;
+    int currentFrame;
+    int frameCount;
+    int rows;
+    int cols;
+    bool isAtlas;
+};
 //End Util
 
 #endif 

@@ -23,6 +23,7 @@
 #include "RThings/RenderingResManager.hpp"
 #include "RThings/Lights.hpp"
 #include "RThings/Camera.hpp"
+#include "RThings/Animator.hpp"
 
 #include "BaseRenderer.hpp"
 #include "Examples/ForwardRenderer.hpp"

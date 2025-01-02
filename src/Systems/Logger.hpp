@@ -64,7 +64,7 @@ namespace SYSTEMS
         * @param message: Log Message
         * @param messageLevel: Log Level, LogLevel::DEBUG by default
         */
-        void Log(std::string codeFile, int codeLine, std::string message, LogLevel messageLevel = LogLevel::L_DEBUG)
+        void Log(std::string message, LogLevel messageLevel = LogLevel::L_DEBUG, std::string codeFile = "", int codeLine = 0)
         {
             if (messageLevel <= logLevel)
             {
