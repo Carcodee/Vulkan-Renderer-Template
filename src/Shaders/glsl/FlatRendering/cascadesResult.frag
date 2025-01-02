@@ -89,13 +89,17 @@ void main() {
     vec4 blackOc= imageLoad(PaintingLayers[1], coord);
     vec4 debug= imageLoad(PaintingLayers[2], coord);
 
-    ivec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(gl_FragCoord.xy), fSize);
+    int size = spriteAnimInfo.rows * spriteAnimInfo.cols;
+    vec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(gl_FragCoord.xy), fSize);
+    vec2 spritePos1 = u_GetSpriteCoordInAtlas((spriteAnimInfo.currentFrame + 1) % size, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(gl_FragCoord.xy), fSize);
+    vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos));
+    vec4 spriteCol1 = texture(SpriteAnims[0], vec2(spritePos1));
     
-    vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos)/vec2(fSize));
+    vec4 finalVal = mix(spriteCol, spriteCol1, spriteAnimInfo.interpVal);
 
 //    outColor = blackOc;
-    if(spriteCol.w > 0.01){
-        outColor = spriteCol;
+    if(finalVal.w > 0.01){
+        outColor = finalVal;
     }else{
 //        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
         outColor = radiance;

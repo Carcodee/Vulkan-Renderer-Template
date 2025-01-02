@@ -98,8 +98,8 @@ namespace Rendering
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
 
             testSpriteAnim.LoadAtlas(
-                assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\128\\Smoke_1_128-sheet.png",
-                glm::uvec2(128, 128), 6, 6, 5);
+            assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
+            glm::uvec2(512, 512), 7, 7, 10);
             
         }
 

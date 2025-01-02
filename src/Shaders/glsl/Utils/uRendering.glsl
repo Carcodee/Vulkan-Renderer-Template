@@ -59,14 +59,16 @@ float u_GetZSlice(float Z, float near, float far, float numSlices) {
 }
 
 
-ivec2 u_GetSpriteCoordInAtlas(int frameIndex, ivec2 spriteSizePx, int rows, int cols, ivec2 fragPos, ivec2 fSize){
+vec2 u_GetSpriteCoordInAtlas(int frameIndex, ivec2 spriteSizePx, int rows, int cols, ivec2 fragPos, ivec2 fSize){
     ivec2 frameIndexInAtlas = ivec2(frameIndex % cols, frameIndex / cols);
     
     vec2 gridSizePx = vec2(fSize) / vec2(spriteSizePx);
     vec2 spritePixelPos = floor(vec2(fragPos) / gridSizePx); 
     vec2 spriteBaseIndexPos = frameIndexInAtlas * vec2(spriteSizePx);
     ivec2 finalPos = ivec2((spriteBaseIndexPos + spritePixelPos));
-    return finalPos;
+    vec2 spriteSize =  vec2(spriteSizePx) * vec2(cols, rows);
+    
+    return vec2(finalPos) / spriteSize;
 }
 
 #endif 

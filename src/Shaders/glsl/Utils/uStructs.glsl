@@ -75,6 +75,7 @@ struct u_SpriteAnimationInfo{
     int frameCount;
     int rows;
     int cols;
+    float interpVal;
     bool isAtlas;
 };
 //End Util

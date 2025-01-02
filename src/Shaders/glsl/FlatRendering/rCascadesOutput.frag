@@ -52,18 +52,22 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
     for (int i = 0; i < maxSteps; i++){
         vec4 sampleCol= imageLoad(PaintingLayers[0], ivec2(pos));
         vec4 sampleColImage= texture(TestImage, vec2(pos)/ fSize);
-        
-        ivec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
-        vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos)/vec2(fSize));
+
+        int size = spriteAnimInfo.rows * spriteAnimInfo.cols;
+        vec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
+        vec2 spritePos1 = u_GetSpriteCoordInAtlas((spriteAnimInfo.currentFrame + 1) % size, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
+        vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos));
+        vec4 spriteCol1 = texture(SpriteAnims[0], vec2(spritePos1));
+        vec4 finalVal = mix(spriteCol, spriteCol1, spriteAnimInfo.interpVal);
         ///debug
         vec3 cascadeCol = u_HSLToRGB(float(spriteAnimInfo.currentFrame) / 36.0, 0.8, 0.4);
 //        if(cascadeIndex == 3){
 //            imageStore(PaintingLayers[2], ivec2(pos), vec4(cascadeCol, 1.0));
 //        }       
         ///
-        if(spriteCol.w > 0.01){
+        if(finalVal.w > 0.01){
             occluded = true;
-            accumulatedRadiance += spriteCol * vec4(cascadeCol, 1.0);
+            accumulatedRadiance += finalVal;
 //            sampleCount++;
         }       
         if(sampleCol != vec4(0.0, 0.0, 0.0, 0.0)){
