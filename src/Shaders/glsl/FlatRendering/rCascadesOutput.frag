@@ -65,9 +65,9 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
 //            imageStore(PaintingLayers[2], ivec2(pos), vec4(cascadeCol, 1.0));
 //        }       
         ///
-        if(finalVal.w > 0.01){
+        if(spriteCol.w > 0.8){
             occluded = true;
-            accumulatedRadiance += finalVal;
+            accumulatedRadiance += spriteCol * spriteCol.w;
 //            sampleCount++;
         }       
         if(sampleCol != vec4(0.0, 0.0, 0.0, 0.0)){

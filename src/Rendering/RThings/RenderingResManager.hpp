@@ -6,6 +6,8 @@
 
 
 
+
+
 #ifndef ENGINERESMANAGER_HPP
 #define ENGINERESMANAGER_HPP
 
@@ -536,6 +538,35 @@ namespace Rendering
             return model;
         }
 
+    	Animator2D* GetAnimator(std::string name, std::string path, int frameSpacing, AnimatorInfo animatorInfo)
+    	{
+    		if (animatorsNames.contains(name))
+    		{
+    			SYSTEMS::Logger::GetInstance()->Log("Invalid name for animator");
+    			return nullptr;
+    		}
+    		animatorsNames.try_emplace(name, animators.size());
+		    animators.emplace_back(std::make_unique<Animator2D>());
+    		if (animatorInfo.isAtlas)
+    		{
+    			animators.back()->LoadAtlas(path, frameSpacing, animatorInfo);
+    		}else
+    		{
+    			animators.back()->LoadFrames(path, frameSpacing);
+    		}
+    		return animators.back().get();
+    	}
+
+	    Animator2D* GetAnimatorByName(std::string name)
+    	{
+     		if (!animatorsNames.contains(name))
+    		{
+    			SYSTEMS::Logger::GetInstance()->Log("Invalid name for animator");
+    			return nullptr;
+    		}
+    		return animators.at(animatorsNames.at(name)).get();
+    	}
+    	
     	void BuildIndirectBuffers()
     	{
     		indirectDrawsCmdInfos.clear();
@@ -618,10 +649,12 @@ namespace Rendering
         std::map<std::string, int> materialsNames;
         std::map<std::string, int> modelsNames;
         std::map<std::string, int> texturesNames;
+        std::map<std::string, int> animatorsNames;
         
         std::vector<std::unique_ptr<Material>> materials;
         std::vector<MaterialPackedData*> materialPackedData;
         std::vector<std::unique_ptr<Model>> models;
+    	std::vector<std::unique_ptr<Animator2D>> animators;
     	ENGINE::Buffer* indirectDrawBuffer;
     	std::map<std::string, Model*> individualDrawModels;
     	std::map<std::string, Model*> indirectModelsToDraw;

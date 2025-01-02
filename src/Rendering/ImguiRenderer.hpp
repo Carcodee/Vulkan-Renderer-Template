@@ -4,6 +4,7 @@
 
 
 
+
 // Created by carlo on 2024-10-10.
 //
 
@@ -140,6 +141,7 @@ namespace Rendering
 	    	{
 	    		PaintingInfo();
 	    		RCascadesInfo();
+	    		AnimatorInfo();
 	    	}
 	    	
             RenderGraphProfiler();
@@ -449,31 +451,52 @@ namespace Rendering
 			    std::string name = "radianceStorage_" + std::to_string(i);
 			    ResourcesManager::GetInstance()->RequestStorageImageClear(name);
 		    }
+	    	ImGui::End();
+	    	
+	    }
+    	void AnimatorInfo()
+	    {
+		    ImGui::Begin("Animator Info");
 
-	    	
-	    	
+	    	int i = 0;
+		    for (const auto& animatorPair :RenderingResManager::GetInstance()->animatorsNames)
+		    {
+		    	auto animator = RenderingResManager::GetInstance()->GetAnimatorByName(animatorPair.first);
+		    	std::string frameSpacingName=animatorPair.first + ": Frame Spacing";
+		    	ImGui::SliderInt(frameSpacingName.c_str(), &animator->frameSpacing,1, 1000);
+
+		    	std::string frameInfo =animatorPair.first + " Frames Info: "+ std::to_string(animator->animatorInfo.currentFrame) + " / " + std::to_string(animator->animatorInfo.frameCount);
+			    ImGui::Text("%s", frameInfo.c_str());
+		    	
+			    std::string frameSpacingInfo = animatorPair.first + " Frame Spacing info: " + std::to_string(animator->currentFrameSpacing) + " / " +std::to_string(animator->frameSpacing);
+			    ImGui::Text("%s", frameSpacingInfo.c_str());
+
+			    std::string interpInfo = animatorPair.first + " Interpolation info: " + std::to_string(animator->animatorInfo.interpVal) +
+				    " / 1.0";
+			    ImGui::Text("%s", interpInfo.c_str());
+		    }
 	    	
 	    	ImGui::End();
+		    
 	    }
 
     	void RCascadesInfo()
 	    {
-		    ImGui::Begin("Radiance Output Info");
-		
-		    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-
-	    	std::vector<ImageView*> cascades = flatRenderer->cascadesAttachmentsImagesViews;
-
-		    for (int i = 0; i < cascades.size(); ++i)
-		    {
-		    	std::string imageName = "cascade_" + std::to_string(i);
-		    	AddImage(imageName ,cascades[i], viewportSize);
-		    }
-		    std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
-
-	    	
-	    	ImGui::End();
-	    	
+		    // ImGui::Begin("Radiance Output Info");
+		    //
+		    // ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+		    //
+	    	// std::vector<ImageView*> cascades = flatRenderer->cascadesAttachmentsImagesViews;
+		    //
+		    // for (int i = 0; i < cascades.size(); ++i)
+		    // {
+		    // 	std::string imageName = "cascade_" + std::to_string(i);
+		    // 	AddImage(imageName ,cascades[i], viewportSize);
+		    // }
+		    // std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
+	    	//
+	    	// ImGui::End();
+	    	//
 		    ImGui::Begin("Radiance Cascades Configs");
 		    static int probeSizePx = flatRenderer->cascadesInfo.probeSizePx;
 		    if (ImGui::SliderInt("Probe Size in Px", &probeSizePx, 2, 1024))

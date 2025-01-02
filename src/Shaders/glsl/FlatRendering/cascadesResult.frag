@@ -98,8 +98,8 @@ void main() {
     vec4 finalVal = mix(spriteCol, spriteCol1, spriteAnimInfo.interpVal);
 
 //    outColor = blackOc;
-    if(finalVal.w > 0.01){
-        outColor = finalVal;
+    if(spriteCol.w > 0.01){
+        outColor = spriteCol;
     }else{
 //        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
         outColor = radiance;

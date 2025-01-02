@@ -71,10 +71,10 @@ struct u_MergeCascadesInfo{
 
 struct u_SpriteAnimationInfo{
     ivec2 spriteSizePx;
-    int currentFrame;
-    int frameCount;
     int rows;
     int cols;
+    int currentFrame;
+    int frameCount;
     float interpVal;
     bool isAtlas;
 };

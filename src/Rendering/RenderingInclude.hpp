@@ -20,10 +20,10 @@
 
 #include "RThings/Material.hpp"
 #include "RThings/Model.hpp"
-#include "RThings/RenderingResManager.hpp"
 #include "RThings/Lights.hpp"
 #include "RThings/Camera.hpp"
 #include "RThings/Animator.hpp"
+#include "RThings/RenderingResManager.hpp"
 
 #include "BaseRenderer.hpp"
 #include "Examples/ForwardRenderer.hpp"

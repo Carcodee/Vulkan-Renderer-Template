@@ -16,6 +16,8 @@
 
 
 
+
+
 #ifndef FLATRENDERER_HPP
 #define FLATRENDERER_HPP
 
@@ -97,9 +99,15 @@ namespace Rendering
             testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\VulkanLogo.png", 1, 1,
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
 
-            testSpriteAnim.LoadAtlas(
-            assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
-            glm::uvec2(512, 512), 7, 7, 10);
+            // testSpriteAnim.LoadAtlas(
+            // assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
+            // glm::uvec2(512, 512), 7, 7, 10);
+
+            AnimatorInfo animatorInfo = {glm::uvec2(512, 512), 4, 4, -1, -1, -1, true};
+            testSpriteAnim = RenderingResManager::GetInstance()->GetAnimator("TestAnim",
+                                                                            assetPath +
+                                                                            "\\Animations\\FireFreePack\\Compressed\\512\\Fire_1_512-comp_sheet.png",
+                                                                            30, animatorInfo);
             
         }
 
@@ -399,8 +407,8 @@ namespace Rendering
                     outputCache->SetStorageImageArray("PaintingLayers", paintingLayers);
                     outputCache->SetStorageImageArray("Radiances", radiancesImages);
                     outputCache->SetSampler("TestImage", testImage->imageView.get());
-                    outputCache->SetSamplerArray("SpriteAnims", testSpriteAnim.imagesFrames);
-                    outputCache->SetBuffer("SpriteInfo", testSpriteAnim.animationInfo);
+                    outputCache->SetSamplerArray("SpriteAnims", testSpriteAnim->imagesFrames);
+                    outputCache->SetBuffer("SpriteInfo", testSpriteAnim->animatorInfo);
                     
                     auto& renderNode = renderGraph->renderNodes.at(rCascadesPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
@@ -478,8 +486,8 @@ namespace Rendering
                     cascadesResultCache->SetStorageImageArray("PaintingLayers", paintingLayers);
                     cascadesResultCache->SetStorageImageArray("Radiances", radiancesImages);
                     cascadesResultCache->SetSampler("TestImage", testImage->imageView.get());
-                    cascadesResultCache->SetSamplerArray("SpriteAnims", testSpriteAnim.imagesFrames);
-                    cascadesResultCache->SetBuffer("SpriteInfo", testSpriteAnim.animationInfo);
+                    cascadesResultCache->SetSamplerArray("SpriteAnims", testSpriteAnim->imagesFrames);
+                    cascadesResultCache->SetBuffer("SpriteInfo", testSpriteAnim->animatorInfo);
                         
                     
                     auto& renderNode = renderGraph->renderNodes.at(resultPassName);
@@ -498,7 +506,7 @@ namespace Rendering
 
                     commandBuffer.drawIndexed(Vertex2D::GetQuadIndices().size(), 1, 0,
                                               0, 0);
-                    testSpriteAnim.UseFrame();
+                    testSpriteAnim->UseFrame();
                 });
             renderGraph->GetNode(resultPassName)->SetRenderOperation(resultRenderOp);
             renderGraph->GetNode(resultPassName)->AddTask(resultTask);
@@ -565,7 +573,7 @@ namespace Rendering
         Buffer* quadVertBufferRef;
         Buffer* quadIndexBufferRef;
 
-        Animator2D testSpriteAnim;
+        Animator2D* testSpriteAnim;
         PaintingPc paintingPc;
         RcPc rcPc;
         ProbesGenPc probesGenPc;
