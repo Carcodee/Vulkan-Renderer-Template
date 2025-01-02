@@ -99,15 +99,30 @@ namespace Rendering
             testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\VulkanLogo.png", 1, 1,
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
 
+            normalMap = ResourcesManager::GetInstance()->GetShipper("NormalMap", resourcesPath + "\\Images\\Normal.png", 1, 1,
+                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+            
+            baseCol = ResourcesManager::GetInstance()->GetShipper("BaseCol", resourcesPath + "\\Images\\BaseCol.png", 1, 1,
+                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+            
+            roughness = ResourcesManager::GetInstance()->GetShipper("Roughness", resourcesPath + "\\Images\\Roughness.png", 1, 1,
+                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+            ao = ResourcesManager::GetInstance()->GetShipper("Ao", resourcesPath + "\\Images\\Ao.png", 1, 1,
+                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+            height = ResourcesManager::GetInstance()->GetShipper("Height", resourcesPath + "\\Images\\Height.png", 1, 1,
+                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+
+
+
             // testSpriteAnim.LoadAtlas(
             // assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
             // glm::uvec2(512, 512), 7, 7, 10);
 
-            AnimatorInfo animatorInfo = {glm::uvec2(512, 512), 4, 4, -1, -1, -1, true};
+            AnimatorInfo animatorInfo = {glm::uvec2(512, 512), 7, 7, -1, -1, -1, true};
             testSpriteAnim = RenderingResManager::GetInstance()->GetAnimator("TestAnim",
-                                                                            assetPath +
-                                                                            "\\Animations\\FireFreePack\\Compressed\\512\\Fire_1_512-comp_sheet.png",
-                                                                            30, animatorInfo);
+                                                                             assetPath +
+                                                                             "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
+                                                                             30, animatorInfo);
             
         }
 
@@ -488,6 +503,12 @@ namespace Rendering
                     cascadesResultCache->SetSampler("TestImage", testImage->imageView.get());
                     cascadesResultCache->SetSamplerArray("SpriteAnims", testSpriteAnim->imagesFrames);
                     cascadesResultCache->SetBuffer("SpriteInfo", testSpriteAnim->animatorInfo);
+                    cascadesResultCache->SetSampler("NormalMap", normalMap->imageView.get());
+                    cascadesResultCache->SetSampler("BaseCol", baseCol->imageView.get());
+                    cascadesResultCache->SetSampler("Roughness", roughness->imageView.get());
+                    cascadesResultCache->SetSampler("Ao", ao->imageView.get());
+                    cascadesResultCache->SetSampler("Height", height->imageView.get());
+                    cascadesResultCache->SetBuffer("LightInfo", light);
                         
                     
                     auto& renderNode = renderGraph->renderNodes.at(resultPassName);
@@ -568,12 +589,19 @@ namespace Rendering
         std::unique_ptr<Shader> paintCompShader;
         std::vector<ImageView*> paintingLayers;
         ImageShipper* testImage;
+        ImageShipper* normalMap;
+        ImageShipper* baseCol;
+        ImageShipper* roughness;
+        ImageShipper* ao;
+        ImageShipper* height;
 
 
         Buffer* quadVertBufferRef;
         Buffer* quadIndexBufferRef;
 
         Animator2D* testSpriteAnim;
+
+        DirectionalLight light;
         PaintingPc paintingPc;
         RcPc rcPc;
         ProbesGenPc probesGenPc;

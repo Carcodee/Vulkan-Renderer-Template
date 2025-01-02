@@ -35,8 +35,22 @@ layout (set = 0, binding = 5, scalar) buffer SpriteInfo{
     u_SpriteAnimationInfo spriteAnimInfo;
 };
 
+layout (set = 0, binding = 6) uniform sampler2D NormalMap;
+layout (set = 0, binding = 7) uniform sampler2D BaseCol;
+layout (set = 0, binding = 8) uniform sampler2D Roughness;
+layout (set = 0, binding = 9) uniform sampler2D Height;
+layout (set = 0, binding = 10) uniform sampler2D Ao;
+
+layout (set = 0, binding = 11, scalar) uniform LightInfo{
+    vec3 pos;
+    vec3 col;
+    float intensity;
+}ubo;
+
+
 
 void main() {
+    vec3 lightDir = ubo.pos ;
    
     ivec2 coord = ivec2(gl_FragCoord.xy);
     ivec2 fSize = ivec2(pc.fWidth, pc.fHeight);
@@ -44,14 +58,11 @@ void main() {
     int intervalCount = pc.intervalCount;
     int probeSizePx = pc.probeSizePx;
     
-    
     vec2 probeCount = floor(vec2(fSize) / float(probeSizePx));
     vec2 baseIndex = ((vec2(gl_FragCoord.xy)) / probeSizePx);
     vec2 cellFrac = fract(baseIndex);
 
     baseIndex = floor(baseIndex);
-    
-   
 
     vec2 tlProbePos= baseIndex;
     vec2 trProbePos= baseIndex + vec2(1.0, 0.0);
@@ -83,7 +94,7 @@ void main() {
 //    vec4 interpolated = vec4(0.0);
 //    interpolated += mix(mix(tlCol, trCol, 0.0), mix(blCol, brCol, cellFrac.x), cellFrac.y);
 
-    vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
+//    vec4 baseCol = imageLoad(Radiances[0], ivec2(gl_FragCoord.xy));
     vec4 paintingImage = imageLoad(PaintingLayers[0], coord);
     vec4 testImg = texture(TestImage, textCoord);
     vec4 blackOc= imageLoad(PaintingLayers[1], coord);
@@ -97,18 +108,23 @@ void main() {
     
     vec4 finalVal = mix(spriteCol, spriteCol1, spriteAnimInfo.interpVal);
 
-//    outColor = blackOc;
-    if(spriteCol.w > 0.01){
-        outColor = spriteCol;
-    }else{
-//        vec4 frag = vec4(trFragPos/fSize, 0.0, 1.0);
-        outColor = radiance;
+    vec4 baseCol = texture(BaseCol, textCoord);
+    vec4 normalMap = texture(NormalMap, textCoord);
+    vec4 roughness = texture(Roughness, textCoord);
+    vec4 ao = texture(Ao, textCoord);
+    vec4 height = texture(Height, textCoord);
+    
+//    outColor = (baseCol * ao.x * height.x) * vec4(diff, 1.0);
+    float normalMapCombined =pow(24.0,(normalMap.x * normalMap.y * normalMap.z));
+    float specular = pow(2.0 ,max(0.0, normalMapCombined));
+    vec4 finalCol = baseCol * radiance * radiance * normalMapCombined * specular * pow(2.0, roughness.x) * height;
+    vec4 dirLightCol = abs(dot(normalMap.xyz, lightDir)) * vec4(0.0, 0.0, 1.0, 1.0) * 0.01;
+    outColor = finalCol + dirLightCol;
+    if(spriteCol.w > 0.8){
+        outColor = spriteCol ;
     }
     if(paintingImage.w > 0.01){
         outColor = paintingImage;
-    }else{
-        outColor = radiance;
     }
-//    outColor = col;
 
 }

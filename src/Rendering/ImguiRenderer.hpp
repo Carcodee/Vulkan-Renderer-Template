@@ -19,6 +19,8 @@
 
 
 
+
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -474,6 +476,13 @@ namespace Rendering
 			    std::string interpInfo = animatorPair.first + " Interpolation info: " + std::to_string(animator->animatorInfo.interpVal) +
 				    " / 1.0";
 			    ImGui::Text("%s", interpInfo.c_str());
+
+			    std::string stopAnim = animatorPair.first + ": Stop anim";
+		    	ImGui::Checkbox(stopAnim.c_str(), &animator->stop);
+		    	if(animator->stop){
+				    std::string frameIndexLabelName = animatorPair.first + ": Frame index";
+		    		ImGui::SliderInt(frameIndexLabelName.c_str(), &animator->animatorInfo.currentFrame, 1, animator->animatorInfo.frameCount);
+		    	}
 		    }
 	    	
 	    	ImGui::End();
@@ -483,37 +492,44 @@ namespace Rendering
     	void RCascadesInfo()
 	    {
 		    // ImGui::Begin("Radiance Output Info");
-		    //
-		    // ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-		    //
+	    	//
+	    	// ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+	    	//
 	    	// std::vector<ImageView*> cascades = flatRenderer->cascadesAttachmentsImagesViews;
-		    //
-		    // for (int i = 0; i < cascades.size(); ++i)
-		    // {
-		    // 	std::string imageName = "cascade_" + std::to_string(i);
-		    // 	AddImage(imageName ,cascades[i], viewportSize);
-		    // }
-		    // std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
+	    	//
+	    	// for (int i = 0; i < cascades.size(); ++i)
+	    	// {
+	    	// 	std::string imageName = "cascade_" + std::to_string(i);
+	    	// 	AddImage(imageName ,cascades[i], viewportSize);
+	    	// }
+	    	// std::vector<ImageView*> paintingLayers = flatRenderer->paintingLayers;
 	    	//
 	    	// ImGui::End();
 	    	//
-		    ImGui::Begin("Radiance Cascades Configs");
-		    static int probeSizePx = flatRenderer->cascadesInfo.probeSizePx;
-		    if (ImGui::SliderInt("Probe Size in Px", &probeSizePx, 2, 1024))
-		    {
-			    flatRenderer->cascadesInfo.probeSizePx = probeSizePx;
-		    }
-		    static int intervalCount = flatRenderer->cascadesInfo.intervalCount;
-		    if (ImGui::SliderInt("Interval Count", &intervalCount, 1, 16))
-		    {
-			    flatRenderer->cascadesInfo.intervalCount = intervalCount;
-		    }
+	    	ImGui::Begin("Radiance Cascades Configs");
+	    	static int probeSizePx = flatRenderer->cascadesInfo.probeSizePx;
+	    	if (ImGui::SliderInt("Probe Size in Px", &probeSizePx, 2, 1024))
+	    	{
+	    		flatRenderer->cascadesInfo.probeSizePx = probeSizePx;
+	    	}
+	    	static int intervalCount = flatRenderer->cascadesInfo.intervalCount;
+	    	if (ImGui::SliderInt("Interval Count", &intervalCount, 1, 16))
+	    	{
+	    		flatRenderer->cascadesInfo.intervalCount = intervalCount;
+	    	}
 
-		    static int baseIntervalLength = flatRenderer->cascadesInfo.baseIntervalLength;
-		    if (ImGui::SliderInt("Base Interval Length", &baseIntervalLength, 1, 1000))
+	    	static int baseIntervalLength = flatRenderer->cascadesInfo.baseIntervalLength;
+	    	if (ImGui::SliderInt("Base Interval Length", &baseIntervalLength, 1, 1000))
+	    	{
+	    		flatRenderer->cascadesInfo.baseIntervalLength = baseIntervalLength;
+	    	}
+
+	    	static float lightDir[3] = {0.0, 1.0, 0.0};
+		    if (ImGui::SliderFloat3("Light Dir", lightDir, 0.0, 1.0))
 		    {
-			    flatRenderer->cascadesInfo.baseIntervalLength = baseIntervalLength;
+			    flatRenderer->light.pos = glm::make_vec3(lightDir);
 		    }
+	    	
 			ImGui::End();	
 	    }
     	void AddImage(std::string name, ImageView* imageView,ImVec2 size)

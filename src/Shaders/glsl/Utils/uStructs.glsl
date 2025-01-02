@@ -78,6 +78,8 @@ struct u_SpriteAnimationInfo{
     float interpVal;
     bool isAtlas;
 };
+
+
 //End Util
 
 #endif 
