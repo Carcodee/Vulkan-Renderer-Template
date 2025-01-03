@@ -593,6 +593,8 @@ namespace Rendering
     	void DisplayMaterial(Material* mat)
 	    {
 		    UI::TextureViewer textureViewerBaseCol;
+	    	textureViewerBaseCol.AddProperty(UI::DRAG);
+	    	textureViewerBaseCol.AddProperty(UI::DROP);
 		     for (auto& texture : mat->texturesRef)
 		    {
 		    	if (texture.second == nullptr)
@@ -600,8 +602,12 @@ namespace Rendering
 		    		continue;
 		    	}
 		    	std::string name = mat->texturesStrings.at(texture.first);
-		    	AddImage(name, texture.second, {50, 50});
-			    textureViewerBaseCol.DisplayTexture(name, texture.second, (ImTextureID)dsetsArrays->GetDsetByName(name), {50,50});
+		    	AddImage(texture.second->name, texture.second, {50, 50});
+			    ImageView* imageViewRef = textureViewerBaseCol.DisplayTexture(name, texture.second, (ImTextureID)dsetsArrays->GetDsetByName(texture.second->name), {50,50});
+		     	if (imageViewRef->name != texture.second->name)
+		     	{
+		     		texture.second = imageViewRef;
+		     	}
 		    }   
 	    }
         void Destroy()

@@ -1,13 +1,8 @@
 //
 
 
-
 // Created by carlo on 2024-11-22.
 //
-
-
-
-
 
 
 #ifndef RESOURCESMANAGER_HPP
@@ -15,7 +10,7 @@
 
 #define BASE_SIZE 10000
 
-namespace ENGINE 
+namespace ENGINE
 {
     class ResourcesManager : SYSTEMS::Subject
     {
@@ -25,14 +20,15 @@ namespace ENGINE
             VALID,
             INVALID
         };
-        struct BufferUpdateInfo 
+
+        struct BufferUpdateInfo
         {
             BufferState state;
             size_t size;
             void* data;
         };
 
-        struct ImagesUpdateInfo 
+        struct ImagesUpdateInfo
         {
             std::string path;
             uint32_t arrayLayersCount;
@@ -40,73 +36,90 @@ namespace ENGINE
             vk::Format format;
             LayoutPatterns dstPattern;
             BufferState bufferState;
+            std::string name;
+            int32_t id;
         };
-        ImageShipper* GetShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
+
+        ImageShipper* GetShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount,
+                                 vk::Format format,
                                  LayoutPatterns dstPattern)
         {
             assert(core!= nullptr &&"core must be set");
             ImageShipper* imageShipper;
+            int32_t id = (int32_t)imageShippers.size();
             if (imagesShippersNames.contains(name))
             {
                 imageShipper = imageShippers.at(imagesShippersNames.at(name)).get();
             }
             else
             {
-                imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
+                imagesShippersNames.try_emplace(name, id);
                 imageShippers.emplace_back(std::make_unique<ImageShipper>());
-                imagesUpdateInfos.emplace_back(ImagesUpdateInfo{path, arrayLayersCount, mipsCount, format, dstPattern, VALID});
+                imagesUpdateInfos.emplace_back(ImagesUpdateInfo{
+                    path, arrayLayersCount, mipsCount, format, dstPattern, VALID, name, id
+                });
                 imageShipper = GetShipperFromName(name);
             }
             if (imageShipper->image == nullptr)
             {
                 imageShipper->SetDataFromPath(path);
-                imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern);
+                imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern, name, id);
             }
             return imageShipper;
         }
-         ImageShipper* GetShipper(std::string name, void* data, int width, int height, vk::DeviceSize size, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
+
+        ImageShipper* GetShipper(std::string name, void* data, int width, int height, vk::DeviceSize size,
+                                 uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
                                  LayoutPatterns dstPattern)
         {
             assert(core!= nullptr &&"core must be set");
             ImageShipper* imageShipper;
+            int32_t id = (int32_t)imageShippers.size();
             if (imagesShippersNames.contains(name))
             {
                 imageShipper = imageShippers.at(imagesShippersNames.at(name)).get();
             }
             else
             {
-                imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
+                //TODO: why is this here?
+                imagesShippersNames.try_emplace(name, id);
                 imageShippers.emplace_back(std::make_unique<ImageShipper>());
-                imagesUpdateInfos.emplace_back(ImagesUpdateInfo{"", arrayLayersCount, mipsCount, format, dstPattern, VALID});
+                imagesUpdateInfos.emplace_back(ImagesUpdateInfo{
+                    "", arrayLayersCount, mipsCount, format, dstPattern, VALID, name, id
+                });
                 imageShipper = GetShipperFromName(name);
             }
             if (imageShipper->image == nullptr)
             {
                 imageShipper->SetDataRaw(data, width, height, size);
-                imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern);
+                imageShipper->BuildImage(core, arrayLayersCount, mipsCount, format, dstPattern, name, id);
             }
             return imageShipper;
         }
-        
-        ImageShipper* BatchShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format,
-                                 LayoutPatterns dstPattern)
+
+        ImageShipper* BatchShipper(std::string name, std::string path, uint32_t arrayLayersCount, uint32_t mipsCount,
+                                   vk::Format format,
+                                   LayoutPatterns dstPattern)
         {
             if (imagesShippersNames.contains(name))
             {
                 SYSTEMS::Logger::GetInstance()->SetLogPreferences(SYSTEMS::LogLevel::L_INFO);
-                SYSTEMS::Logger::GetInstance()->Log("Using texture that already exist: " + name, SYSTEMS::LogLevel::L_INFO);
+                SYSTEMS::Logger::GetInstance()->Log("Using texture that already exist: " + name,
+                                                    SYSTEMS::LogLevel::L_INFO);
                 ImageShipper* shipper = GetShipperFromName(name);
                 return shipper;
             }
-            imagesShippersNames.try_emplace(name, (int32_t)imageShippers.size());
+            int id = (int32_t)imageShippers.size();
+            imagesShippersNames.try_emplace(name, id);
             imageShippers.emplace_back(std::make_unique<ImageShipper>());
-            imagesUpdateInfos.emplace_back(ImagesUpdateInfo{path, arrayLayersCount, mipsCount, format, dstPattern, INVALID});
+            imagesUpdateInfos.emplace_back(ImagesUpdateInfo{
+                path, arrayLayersCount, mipsCount, format, dstPattern, INVALID, name, id
+            });
             updateImagesShippers = true;
             return GetShipperFromName(name);
-            
         }
-        
-        
+
+
         ImageView* GetImage(std::string name, vk::ImageCreateInfo imageInfo, int baseMipLevel, int baseArrayLayer)
         {
             assert(core!= nullptr &&"core must be set");
@@ -115,23 +128,25 @@ namespace ENGINE
             {
                 imageViewRef = GetStorageFromName(name);
                 return imageViewRef;
-                
-            }else if(imagesNames.contains(name))
+            }
+            else if (imagesNames.contains(name))
             {
                 imageViewRef = GetImageViewFromName(name);
                 return imageViewRef;
             }
-            
+
             auto image = std::make_unique<
                 Image>(core->physicalDevice, core->logicalDevice.get(), imageInfo);
+            int32_t id = (int32_t)storageImagesViews.size();
             if (imageInfo.usage & vk::ImageUsageFlagBits::eStorage)
             {
                 assert(!storageImagesNames.contains(name) && "Image name already exist");
-                storageImagesNames.try_emplace(name, (int32_t)storageImagesViews.size());
+                storageImagesNames.try_emplace(name, (int32_t)id);
+
                 storageImagesViews.emplace_back(std::make_unique<ImageView>(
                     core->logicalDevice.get(), image->imageData.get(),
                     baseMipLevel, imageInfo.mipLevels, baseArrayLayer,
-                    imageInfo.arrayLayers));
+                    imageInfo.arrayLayers, name, id));
                 images.emplace_back(std::move(image));
                 return storageImagesViews.back().get();
             }
@@ -141,12 +156,12 @@ namespace ENGINE
                 imagesNames.try_emplace(name, (int32_t)imageViews.size());
                 imageViews.emplace_back(std::make_unique<ImageView>(core->logicalDevice.get(), image->imageData.get(),
                                                                     baseMipLevel, imageInfo.mipLevels, baseArrayLayer,
-                                                                    imageInfo.arrayLayers));
+                                                                    imageInfo.arrayLayers, name, id));
                 images.emplace_back(std::move(image));
                 return imageViews.back().get();
             }
         }
-        
+
         Buffer* GetBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags,
                           vk::MemoryPropertyFlags memPropertyFlags, vk::DeviceSize deviceSize
                           , void* data = nullptr)
@@ -156,44 +171,45 @@ namespace ENGINE
             {
                 return GetBuffFromName(name);
             }
-        
+
             auto buffer = std::make_unique<Buffer>(
                 core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, memPropertyFlags, deviceSize,
                 data);
-        
+
             bufferNames.try_emplace(name, (int32_t)buffers.size());
             buffers.emplace_back(std::move(buffer));
             buffersState.push_back({VALID, deviceSize, data});
             return buffers.back().get();
         }
-        
-        StagedBuffer* GetStageBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags, vk::DeviceSize deviceSize, void* data = nullptr)
+
+        StagedBuffer* GetStageBuffer(std::string name, vk::BufferUsageFlags bufferUsageFlags, vk::DeviceSize deviceSize,
+                                     void* data = nullptr)
         {
             assert(core!= nullptr &&"core must be set");
             if (stagedBufferNames.contains(name))
             {
                 return GetStagedBuffFromName(name);
             }
-        
+
             auto buffer = std::make_unique<StagedBuffer>(
                 core->physicalDevice, core->logicalDevice.get(), bufferUsageFlags, deviceSize);
 
             if (data != nullptr)
             {
-                void* mappedMem= buffer->Map();
+                void* mappedMem = buffer->Map();
                 memcpy(mappedMem, data, deviceSize);
                 auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);
                 auto commandBuffer = commandExecutor->BeginCommandBuffer();
                 buffer->Unmap(commandBuffer);
                 commandExecutor->EndCommandBuffer();
             }
-        
+
             stagedBufferNames.try_emplace(name, (int32_t)stagedBuffers.size());
             stagedBuffers.emplace_back(std::move(buffer));
             stagedBuffersState.push_back({VALID, deviceSize});
             return stagedBuffers.back().get();
         }
-        
+
         Buffer* SetBuffer(std::string name, vk::DeviceSize deviceSize
                           , void* data)
         {
@@ -205,8 +221,8 @@ namespace ENGINE
             {
                 buffersState.at(bufferNames.at(name)) = {INVALID, deviceSize, data};
                 invalidateBuffers = true;
-                
-            }else
+            }
+            else
             {
                 //pending to handle this if is a staged resource
                 Buffer* bufferRef = GetBuffFromName(name);
@@ -223,7 +239,7 @@ namespace ENGINE
 
             return buffers.at(bufferNames.at(name)).get();
         }
-        
+
         StagedBuffer* SetStageBuffer(std::string name, vk::DeviceSize deviceSize, void* data)
         {
             //todo
@@ -234,7 +250,8 @@ namespace ENGINE
             {
                 stagedBuffersState.at(stagedBufferNames.at(name)) = {INVALID, deviceSize, data};
                 invalidateBuffers = true;
-            }else
+            }
+            else
             {
                 StagedBuffer* buffer = GetStagedBuffFromName(name);
                 void* mappedMem = buffer->Map();
@@ -247,27 +264,27 @@ namespace ENGINE
             return stagedBuffers.at(stagedBufferNames.at(name)).get();
         }
 
-        
+
         ImageView* GetImageViewFromName(std::string name)
         {
             if (!imagesNames.contains(name))
             {
-                SYSTEMS::Logger::GetInstance()->Log("Image View With Name: "+ name+ "Does not exist");
+                SYSTEMS::Logger::GetInstance()->Log("Image View With Name: " + name + "Does not exist");
                 return nullptr;
             }
             return imageViews.at(imagesNames.at(name)).get();
         }
-        
+
         ImageShipper* GetShipperFromName(std::string name)
         {
             if (!imagesShippersNames.contains(name))
             {
-                SYSTEMS::Logger::GetInstance()->Log("Image Shipper With Name: "+ name+ "Does not exist");
+                SYSTEMS::Logger::GetInstance()->Log("Image Shipper With Name: " + name + "Does not exist");
                 return nullptr;
             }
             return imageShippers.at(imagesShippersNames.at(name)).get();
         }
-        
+
         ImageView* GetStorageFromName(std::string name)
         {
             if (!storageImagesNames.contains(name))
@@ -276,7 +293,7 @@ namespace ENGINE
             }
             return storageImagesViews.at(storageImagesNames.at(name)).get();
         }
-        
+
         Buffer* GetBuffFromName(std::string name)
         {
             if (!bufferNames.contains(name))
@@ -285,7 +302,7 @@ namespace ENGINE
             }
             return buffers.at(bufferNames.at(name)).get();
         }
-        
+
         StagedBuffer* GetStagedBuffFromName(std::string name)
         {
             if (!stagedBufferNames.contains(name))
@@ -309,9 +326,10 @@ namespace ENGINE
             imageShippers.clear();
             images.clear();
         }
+
         void UpdateImages()
         {
-            if (!updateImagesShippers){return;}
+            if (!updateImagesShippers) { return; }
             for (int i = 0; i < imageShippers.size(); i++)
             {
                 ImagesUpdateInfo& updateInfo = imagesUpdateInfos[i];
@@ -319,23 +337,26 @@ namespace ENGINE
                 {
                     imageShippers[i]->SetDataFromPath(updateInfo.path);
                     imageShippers[i]->BuildImage(core, updateInfo.arrayLayersCount, updateInfo.mipsCount,
-                                                 updateInfo.format, updateInfo.dstPattern);
+                                                 updateInfo.format, updateInfo.dstPattern, updateInfo.name,
+                                                 updateInfo.id);
                     updateInfo.bufferState = VALID;
                 }
             }
-            
         }
+
         void UpdateBuffers()
         {
-            if (!invalidateBuffers){return;}
+            if (!invalidateBuffers) { return; }
             for (auto& name : bufferNames)
             {
                 BufferUpdateInfo& bufferUpdateInfo = buffersState.at(name.second);
                 if (bufferUpdateInfo.state == INVALID)
                 {
-                    buffers.at(bufferNames.at(name.first)).reset(new Buffer(core->physicalDevice, core->logicalDevice.get(),
-                                                                  buffers.at(name.second)->usageFlags, buffers.at(name.second)->memPropertyFlags, bufferUpdateInfo.size,
-                                                                  bufferUpdateInfo.data));
+                    buffers.at(bufferNames.at(name.first)).reset(new Buffer(
+                        core->physicalDevice, core->logicalDevice.get(),
+                        buffers.at(name.second)->usageFlags, buffers.at(name.second)->memPropertyFlags,
+                        bufferUpdateInfo.size,
+                        bufferUpdateInfo.data));
                     bufferUpdateInfo.state = VALID;
                 }
             }
@@ -354,15 +375,15 @@ namespace ENGINE
                     void* mappedMem = buffer->Map();
                     memcpy(mappedMem, bufferUpdateInfo.data, bufferUpdateInfo.size);
                     buffer->Unmap(commandBuffer);
-                    
+
                     bufferUpdateInfo.state = VALID;
-                }               
-                
+                }
             }
             commandExecutor->EndCommandBuffer();
             Notify();
             invalidateBuffers = false;
         }
+
         void EndFrameDynamicUpdates(vk::CommandBuffer commandBuffer)
         {
             BufferAccessPattern src = GetSrcBufferAccessPattern(BufferUsageTypes::B_GRAPHICS_WRITE);
@@ -377,9 +398,8 @@ namespace ENGINE
                     imageView->imageData->imageHandle,
                     vk::ImageLayout::eGeneral,
                     clearColor,
-                   imageView->GetSubresourceRange() 
+                    imageView->GetSubresourceRange()
                 );
-
             }
             storageImagesToClear.clear();
         }
@@ -392,18 +412,19 @@ namespace ENGINE
             storageImagesViews.reserve(BASE_SIZE);
             imageViews.reserve(BASE_SIZE);
             images.reserve(BASE_SIZE);
-            std::string defaultTexturePath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath() + "\\Images\\default_texture.jpg";
-            
-            ImageShipper* shipper = GetShipper("default_tex", defaultTexturePath, 1,1, g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+            std::string defaultTexturePath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath() +
+                "\\Images\\default_texture.jpg";
+
+            ImageShipper* shipper = GetShipper("default_tex", defaultTexturePath, 1, 1, g_ShipperFormat,
+                                               LayoutPatterns::GRAPHICS_READ);
 
 
             auto imageInfo = ENGINE::Image::CreateInfo2d(
                 glm::uvec2(core->swapchainRef->extent.width, core->swapchainRef->extent.height), 1, 1,
-                                                         ENGINE::g_32bFormat,
-                                                         vk::ImageUsageFlagBits::eStorage);
+                ENGINE::g_32bFormat,
+                vk::ImageUsageFlagBits::eStorage);
 
             ImageView* defaultStorage = GetImage("default_storage", imageInfo, 0, 0);
-            
         }
 
         void RequestStorageImageClear(std::string name)
@@ -415,7 +436,7 @@ namespace ENGINE
             }
             storageImagesToClear.push_back(name);
         }
-        
+
         static ResourcesManager* GetInstance(Core* coreRef = nullptr)
         {
             if (instance == nullptr && coreRef != nullptr)
@@ -424,17 +445,17 @@ namespace ENGINE
             }
             return instance;
         }
-        
+
         ~ResourcesManager() = default;
 
         void Attach(SYSTEMS::Watcher* watcher) override
         {
-           watchers.push_back(watcher); 
+            watchers.push_back(watcher);
         }
 
         void Detach(SYSTEMS::Watcher* watcher) override
         {
-           watchers.erase(std::remove(watchers.begin(), watchers.end(), watcher), watchers.end()); 
+            watchers.erase(std::remove(watchers.begin(), watchers.end(), watcher), watchers.end());
         }
 
         void Notify() override
@@ -446,14 +467,14 @@ namespace ENGINE
         }
 
         std::vector<SYSTEMS::Watcher*> watchers;
-        
+
         std::unordered_map<std::string, int32_t> bufferNames;
         std::unordered_map<std::string, int32_t> stagedBufferNames;
         std::unordered_map<std::string, int32_t> imagesNames;
         std::unordered_map<std::string, int32_t> storageImagesNames;
         std::unordered_map<std::string, int32_t> imagesShippersNames;
-        
-        
+
+
         std::vector<std::unique_ptr<Buffer>> buffers;
         std::vector<std::unique_ptr<StagedBuffer>> stagedBuffers;
         std::vector<BufferUpdateInfo> buffersState;
@@ -464,13 +485,12 @@ namespace ENGINE
         std::vector<ImagesUpdateInfo> imagesUpdateInfos;
         std::vector<std::unique_ptr<Image>> images;
         std::vector<std::string> storageImagesToClear;
-      
+
         bool invalidateBuffers = false;
         bool updateImagesShippers = false;
-        
+
         Core* core;
         static ResourcesManager* instance;
-
     };
 
     ResourcesManager* ResourcesManager::instance = nullptr;

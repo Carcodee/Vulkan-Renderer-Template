@@ -54,18 +54,54 @@ namespace ENGINE
 
             this->imageView = logicalDevice.createImageViewUnique(imageViewCreateInfo);
         }
-        vk::ImageSubresourceRange GetSubresourceRange()
-        {
-            auto subResourceRange = vk::ImageSubresourceRange()
-                                    .setLayerCount(this->arrayLayersCount)
-                                    .setLevelCount(this->mipLevelCount)
-                                    .setBaseArrayLayer(this->baseArrayLayer)
-                                    .setBaseMipLevel(this->baseMipLevel)
-                                    .setAspectMask(imageData->aspectFlags);
-            return subResourceRange;
 
+        ImageView(vk::Device logicalDevice, ImageData* imageData,
+                  uint32_t baseMipLevel, uint32_t mipLevelCount, uint32_t baseArrayLayer, uint32_t arrayLayersCount,
+                  std::string name, int32_t id)
+        {
+            this->imageData = imageData;
+
+            this->baseMipLevel = baseMipLevel;
+            this->mipLevelCount = mipLevelCount;
+            this->baseArrayLayer = baseArrayLayer;
+            this->arrayLayersCount = arrayLayersCount;
+            this->name = name;
+            this->id = id;
+
+            auto subResourceRange = vk::ImageSubresourceRange()
+                                    .setLayerCount(arrayLayersCount)
+                                    .setLevelCount(mipLevelCount)
+                                    .setBaseArrayLayer(baseArrayLayer)
+                                    .setBaseMipLevel(baseMipLevel)
+                                    .setAspectMask(imageData->aspectFlags);
+
+
+            vk::ImageViewType imageViewType;
+
+            switch (imageData->imageType)
+            {
+            case vk::ImageType::e1D:
+                imageViewType = vk::ImageViewType::e1D;
+                break;
+            case vk::ImageType::e2D:
+                imageViewType = vk::ImageViewType::e2D;
+                break;
+            case vk::ImageType::e3D:
+                imageViewType = vk::ImageViewType::e3D;
+                break;
+            }
+
+            auto imageViewCreateInfo = vk::ImageViewCreateInfo()
+                                       .setSubresourceRange(subResourceRange)
+                                       .setFormat(imageData->format)
+                                       .setImage(imageData->imageHandle)
+                                       .setViewType(imageViewType);
+
+            this->imageView = logicalDevice.createImageViewUnique(imageViewCreateInfo);
         }
 
+
+        //cubemaps
         ImageView(vk::PhysicalDevice physicalDevice, vk::Device logicalDevice, ImageData* imageData,
                   uint32_t mipLevelCount, uint32_t baseMipLevel)
         {
@@ -98,13 +134,28 @@ namespace ENGINE
         }
 
 
+        vk::ImageSubresourceRange GetSubresourceRange()
+        {
+            auto subResourceRange = vk::ImageSubresourceRange()
+                                    .setLayerCount(this->arrayLayersCount)
+                                    .setLevelCount(this->mipLevelCount)
+                                    .setBaseArrayLayer(this->baseArrayLayer)
+                                    .setBaseMipLevel(this->baseMipLevel)
+                                    .setAspectMask(imageData->aspectFlags);
+            return subResourceRange;
+
+        }
+
         uint32_t mipLevelCount;
         uint32_t baseMipLevel;
         uint32_t baseArrayLayer;
         uint32_t arrayLayersCount;
+        std::string name;
+        int32_t id;
 
         vk::UniqueImageView imageView;
         ImageData* imageData;
+        
         friend class SwapChain;
     };
 }

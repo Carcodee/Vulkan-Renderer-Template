@@ -29,7 +29,7 @@ namespace ENGINE
             this->size =size;
         }
 
-        void BuildImage(Core* core, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format, LayoutPatterns dstPattern)
+        void BuildImage(Core* core, uint32_t arrayLayersCount, uint32_t mipsCount, vk::Format format, LayoutPatterns dstPattern, std::string name, int32_t id)
         {
             assert(this->data && "variable \"data\" is not set or is invalid");
             vk::ImageUsageFlags usage = GetGeneralUsageFlags(format);
@@ -40,7 +40,7 @@ namespace ENGINE
             image = std::make_unique<Image>(core->physicalDevice, core->logicalDevice.get(), createInfo);
 
             imageView = std::make_unique<ImageView>(core->logicalDevice.get(), image->imageData.get(),
-                                                    0, mipsCount, 0, arrayLayersCount);
+                                                    0, mipsCount, 0, arrayLayersCount, name, id);
 
             
             auto commandExecutor = std::make_unique<ExecuteOnceCommand>(core);

@@ -51,13 +51,13 @@ namespace Rendering
                 sizeof(uint32_t) * model->indices.size(), model->indices.data());
             
             std::string resourcesPath = SYSTEMS::OS::GetInstance()->GetEngineResourcesPath();
-            
-            imageShipper.SetDataFromPath(resourcesPath + "\\Images\\default_texture.jpg");
-            imageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
+
+            imageShipper = ENGINE::ResourcesManager::GetInstance()->GetShipper(
+                "ForwardShipper", resourcesPath + "\\Images\\default_texture.jpg", 1, 1,
+                renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
 
             
-            defaultImageShipper.SetDataFromPath(resourcesPath + "\\Images\\default_texture.jpg");
-            defaultImageShipper.BuildImage(core, 1, 1, renderGraphRef->core->swapchainRef->GetFormat(), ENGINE::GRAPHICS_READ);
+            defaultImageShipper = ENGINE::ResourcesManager::GetInstance()->GetShipperFromName("default_tex");
  
             ENGINE::ImageView* computeStorage = renderGraphRef->GetImageResource("storageImage");
 
@@ -109,7 +109,7 @@ namespace Rendering
             renderNode->SetDepthAttachmentOutput("depth", depthInfo);
             renderNode->AddColorBlendConfig(ENGINE::BlendConfigs::B_OPAQUE);
             renderNode->SetDepthConfig(ENGINE::DepthConfigs::D_ENABLE);
-            renderNode->AddSamplerResource("sampler", imageShipper.imageView.get());
+            renderNode->AddSamplerResource("sampler", imageShipper->imageView.get());
             renderNode->AddStorageResource("storageImage", computeStorage);
             renderNode->BuildRenderGraphNode();
             
@@ -146,7 +146,7 @@ namespace Rendering
                     //IMPORTANT
                     //image binding always should be done in the render operation, because it guarantees that the layout will be correct, otherwise layout errors can happen
 
-                    descriptorCache->SetSampler("testImage", imageShipper.imageView.get(), imageShipper.sampler);
+                    descriptorCache->SetSampler("testImage", imageShipper->imageView.get(), imageShipper->sampler);
                     descriptorCache->SetStorageImageArray("storagesImgs", imagesArray);
                     descriptorCache->SetBuffer("Camera", pc);
                     descriptorCache->SetBuffer("CameraBuffer", ssbo);
@@ -202,8 +202,8 @@ namespace Rendering
         vk::UniqueDescriptorSet dstSet;
 
         std::string forwardPassName;
-        ENGINE::ImageShipper imageShipper;
-        ENGINE::ImageShipper defaultImageShipper;
+        ENGINE::ImageShipper* imageShipper;
+        ENGINE::ImageShipper* defaultImageShipper;
         std::vector<ENGINE::ImageView*> imagesArray;
         
         std::unique_ptr<ENGINE::Buffer> vertexBuffer;
