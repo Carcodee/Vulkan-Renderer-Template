@@ -765,7 +765,7 @@ namespace ENGINE
             {
                 if (!renderNode->active){continue;}
                 
-                Profiler::GetInstance()->AddProfilerGpuSpot(legit::Colors::getColor(idx), "Rp: " + renderNode->passName);
+                Profiler::GetInstance()->AddProfilerCpuSpot(legit::Colors::getColor(idx), "Rp: " + renderNode->passName);
                 RenderGraphNode* node = renderNode;
                 bool dependancyNeed = false;
                 std::string dependancyName = "";
@@ -792,7 +792,7 @@ namespace ENGINE
                     CreateMemBarrier(lastNodePattern, currNodePattern, currentFrame->commandBuffer.get());
                 }
                 node->Execute(currentFrame->commandBuffer.get());
-                Profiler::GetInstance()->EndProfilerGpuSpot("Rp: " + renderNode->passName);
+                Profiler::GetInstance()->EndProfilerCpuSpot("Rp: " + renderNode->passName);
                 allPassesNames.push_back(node->passName);
                 idx++;
                 
