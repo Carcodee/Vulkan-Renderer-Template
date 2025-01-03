@@ -78,7 +78,13 @@ struct u_SpriteAnimationInfo{
     float interpVal;
     bool isAtlas;
 };
-
+struct u_RadianceCascadesConfigs
+{
+    int radiancePow;
+    int normalMapPow;
+    int specularPow;
+    int roughnessPow;
+};
 
 //End Util
 

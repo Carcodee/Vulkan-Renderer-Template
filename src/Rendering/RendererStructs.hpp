@@ -219,6 +219,14 @@ namespace Rendering
 		glm::uvec2 probeSizesPx;
 		int dirIndices;
 	};
+
+	struct RadianceCascadesConfigs
+	{
+		int radiancePow = 2;
+		int normalMapPow = 24;
+		int specularPow = 2;
+		int roughnessPow = 2;
+	};
     
 }
 

@@ -7,9 +7,9 @@
     <option name="/Default/RiderDebugger/RiderRestoreDecompile/RestoreDecompileSetting/@EntryValue" value="false" type="bool" />
     <option name="/Default/Housekeeping/GlobalSettingsUpgraded/IsUpgraded/@EntryValue" value="true" type="bool" />
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
-    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexRemoved" />
     <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
     <option name="/Default/Environment/Hierarchy/GeneratedFilesCacheKey/Timestamp/@EntryValue" value="4" type="long" />
+    <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexRemoved" />
   </component>
   <component name="CMakePresetLoader">{
   &quot;useNewFormat&quot;: true
@@ -31,10 +31,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Small sprite animation system">
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Added normal maps">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/RendererStructs.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/Renderers/FlatRenderer.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/cascadesResult.frag" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
@@ -66,31 +67,6 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
     <setting file="mock:///dummy.cpp" root0="SKIP_HIGHLIGHTING" />
@@ -269,14 +245,7 @@
       <workItem from="1735776099583" duration="1418000" />
       <workItem from="1735791594859" duration="2092000" />
       <workItem from="1735796012226" duration="4814000" />
-    </task>
-    <task id="LOCAL-00008" summary="Simple input system and changed all the absolute paths">
-      <option name="closed" value="true" />
-      <created>1732255277616</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1732255277616</updated>
+      <workItem from="1735861409876" duration="2081000" />
     </task>
     <task id="LOCAL-00009" summary="Simple input system and changed all the absolute paths">
       <option name="closed" value="true" />
@@ -662,7 +631,15 @@
       <option name="project" value="LOCAL" />
       <updated>1735793006036</updated>
     </task>
-    <option name="localTasksCounter" value="57" />
+    <task id="LOCAL-00057" summary="Added normal maps">
+      <option name="closed" value="true" />
+      <created>1735857156879</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1735857156880</updated>
+    </task>
+    <option name="localTasksCounter" value="58" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -685,7 +662,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="changed buffers to staged resources" />
     <MESSAGE value="Merge with main" />
     <MESSAGE value="Preparing Materials, Gpu driven rendering" />
     <MESSAGE value="bindless drawing" />
@@ -710,7 +686,8 @@
     <MESSAGE value="Mergin works" />
     <MESSAGE value="post merge average done" />
     <MESSAGE value="Small sprite animation system" />
-    <option name="LAST_COMMIT_MESSAGE" value="Small sprite animation system" />
+    <MESSAGE value="Added normal maps" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added normal maps" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

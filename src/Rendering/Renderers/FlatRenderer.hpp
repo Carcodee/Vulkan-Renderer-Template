@@ -18,6 +18,7 @@
 
 
 
+
 #ifndef FLATRENDERER_HPP
 #define FLATRENDERER_HPP
 
@@ -111,8 +112,6 @@ namespace Rendering
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
             height = ResourcesManager::GetInstance()->GetShipper("Height", resourcesPath + "\\Images\\Height.png", 1, 1,
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
-
-
 
             // testSpriteAnim.LoadAtlas(
             // assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
@@ -509,6 +508,7 @@ namespace Rendering
                     cascadesResultCache->SetSampler("Ao", ao->imageView.get());
                     cascadesResultCache->SetSampler("Height", height->imageView.get());
                     cascadesResultCache->SetBuffer("LightInfo", light);
+                    cascadesResultCache->SetBuffer("RConfigs", rConfigs);
                         
                     
                     auto& renderNode = renderGraph->renderNodes.at(resultPassName);
@@ -601,9 +601,10 @@ namespace Rendering
 
         Animator2D* testSpriteAnim;
 
-        DirectionalLight light;
+        DirectionalLight light {glm::vec3(1.0, 1.0, 1.0), glm::vec3(0.0, 0.0, 1.0), 0.01f};
         PaintingPc paintingPc;
         RcPc rcPc;
+        RadianceCascadesConfigs rConfigs {};
         ProbesGenPc probesGenPc;
         CascadesInfo cascadesInfo;
     };

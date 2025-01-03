@@ -46,6 +46,11 @@ layout (set = 0, binding = 11, scalar) uniform LightInfo{
     vec3 col;
     float intensity;
 }ubo;
+layout (set = 0, binding = 12, scalar) uniform RConfigs{
+    u_RadianceCascadesConfigs configs;
+}rConfigs;
+
+
 
 
 
@@ -111,20 +116,28 @@ void main() {
     vec4 baseCol = texture(BaseCol, textCoord);
     vec4 normalMap = texture(NormalMap, textCoord);
     vec4 roughness = texture(Roughness, textCoord);
-    vec4 ao = texture(Ao, textCoord);
+    vec4 ao = texture(Ao, textCoord) * 2.0;
     vec4 height = texture(Height, textCoord);
-    
+
+    u_RadianceCascadesConfigs configs = rConfigs.configs;
 //    outColor = (baseCol * ao.x * height.x) * vec4(diff, 1.0);
-    float normalMapCombined =pow(24.0,(normalMap.x * normalMap.y * normalMap.z));
-    float specular = pow(2.0 ,max(0.0, normalMapCombined));
-    vec4 finalCol = baseCol * radiance * radiance * normalMapCombined * specular * pow(2.0, roughness.x) * height;
-    vec4 dirLightCol = abs(dot(normalMap.xyz, lightDir)) * vec4(0.0, 0.0, 1.0, 1.0) * 0.01;
-    outColor = finalCol + dirLightCol;
+    float normalMapCombined =pow(configs.normalMapPow, (normalMap.x * normalMap.y * normalMap.z));
+    float specular = pow(configs.specularPow ,max(0.0, normalMapCombined));
+    
+    vec4 finalRadiance = vec4(1.0);
+    for(int i = 0; i< configs.radiancePow; i++){
+        finalRadiance *= radiance;
+    }
+    
+    vec4 finalCol = baseCol * finalRadiance * normalMapCombined * specular * pow(configs.roughnessPow, roughness.x) * ao.x;
+    
+    vec3 dirLightCol = abs(dot(normalMap.xyz, lightDir)) * ubo.col * ubo.intensity;
+    outColor = finalCol + vec4(dirLightCol, 1.0);
     if(spriteCol.w > 0.8){
-        outColor = spriteCol ;
+        outColor = spriteCol;
     }
     if(paintingImage.w > 0.01){
-        outColor = paintingImage;
+        outColor = paintingImage * paintingImage.w;
     }
 
 }

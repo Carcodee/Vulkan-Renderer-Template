@@ -34,6 +34,7 @@ layout (set = 0, binding = 5, scalar) buffer SpriteInfo{
     u_SpriteAnimationInfo spriteAnimInfo;
 };
 
+
 #define CASCADE_SIZE 5
 
 vec4 MergeIntervals(vec4 near, vec4 far){
@@ -70,15 +71,16 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
             accumulatedRadiance += spriteCol * spriteCol.w;
             sampleCount++;
         }       
-        if(sampleCol != vec4(0.0, 0.0, 0.0, 0.0)){
+        if(sampleCol.w > 0.01){
             occluded = true;
-            accumulatedRadiance += sampleCol;
+            accumulatedRadiance += sampleCol * sampleCol.w;
+//            dir = reflect(dir , vec2(0.5, 0.0));
             sampleCount++;
         }
 
         pos += dir;
         if(occluded){
-//            accumulatedRadiance /= sampleCount;
+            accumulatedRadiance /= sampleCount;
             break;
         }
         if (pos.x < 0 || pos.x >= pc.fWidth || pos.y < 0 || pos.y >= pc.fHeight || distance(pos, intervalEnd) < 0.1) {

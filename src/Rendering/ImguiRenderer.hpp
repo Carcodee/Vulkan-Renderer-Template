@@ -507,6 +507,7 @@ namespace Rendering
 	    	// ImGui::End();
 	    	//
 	    	ImGui::Begin("Radiance Cascades Configs");
+	    	ImGui::SeparatorText("Cascades Configs");
 	    	static int probeSizePx = flatRenderer->cascadesInfo.probeSizePx;
 	    	if (ImGui::SliderInt("Probe Size in Px", &probeSizePx, 2, 1024))
 	    	{
@@ -524,11 +525,44 @@ namespace Rendering
 	    		flatRenderer->cascadesInfo.baseIntervalLength = baseIntervalLength;
 	    	}
 
+	    	ImGui::SeparatorText("Light Configs");
 	    	static float lightDir[3] = {0.0, 1.0, 0.0};
 		    if (ImGui::SliderFloat3("Light Dir", lightDir, 0.0, 1.0))
 		    {
 			    flatRenderer->light.pos = glm::make_vec3(lightDir);
 		    }
+		    static float lightCol[3] = {0.0, 0.0, 1.0};
+		    if (ImGui::ColorEdit3("Light Col", lightCol))
+		    {
+			    flatRenderer->light.col = glm::make_vec3(lightCol);
+		    }
+		    static float intensity = flatRenderer->light.intensity;
+		    if (ImGui::SliderFloat("Light Intensity", &intensity, 0.0, 1.0))
+		    {
+			    flatRenderer->light.intensity = intensity;
+		    }
+	    	ImGui::SeparatorText("Texture Configs");
+	    	static int radiancePow = flatRenderer->rConfigs.radiancePow;
+		    if (ImGui::SliderInt("Radiance Pow", &radiancePow, 1, 24))
+		    {
+			    flatRenderer->rConfigs.radiancePow = radiancePow;
+		    }
+		    static int normalMapPow = flatRenderer->rConfigs.normalMapPow;
+		    if (ImGui::SliderInt("Normal Map Pow", &normalMapPow, 1, 24))
+		    {
+			    flatRenderer->rConfigs.normalMapPow = normalMapPow;
+		    }
+		    static int  specularPow= flatRenderer->rConfigs.specularPow;
+		    if (ImGui::SliderInt("SpecularPow Pow", &specularPow, 1, 24))
+		    {
+			    flatRenderer->rConfigs.specularPow= specularPow;
+		    }
+		    static int roughnessPow= flatRenderer->rConfigs.roughnessPow;
+		    if (ImGui::SliderInt("Roughness Pow", &roughnessPow, 1, 24))
+		    {
+			    flatRenderer->rConfigs.roughnessPow = roughnessPow;
+		    }
+	    	
 	    	
 			ImGui::End();	
 	    }
