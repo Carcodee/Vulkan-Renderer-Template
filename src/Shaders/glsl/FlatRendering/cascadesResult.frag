@@ -30,28 +30,21 @@ layout (set = 0, binding = 2, rgba8) uniform image2D Radiances[];
 layout (set = 0, binding = 3) uniform sampler2D TestImage;
 
 layout (set = 0, binding = 4) uniform sampler2D SpriteAnims[];
+layout (set = 0, binding = 5) uniform sampler2D MatTextures[];
 
-layout (set = 0, binding = 5, scalar) buffer SpriteInfo{
+layout (set = 0, binding = 6, scalar) buffer SpriteInfo{
     u_SpriteAnimationInfo spriteAnimInfo;
 };
 
-layout (set = 0, binding = 6) uniform sampler2D NormalMap;
-layout (set = 0, binding = 7) uniform sampler2D BaseCol;
-layout (set = 0, binding = 8) uniform sampler2D Roughness;
-layout (set = 0, binding = 9) uniform sampler2D Height;
-layout (set = 0, binding = 10) uniform sampler2D Ao;
 
-layout (set = 0, binding = 11, scalar) uniform LightInfo{
+layout (set = 0, binding = 7, scalar) uniform LightInfo{
     vec3 pos;
     vec3 col;
     float intensity;
 }ubo;
-layout (set = 0, binding = 12, scalar) uniform RConfigs{
+layout (set = 0, binding = 8, scalar) uniform RConfigs{
     u_RadianceCascadesConfigs configs;
 }rConfigs;
-
-
-
 
 
 void main() {
@@ -113,11 +106,11 @@ void main() {
     
     vec4 finalVal = mix(spriteCol, spriteCol1, spriteAnimInfo.interpVal);
 
-    vec4 baseCol = texture(BaseCol, textCoord);
-    vec4 normalMap = texture(NormalMap, textCoord);
-    vec4 roughness = texture(Roughness, textCoord);
-    vec4 ao = texture(Ao, textCoord) * 2.0;
-    vec4 height = texture(Height, textCoord);
+    vec4 baseCol = texture(MatTextures[ALBEDO_OFFSET], textCoord);
+    vec4 normalMap = texture(MatTextures[NORMAL_OFFSET], textCoord);
+    vec4 roughness = texture(MatTextures[ROUGHNESS_OFFSET], textCoord);
+    vec4 ao = texture(MatTextures[AO_OFFSET], textCoord) * 2.0;
+    vec4 height = texture(MatTextures[HEIGHT_OFFSET], textCoord);
 
     u_RadianceCascadesConfigs configs = rConfigs.configs;
 //    outColor = (baseCol * ao.x * height.x) * vec4(diff, 1.0);

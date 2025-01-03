@@ -1,6 +1,17 @@
 #ifndef R_UTIL 
 #define R_UTIL 
 
+#define ALBEDO_OFFSET 0
+#define NORMAL_OFFSET 1
+#define EMISSION_OFFSET 2
+#define TRANSMISSION_OFFSET 3
+#define ROUGHNESS_OFFSET 4
+#define METALLIC_OFFSET 5
+#define METALLIC_ROUGHNESS_OFFSET 6
+#define AO_OFFSET 7
+#define HEIGHT_OFFSET 8
+        
+
 vec3 u_ScreenToWorldNDC(mat4 invProj, mat4 invView, float depth, vec2 screenPos){
     vec4 ndcPos = vec4(screenPos, depth, 1.0);
     

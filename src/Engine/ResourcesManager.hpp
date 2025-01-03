@@ -252,6 +252,7 @@ namespace ENGINE
         {
             if (!imagesNames.contains(name))
             {
+                SYSTEMS::Logger::GetInstance()->Log("Image View With Name: "+ name+ "Does not exist");
                 return nullptr;
             }
             return imageViews.at(imagesNames.at(name)).get();
@@ -261,6 +262,7 @@ namespace ENGINE
         {
             if (!imagesShippersNames.contains(name))
             {
+                SYSTEMS::Logger::GetInstance()->Log("Image Shipper With Name: "+ name+ "Does not exist");
                 return nullptr;
             }
             return imageShippers.at(imagesShippersNames.at(name)).get();

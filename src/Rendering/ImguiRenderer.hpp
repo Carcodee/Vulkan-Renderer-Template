@@ -21,6 +21,8 @@
 
 
 
+
+
 #ifndef IMGUIRENDERER_HPP
 #define IMGUIRENDERER_HPP
 
@@ -562,11 +564,14 @@ namespace Rendering
 		    {
 			    flatRenderer->rConfigs.roughnessPow = roughnessPow;
 		    }
+
+	    	ImGui::SeparatorText("Background Material");
+		    DisplayMaterial(flatRenderer->backgroundMaterial);
 	    	
 	    	
 			ImGui::End();	
 	    }
-    	void AddImage(std::string name, ImageView* imageView,ImVec2 size)
+    	void AddImage(std::string name, ImageView* imageView,glm::vec2 size)
 	    {
 		    Sampler* sampler = core->renderGraphRef->samplerPool.GetSampler(
 			    vk::SamplerAddressMode::eRepeat, vk::Filter::eLinear, vk::SamplerMipmapMode::eLinear);
@@ -576,8 +581,6 @@ namespace Rendering
 	    	
 	    	if (dsetsArrays->indexes.contains(name))
 	    	{
-			    ImGui::Image((ImTextureID)dsetsArrays->GetDsetByName(name), size);
-	    		
 			    TransitionImage(imageView->imageData, lastLayout, imageView->GetSubresourceRange(),
 			                    *currCommandBuffer);
 	    		return;
@@ -586,8 +589,20 @@ namespace Rendering
 	    	ENGINE::DescriptorWriterBuilder writerBuilder;
 	    	writerBuilder.AddWriteImage(0, imageView, sampler->samplerHandle.get(), vk::ImageLayout::eShaderReadOnlyOptimal, vk::DescriptorType::eCombinedImageSampler);
 	    	writerBuilder.UpdateSet(core->logicalDevice.get(), dsetsArrays->GetDsetByName(name));
-	    	
-		    ImGui::Image((ImTextureID)dsetsArrays->GetDsetByName(name), size);
+	    }
+    	void DisplayMaterial(Material* mat)
+	    {
+		    UI::TextureViewer textureViewerBaseCol;
+		     for (auto& texture : mat->texturesRef)
+		    {
+		    	if (texture.second == nullptr)
+		    	{
+		    		continue;
+		    	}
+		    	std::string name = mat->texturesStrings.at(texture.first);
+		    	AddImage(name, texture.second, {50, 50});
+			    textureViewerBaseCol.DisplayTexture(name, texture.second, (ImTextureID)dsetsArrays->GetDsetByName(name), {50,50});
+		    }   
 	    }
         void Destroy()
         {

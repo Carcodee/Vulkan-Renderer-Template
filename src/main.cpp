@@ -18,6 +18,7 @@ double previousTime;
 #include "WindowAPI/WindowInclude.hpp"
 #include "Systems/SystemsInclude.hpp"
 #include "Engine/EngineInclude.hpp"
+#include "UI/UI_Include.hpp"
 
 
 #include "Rendering/RenderingInclude.hpp"

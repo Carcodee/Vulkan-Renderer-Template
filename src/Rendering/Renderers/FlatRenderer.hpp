@@ -19,6 +19,8 @@
 
 
 
+
+
 #ifndef FLATRENDERER_HPP
 #define FLATRENDERER_HPP
 
@@ -49,9 +51,9 @@ namespace Rendering
         void CreateResources()
         {
             cascadesInfo.cascadeCount = 5;
-            cascadesInfo.probeSizePx = 8;
+            cascadesInfo.probeSizePx = 2;
             cascadesInfo.intervalCount = 2;
-            cascadesInfo.baseIntervalLength = 12;
+            cascadesInfo.baseIntervalLength = 1;
             auto imageInfo = Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
                                                  ENGINE::g_32bFormat,
                                                  vk::ImageUsageFlagBits::eColorAttachment |
@@ -100,18 +102,32 @@ namespace Rendering
             testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\VulkanLogo.png", 1, 1,
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
 
-            normalMap = ResourcesManager::GetInstance()->GetShipper("NormalMap", resourcesPath + "\\Images\\Normal.png", 1, 1,
-                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
-            
-            baseCol = ResourcesManager::GetInstance()->GetShipper("BaseCol", resourcesPath + "\\Images\\BaseCol.png", 1, 1,
-                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
-            
-            roughness = ResourcesManager::GetInstance()->GetShipper("Roughness", resourcesPath + "\\Images\\Roughness.png", 1, 1,
-                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
-            ao = ResourcesManager::GetInstance()->GetShipper("Ao", resourcesPath + "\\Images\\Ao.png", 1, 1,
-                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
-            height = ResourcesManager::GetInstance()->GetShipper("Height", resourcesPath + "\\Images\\Height.png", 1, 1,
-                                                     ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
+            backgroundMaterial = RenderingResManager::GetInstance()->PushMaterial("RCascadesMat");
+
+            ImageView* colRef = ResourcesManager::GetInstance()->GetShipper(
+                "BaseCol", resourcesPath + "\\Images\\BaseCol.png", 1, 1, ENGINE::g_ShipperFormat,
+                LayoutPatterns::GRAPHICS_READ)->imageView.get();
+            backgroundMaterial->SetTexture(TextureType::ALBEDO, colRef);
+
+            ImageView* normRef = ResourcesManager::GetInstance()->GetShipper(
+                "NormalMap", resourcesPath + "\\Images\\Normal.png", 1, 1,
+                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+            backgroundMaterial->SetTexture(TextureType::NORMAL, normRef);
+
+            ImageView* roughnessRef = ResourcesManager::GetInstance()->GetShipper(
+                "Roughness", resourcesPath + "\\Images\\Roughness.png", 1, 1,
+                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+            backgroundMaterial->SetTexture(TextureType::ROUGHNESS, roughnessRef);
+
+            ImageView* aoRef = ResourcesManager::GetInstance()->GetShipper(
+                "Ao", resourcesPath + "\\Images\\Ao.png", 1, 1,
+                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+            backgroundMaterial->SetTexture(TextureType::AO, aoRef);
+
+            ImageView* heightRef = ResourcesManager::GetInstance()->GetShipper(
+                "Height", resourcesPath + "\\Images\\Height.png", 1, 1,
+                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+            backgroundMaterial->SetTexture(TextureType::HEIGHT, heightRef);
 
             // testSpriteAnim.LoadAtlas(
             // assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
@@ -502,11 +518,7 @@ namespace Rendering
                     cascadesResultCache->SetSampler("TestImage", testImage->imageView.get());
                     cascadesResultCache->SetSamplerArray("SpriteAnims", testSpriteAnim->imagesFrames);
                     cascadesResultCache->SetBuffer("SpriteInfo", testSpriteAnim->animatorInfo);
-                    cascadesResultCache->SetSampler("NormalMap", normalMap->imageView.get());
-                    cascadesResultCache->SetSampler("BaseCol", baseCol->imageView.get());
-                    cascadesResultCache->SetSampler("Roughness", roughness->imageView.get());
-                    cascadesResultCache->SetSampler("Ao", ao->imageView.get());
-                    cascadesResultCache->SetSampler("Height", height->imageView.get());
+                    cascadesResultCache->SetSamplerArray("MatTextures", backgroundMaterial->ConvertTexturesToVec());
                     cascadesResultCache->SetBuffer("LightInfo", light);
                     cascadesResultCache->SetBuffer("RConfigs", rConfigs);
                         
@@ -588,12 +600,8 @@ namespace Rendering
         std::unique_ptr<DescriptorCache> paintingCache;
         std::unique_ptr<Shader> paintCompShader;
         std::vector<ImageView*> paintingLayers;
+        Material* backgroundMaterial;
         ImageShipper* testImage;
-        ImageShipper* normalMap;
-        ImageShipper* baseCol;
-        ImageShipper* roughness;
-        ImageShipper* ao;
-        ImageShipper* height;
 
 
         Buffer* quadVertBufferRef;

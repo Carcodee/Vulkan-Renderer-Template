@@ -10,13 +10,16 @@ namespace Rendering
 {
     enum TextureType
     {
-        ALBEDO,
-        NORMAL,
-        EMISSION,
-        TRANSMISSION,
-        ROUGHNESS,
-        METALLIC,
-        METALLIC_ROUGHNESS,
+        ALBEDO = 0,
+        NORMAL = 1,
+        EMISSION = 2,
+        TRANSMISSION = 3,
+        ROUGHNESS = 4,
+        METALLIC = 5,
+        METALLIC_ROUGHNESS = 6,
+        AO = 7,
+        HEIGHT = 8
+        
     };
     class Material 
     {
@@ -31,7 +34,32 @@ namespace Rendering
             {ROUGHNESS, -1},
             {METALLIC, -1},
             {METALLIC_ROUGHNESS, -1},
+            {AO, -1},
+            {HEIGHT, -1},
         };
+        std::map<TextureType, ENGINE::ImageView*> texturesRef{
+            {ALBEDO, nullptr},
+            {NORMAL, nullptr},
+            {EMISSION, nullptr},
+            {TRANSMISSION, nullptr},
+            {ROUGHNESS, nullptr},
+            {METALLIC, nullptr},
+            {METALLIC_ROUGHNESS, nullptr},
+            {AO, nullptr},
+            {HEIGHT, nullptr},
+        };
+        std::map<TextureType, std::string> texturesStrings{
+            {ALBEDO,"Albedo"},
+            {NORMAL,"Normal"},
+            {EMISSION,"Emission"},
+            {TRANSMISSION,"Transmission"},
+            {ROUGHNESS,"Roughness"},
+            {METALLIC,"Metallic"},
+            {METALLIC_ROUGHNESS,"Metallic_roughness"},
+            {AO,"Ao"},
+            {HEIGHT,"Height"},
+        };
+        std::vector<ENGINE::ImageView*> imageViewsVec;
 
         void SetTexture(TextureType type, int offset)
         {
@@ -60,19 +88,31 @@ namespace Rendering
                 materialPackedData.metRoughnessOffset = offset;
                 break;
             }
-        
         }
+        void SetTexture(TextureType type, ENGINE::ImageView* imgView)
+        {
+            assert(texturesOffsets.contains(type) && "Texture type dont exist");
+            texturesRef.at(type) = imgView;
+        }
+        std::vector<ENGINE::ImageView*>& ConvertTexturesToVec()
+        {
+            imageViewsVec.clear();
+            imageViewsVec.reserve(texturesRef.size());
+            for (auto& imageView : texturesRef)
+            {
+                if (imageView.second == nullptr)
+                {
+                    imageViewsVec.emplace_back(
+                        ENGINE::ResourcesManager::GetInstance()->GetShipperFromName("default_tex")->imageView.get());
+                }else
+                {
+                    imageViewsVec.emplace_back(imageView.second);
+                }
+            }
+            return imageViewsVec;
+        }
+ 
         
-        
-
-
-        
-        
-        
-
-        
-        
-
         
     };
 }
