@@ -114,7 +114,7 @@ void main() {
 
     u_RadianceCascadesConfigs configs = rConfigs.configs;
 //    outColor = (baseCol * ao.x * height.x) * vec4(diff, 1.0);
-    float normalMapCombined =pow(configs.normalMapPow, (normalMap.x * normalMap.y * normalMap.z));
+    float normalMapCombined =pow(float(configs.normalMapPow), (normalMap.x * normalMap.y * normalMap.z));
     float specular = pow(configs.specularPow ,max(0.0, normalMapCombined));
     
     vec4 finalRadiance = vec4(1.0);
@@ -122,13 +122,14 @@ void main() {
         finalRadiance *= radiance;
     }
     
-    vec4 finalCol = baseCol * finalRadiance * normalMapCombined * specular * pow(configs.roughnessPow, roughness.x) * ao.x;
+    vec4 test = baseCol * finalRadiance * pow(8.0 ,height.x);
+    vec4 finalCol = baseCol * finalRadiance * normalMapCombined * specular * pow(roughness.x, configs.roughnessPow) * ao.x;
     
     vec3 dirLightCol = abs(dot(normalMap.xyz, lightDir)) * ubo.col * ubo.intensity;
     outColor = finalCol + vec4(dirLightCol, 1.0);
-    if(spriteCol.w > 0.8){
-        outColor = spriteCol;
-    }
+//    if(spriteCol.w > 0.8){
+//        outColor = spriteCol;
+//    }
     if(paintingImage.w > 0.01){
         outColor = paintingImage * paintingImage.w;
     }

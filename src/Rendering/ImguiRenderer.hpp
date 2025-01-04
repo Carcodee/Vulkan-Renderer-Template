@@ -566,7 +566,12 @@ namespace Rendering
 		    }
 
 	    	ImGui::SeparatorText("Background Material");
-		    DisplayMaterial(flatRenderer->backgroundMaterial);
+	    	static int materialSelected = flatRenderer->materialIndexSelected;
+	    	if (ImGui::SliderInt("Material Selected", &materialSelected, 0, flatRenderer->backgroundMaterials.size()-1))
+	    	{
+	    		flatRenderer->materialIndexSelected = materialSelected;
+	    	}
+		    DisplayMaterial(flatRenderer->backgroundMaterials.at(flatRenderer->materialIndexSelected));
 	    	
 	    	
 			ImGui::End();	

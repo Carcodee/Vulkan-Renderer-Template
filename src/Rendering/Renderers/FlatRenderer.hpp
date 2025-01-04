@@ -102,32 +102,43 @@ namespace Rendering
             testImage = ResourcesManager::GetInstance()->GetShipper("TestImage", resourcesPath + "\\Images\\VulkanLogo.png", 1, 1,
                                                      ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ);
 
-            backgroundMaterial = RenderingResManager::GetInstance()->PushMaterial("RCascadesMat");
 
-            ImageView* colRef = ResourcesManager::GetInstance()->GetShipper(
-                "BaseCol", resourcesPath + "\\Images\\BaseCol.png", 1, 1, ENGINE::g_ShipperFormat,
-                LayoutPatterns::GRAPHICS_READ)->imageView.get();
-            backgroundMaterial->SetTexture(TextureType::ALBEDO, colRef);
+            std::filesystem::path dirEntry(assetPath + "\\Textures\\RCascadesTextures");
 
-            ImageView* normRef = ResourcesManager::GetInstance()->GetShipper(
-                "NormalMap", resourcesPath + "\\Images\\Normal.png", 1, 1,
-                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
-            backgroundMaterial->SetTexture(TextureType::NORMAL, normRef);
+            int i = 0;
+            for (auto& pathView : std::filesystem::directory_iterator(dirEntry))
+            {
+                Material* backgroundMaterial = RenderingResManager::GetInstance()->PushMaterial("RCascadesMat_"+std::to_string(i++));
+                std::string path = pathView.path().string();
+                ImageView* colRef = ResourcesManager::GetInstance()->GetShipper(
+                    path + "\\Albedo.png", path + "\\Albedo.png", 1, 1, ENGINE::g_ShipperFormat,
+                    LayoutPatterns::GRAPHICS_READ)->imageView.get();
+                backgroundMaterial->SetTexture(TextureType::ALBEDO, colRef);
 
-            ImageView* roughnessRef = ResourcesManager::GetInstance()->GetShipper(
-                "Roughness", resourcesPath + "\\Images\\Roughness.png", 1, 1,
-                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
-            backgroundMaterial->SetTexture(TextureType::ROUGHNESS, roughnessRef);
+                ImageView* normRef = ResourcesManager::GetInstance()->GetShipper(
+                    path + "\\Normal.png", path + "\\Normal.png", 1, 1,
+                    ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+                backgroundMaterial->SetTexture(TextureType::NORMAL, normRef);
 
-            ImageView* aoRef = ResourcesManager::GetInstance()->GetShipper(
-                "Ao", resourcesPath + "\\Images\\Ao.png", 1, 1,
-                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
-            backgroundMaterial->SetTexture(TextureType::AO, aoRef);
+                ImageView* roughnessRef = ResourcesManager::GetInstance()->GetShipper(
+                    path + "\\Roughness.png", path + "\\Roughness.png", 1, 1,
+                    ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+                backgroundMaterial->SetTexture(TextureType::ROUGHNESS, roughnessRef);
 
-            ImageView* heightRef = ResourcesManager::GetInstance()->GetShipper(
-                "Height", resourcesPath + "\\Images\\Height.png", 1, 1,
-                ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
-            backgroundMaterial->SetTexture(TextureType::HEIGHT, heightRef);
+                ImageView* aoRef = ResourcesManager::GetInstance()->GetShipper(
+                    path + "\\Ao.png", path + "\\Ao.png", 1, 1,
+                    ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+                backgroundMaterial->SetTexture(TextureType::AO, aoRef);
+
+                ImageView* heightRef = ResourcesManager::GetInstance()->GetShipper(
+                    path + "\\Height.png", path + "\\Height.png", 1, 1,
+                    ENGINE::g_ShipperFormat, LayoutPatterns::GRAPHICS_READ)->imageView.get();
+                backgroundMaterial->SetTexture(TextureType::HEIGHT, heightRef);
+                backgroundMaterials.emplace_back(backgroundMaterial);
+            }
+            materialIndexSelected = 0;
+            
+
 
             // testSpriteAnim.LoadAtlas(
             // assetPath + "\\Animations\\SmokeFreePack_v2\\Compressed\\512\\Smoke_4_512-sheet.png",
@@ -439,6 +450,7 @@ namespace Rendering
                     outputCache->SetSampler("TestImage", testImage->imageView.get());
                     outputCache->SetSamplerArray("SpriteAnims", testSpriteAnim->imagesFrames);
                     outputCache->SetBuffer("SpriteInfo", testSpriteAnim->animatorInfo);
+                    outputCache->SetSamplerArray("MatTextures",backgroundMaterials.at(materialIndexSelected)->ConvertTexturesToVec());
                     
                     auto& renderNode = renderGraph->renderNodes.at(rCascadesPassName);
                     commandBuffer.bindDescriptorSets(renderNode->pipelineType,
@@ -518,7 +530,7 @@ namespace Rendering
                     cascadesResultCache->SetSampler("TestImage", testImage->imageView.get());
                     cascadesResultCache->SetSamplerArray("SpriteAnims", testSpriteAnim->imagesFrames);
                     cascadesResultCache->SetBuffer("SpriteInfo", testSpriteAnim->animatorInfo);
-                    cascadesResultCache->SetSamplerArray("MatTextures", backgroundMaterial->ConvertTexturesToVec());
+                    cascadesResultCache->SetSamplerArray("MatTextures",backgroundMaterials.at(materialIndexSelected)->ConvertTexturesToVec());
                     cascadesResultCache->SetBuffer("LightInfo", light);
                     cascadesResultCache->SetBuffer("RConfigs", rConfigs);
                         
@@ -600,7 +612,8 @@ namespace Rendering
         std::unique_ptr<DescriptorCache> paintingCache;
         std::unique_ptr<Shader> paintCompShader;
         std::vector<ImageView*> paintingLayers;
-        Material* backgroundMaterial;
+        std::vector<Material*> backgroundMaterials;
+        int materialIndexSelected = 0;
         ImageShipper* testImage;
 
 

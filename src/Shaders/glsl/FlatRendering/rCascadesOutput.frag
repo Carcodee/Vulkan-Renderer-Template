@@ -8,6 +8,7 @@
 #include "../Utils/uRendering.glsl"
 #include "../Utils/uStructs.glsl"
 #include "../Utils/uMath.glsl"
+#include "../Utils/uPBR.glsl"
 
 
 layout (location = 0) in vec2 textCoord;
@@ -34,6 +35,8 @@ layout (set = 0, binding = 5, scalar) buffer SpriteInfo{
     u_SpriteAnimationInfo spriteAnimInfo;
 };
 
+layout (set = 0, binding = 6) uniform sampler2D MatTextures[];
+
 
 #define CASCADE_SIZE 5
 
@@ -50,9 +53,11 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
     bool occluded = false;
     int sampleCount = 0;
     vec2 pos = intervalStart;
+
     for (int i = 0; i < maxSteps; i++){
+        vec2 textCoordPos = vec2(pos)/ vec2(fSize);
         vec4 sampleCol= imageLoad(PaintingLayers[0], ivec2(pos));
-        vec4 sampleColImage= texture(TestImage, vec2(pos)/ fSize);
+        vec4 sampleColImage= texture(TestImage,textCoordPos);
 
         int size = spriteAnimInfo.rows * spriteAnimInfo.cols;
         vec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
@@ -66,15 +71,24 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
 //            imageStore(PaintingLayers[2], ivec2(pos), vec4(cascadeCol, 1.0));
 //        }       
         ///
-        if(spriteCol.w > 0.3){
+        vec4 normalMap = texture(MatTextures[NORMAL_OFFSET], textCoordPos);
+        float normalMapCombined =normalMap.x * normalMap.y * normalMap.z;
+        float dotProd= dot(normalMap.xy, dir);
+        if(normalMapCombined < 0.1){
             occluded = true;
-            accumulatedRadiance += spriteCol * spriteCol.w;
+            float powwdCom= pow(normalMapCombined, 2.0);
+            accumulatedRadiance += vec4(vec3(0.1), 1.0) * normalMapCombined;
             sampleCount++;
-        }       
+        }
+//        if(spriteCol.w > 0.3){
+//            occluded = true;
+//            accumulatedRadiance += spriteCol * spriteCol.w;
+//            sampleCount++;
+//        }       
         if(sampleCol.w > 0.01){
             occluded = true;
-            accumulatedRadiance += sampleCol * sampleCol.w;
-//            dir = reflect(dir , vec2(0.5, 0.0));
+            accumulatedRadiance = sampleCol * sampleCol.w;
+            dir = reflect(dir , vec2(0.5, 0.0));
             sampleCount++;
         }
 
