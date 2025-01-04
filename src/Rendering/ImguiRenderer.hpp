@@ -126,7 +126,6 @@ namespace Rendering
 
             ImGui_ImplVulkan_CreateFontsTexture();
 
-
         }
     	
         void RenderFrame(vk::CommandBuffer commandBuffer, vk::ImageView& imageView)
@@ -455,6 +454,7 @@ namespace Rendering
 			    std::string name = "radianceStorage_" + std::to_string(i);
 			    ResourcesManager::GetInstance()->RequestStorageImageClear(name);
 		    }
+	    	
 	    	ImGui::End();
 	    	
 	    }

@@ -10,5 +10,6 @@
 #include "backends/imgui_impl_vulkan.h"
 #include "backends/imgui_impl_glfw.h"
 #include "ImGuiProfilerRenderer.h"
+#include "imgui_node_editor.h"
 
 #include "Widgets.hpp"

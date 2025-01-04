@@ -75,7 +75,7 @@ namespace Rendering
             rcPc.intervalCount = cascadesInfo.intervalCount;
             rcPc.baseIntervalLength = cascadesInfo.baseIntervalLength;
             
-            paintingPc.radius = 5;
+            paintingPc.radius = 20;
 
 
             auto storageImageInfo = ENGINE::Image::CreateInfo2d(windowProvider->GetWindowSize(), 1, 1,
