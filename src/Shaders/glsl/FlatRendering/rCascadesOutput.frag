@@ -57,14 +57,12 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
     for (int i = 0; i < maxSteps; i++){
         vec2 textCoordPos = vec2(pos)/ vec2(fSize);
         vec4 sampleCol= imageLoad(PaintingLayers[0], ivec2(pos));
+        vec4 ocluddersFinded= imageLoad(Radiances[0], ivec2(pos));
         vec4 sampleColImage= texture(TestImage,textCoordPos);
 
         int size = spriteAnimInfo.rows * spriteAnimInfo.cols;
         vec2 spritePos = u_GetSpriteCoordInAtlas(spriteAnimInfo.currentFrame, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
-        vec2 spritePos1 = u_GetSpriteCoordInAtlas((spriteAnimInfo.currentFrame + 1) % size, spriteAnimInfo.spriteSizePx, spriteAnimInfo.rows, spriteAnimInfo.cols, ivec2(pos), ivec2(fSize));
         vec4 spriteCol = texture(SpriteAnims[0], vec2(spritePos));
-        vec4 spriteCol1 = texture(SpriteAnims[0], vec2(spritePos1));
-        vec4 finalVal = mix(spriteCol, spriteCol1, spriteAnimInfo.interpVal);
         ///debug
         vec3 cascadeCol = u_HSLToRGB(float(spriteAnimInfo.currentFrame) / 36.0, 0.8, 0.4);
 //        if(cascadeIndex == 3){
@@ -80,21 +78,21 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
             accumulatedRadiance += vec4(vec3(0.1), 1.0) * normalMapCombined;
             sampleCount++;
         }
-//        if(spriteCol.w > 0.3){
-//            occluded = true;
-//            accumulatedRadiance += spriteCol * spriteCol.w;
-//            sampleCount++;
-//        }       
+        if(spriteCol.w > 0.3){
+            occluded = true;
+            accumulatedRadiance += spriteCol * spriteCol.w;
+            sampleCount++;
+        }       
         if(sampleCol.w > 0.01){
             occluded = true;
             accumulatedRadiance = sampleCol * sampleCol.w;
-            dir = reflect(dir , vec2(0.5, 0.0));
             sampleCount++;
         }
 
         pos += dir;
         if(occluded){
             accumulatedRadiance /= sampleCount;
+            accumulatedRadiance.w = 0.0;
             break;
         }
         if (pos.x < 0 || pos.x >= pc.fWidth || pos.y < 0 || pos.y >= pc.fHeight || distance(pos, intervalEnd) < 0.1) {
@@ -102,9 +100,6 @@ vec4 CastInterval(vec2 intervalStart, vec2 intervalEnd, int cascadeIndex, vec2 f
         }
     }
 //    accumulatedRadiance /= sampleCount;
-    if(occluded){
-        accumulatedRadiance.w = 0.0;
-    }
     return accumulatedRadiance;
 }
 

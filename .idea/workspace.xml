@@ -31,7 +31,11 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Imgui configs" />
+    <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Imgui node lib">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -379,22 +383,11 @@
       <workItem from="1735876793147" duration="4153000" />
       <workItem from="1735928133267" duration="7790000" />
       <workItem from="1735960837309" duration="8485000" />
-    </task>
-    <task id="LOCAL-00014" summary="dynamic buffers updates">
-      <option name="closed" value="true" />
-      <created>1732505033182</created>
-      <option name="number" value="00014" />
-      <option name="presentableId" value="LOCAL-00014" />
-      <option name="project" value="LOCAL" />
-      <updated>1732505033182</updated>
-    </task>
-    <task id="LOCAL-00015" summary="changed buffers to staged resources">
-      <option name="closed" value="true" />
-      <created>1732550840248</created>
-      <option name="number" value="00015" />
-      <option name="presentableId" value="LOCAL-00015" />
-      <option name="project" value="LOCAL" />
-      <updated>1732550840248</updated>
+      <workItem from="1736017419004" duration="533000" />
+      <workItem from="1736018233947" duration="49000" />
+      <workItem from="1736018516744" duration="200000" />
+      <workItem from="1736018826541" duration="691000" />
+      <workItem from="1736290273690" duration="2807000" />
     </task>
     <task id="LOCAL-00016" summary="changed buffers to staged resources">
       <option name="closed" value="true" />
@@ -772,7 +765,23 @@
       <option name="project" value="LOCAL" />
       <updated>1735969399744</updated>
     </task>
-    <option name="localTasksCounter" value="63" />
+    <task id="LOCAL-00063" summary="Imgui node lib">
+      <option name="closed" value="true" />
+      <created>1736017478068</created>
+      <option name="number" value="00063" />
+      <option name="presentableId" value="LOCAL-00063" />
+      <option name="project" value="LOCAL" />
+      <updated>1736017478068</updated>
+    </task>
+    <task id="LOCAL-00064" summary="Imgui node lib">
+      <option name="closed" value="true" />
+      <created>1736017949944</created>
+      <option name="number" value="00064" />
+      <option name="presentableId" value="LOCAL-00064" />
+      <option name="project" value="LOCAL" />
+      <updated>1736017949944</updated>
+    </task>
+    <option name="localTasksCounter" value="65" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -795,7 +804,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Preparing Materials, Gpu driven rendering" />
     <MESSAGE value="bindless drawing" />
     <MESSAGE value="Added a profiler" />
     <MESSAGE value="add indirect drawing and preparing frustum culling" />
@@ -820,7 +828,8 @@
     <MESSAGE value="Small sprite animation system" />
     <MESSAGE value="Added normal maps" />
     <MESSAGE value="Imgui configs" />
-    <option name="LAST_COMMIT_MESSAGE" value="Imgui configs" />
+    <MESSAGE value="Imgui node lib" />
+    <option name="LAST_COMMIT_MESSAGE" value="Imgui node lib" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
