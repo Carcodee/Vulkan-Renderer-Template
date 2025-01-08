@@ -38,7 +38,7 @@ include_directories("${PROFILER_EXT_INCLUDE_DIR}")
 include_directories("${IMGUI_NODE_INCLUDE_DIR}")
 
 
-file(GLOB_RECURSE dep_sources "${SPIRVCROSS_INCLUDE_DIR}/*.cpp" "${IMGUI_INCLUDE_DIR}/*.cpp")
+file(GLOB_RECURSE dep_sources "${SPIRVCROSS_INCLUDE_DIR}/*.cpp" "${IMGUI_INCLUDE_DIR}/*.cpp" "${IMGUI_NODE_INCLUDE_DIR}/*.cpp")
 file(GLOB_RECURSE engine_sources "${SOLUTION_DIR}/src/*.cpp")
 file(GLOB_RECURSE engine_headers "${SOLUTION_DIR}/src/*.hpp")
 

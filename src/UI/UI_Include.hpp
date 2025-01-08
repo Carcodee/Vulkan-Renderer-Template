@@ -13,3 +13,4 @@
 #include "imgui_node_editor.h"
 
 #include "Widgets.hpp"
+#include "RG_NodeEditor.hpp"

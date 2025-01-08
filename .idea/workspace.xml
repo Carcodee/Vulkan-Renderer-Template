@@ -32,9 +32,87 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7360a5ad-4300-49d4-b960-e2473348fab3" name="Changes" comment="Imgui node lib">
+      <change afterPath="$PROJECT_DIR$/src/UI/RG_NodeEditor.hpp" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMakeLists.txt" beforeDir="false" afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/include/application.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/application.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/config.h.in" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/entry_point.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_extra_keys.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_dx11.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_dx11.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_glfw.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_glfw.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_opengl3.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_opengl3.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_opengl3_loader.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_win32.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/imgui_impl_win32.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/platform.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/platform_glfw.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/platform_win32.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/renderer.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/renderer_dx11.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/renderer_ogl3.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/source/setup.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/support/Icon.icns" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/support/Icon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/support/Icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/support/Info.plist.in" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/application/support/Resource.rc.in" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/basic-interaction-example/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/basic-interaction-example/basic-interaction-example.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/blueprints-example.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/data/BlueprintBackground.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/data/ic_restore_white_24dp.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/data/ic_save_white_24dp.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/utilities/builders.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/utilities/builders.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/utilities/drawing.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/utilities/drawing.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/utilities/widgets.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/blueprints-example/utilities/widgets.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/canvas-example/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/canvas-example/canvas-example.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/data/Cuprum-Bold.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/data/Cuprum-OFL.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/data/Oswald-OFL.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/data/Oswald-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/data/Play-OFL.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/data/Play-Regular.ttf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/simple-example/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/simple-example/simple-example.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/widgets-example/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/examples/widgets-example/widgets-example.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/DXSDK/include/D3DX11.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/DXSDK/include/D3DX11async.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/DXSDK/include/D3DX11core.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/DXSDK/include/D3DX11tex.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/DXSDK/include/dxerr.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/DXSDK/src/dxerr.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/LICENSE.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imconfig.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui.natvis" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui_demo.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui_draw.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui_internal.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui_tables.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imgui_widgets.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imstb_rectpack.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imstb_textedit.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/imgui/imstb_truetype.h" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/stb_image/CMakeLists.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies/imgui-node-editor-master/external/stb_image/stb_image.h" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/imgui.ini" beforeDir="false" afterPath="$PROJECT_DIR$/imgui.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" beforeDir="false" afterPath="$PROJECT_DIR$/src/Shaders/glsl/FlatRendering/rCascadesOutput.frag" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/Rendering/ImguiRenderer.hpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/UI/UI_Include.hpp" beforeDir="false" afterPath="$PROJECT_DIR$/src/UI/UI_Include.hpp" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -258,6 +336,11 @@
     </key>
   </component>
   <component name="RunManager">
+    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
+      <method v="2">
+        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="Engine" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="true" EMULATE_TERMINAL="false" WORKING_DIR="file://$PROJECT_DIR$" PASS_PARENT_ENVS_2="true" CONFIG_NAME="Debug" RUN_PATH="$PROJECT_DIR$/cmake-build-debug/bin/Engine.exe" EXPLICIT_BUILD_TARGET_NAME="all">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -387,15 +470,7 @@
       <workItem from="1736018233947" duration="49000" />
       <workItem from="1736018516744" duration="200000" />
       <workItem from="1736018826541" duration="691000" />
-      <workItem from="1736290273690" duration="2807000" />
-    </task>
-    <task id="LOCAL-00016" summary="changed buffers to staged resources">
-      <option name="closed" value="true" />
-      <created>1732551190154</created>
-      <option name="number" value="00016" />
-      <option name="presentableId" value="LOCAL-00016" />
-      <option name="project" value="LOCAL" />
-      <updated>1732551190154</updated>
+      <workItem from="1736290273690" duration="4919000" />
     </task>
     <task id="LOCAL-00017" summary="changed buffers to staged resources">
       <option name="closed" value="true" />
@@ -781,7 +856,15 @@
       <option name="project" value="LOCAL" />
       <updated>1736017949944</updated>
     </task>
-    <option name="localTasksCounter" value="65" />
+    <task id="LOCAL-00065" summary="Imgui node lib">
+      <option name="closed" value="true" />
+      <created>1736293267175</created>
+      <option name="number" value="00065" />
+      <option name="presentableId" value="LOCAL-00065" />
+      <option name="project" value="LOCAL" />
+      <updated>1736293267175</updated>
+    </task>
+    <option name="localTasksCounter" value="66" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
